@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MonDefense Test</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            font-family: Arial, sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .status {
+            color: white;
+            margin: 10px;
+            padding: 10px;
+            background: rgba(0,0,0,0.3);
+            border-radius: 5px;
+            text-align: center;
+            max-width: 600px;
+        }
+        
+        #game-container {
+            border: 3px solid #fff;
+            border-radius: 10px;
+            width: 800px;
+            height: 600px;
+            background: #000;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="color: white; text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">MonDefense - Asset Test</h1>
+    
+    <div class="status" id="status">Loading Phaser...</div>
+    
+    <div id="game-container"></div>
+    
+    <script type="module">
+        let loadedAssets = {
+            images: 0,
+            sounds: 0,
+            errors: 0
+        };
+        
+        // Test asset loading
+        function testAssets() {
+            const statusDiv = document.getElementById('status');
+            
+            // Test some key images
+            const testImages = [
+                '/characters/chog_idle.png',
+                '/characters/abster idle.png', 
+                '/effects/fireball.png',
+                '/effects/coin.png'
+            ];
+            
+            // Test some key sounds
+            const testSounds = [
+                '/SFX/ui_click.mp3',
+                '/SFX/coins.mp3',
+                '/SFX/fire_attack.mp3',
+                '/SFX/bg_music.mp3'
+            ];
+            
+            let tested = 0;
+            let total = testImages.length + testSounds.length;
+            
+            statusDiv.innerHTML = 'Testing assets...';
+            
+            // Test images
+            testImages.forEach(imgPath => {
+                const img = new Image();
+                img.onload = () => {
+                    loadedAssets.images++;
+                    tested++;
+                    updateStatus(tested, total, statusDiv);
+                };
+                img.onerror = () => {
+                    loadedAssets.errors++;
+                    tested++;
+                    console.error('Failed to load image:', imgPath);
+                    updateStatus(tested, total, statusDiv);
+                };
+                img.src = imgPath;
+            });
+            
+            // Test sounds
+            testSounds.forEach(soundPath => {
+                const audio = new Audio();
+                audio.oncanplay = () => {
+                    loadedAssets.sounds++;
+                    tested++;
+                    updateStatus(tested, total, statusDiv);
+                };
+                audio.onerror = () => {
+                    loadedAssets.errors++;
+                    tested++;
+                    console.error('Failed to load sound:', soundPath);
+                    updateStatus(tested, total, statusDiv);
+                };
+                audio.src = soundPath;
+            });
+        }
+        
+        function updateStatus(tested, total, statusDiv) {
+            statusDiv.innerHTML = `
+                Assets tested: ${tested}/${total}<br>
+                Images loaded: ${loadedAssets.images}<br>
+                Sounds loaded: ${loadedAssets.sounds}<br>
+                Errors: ${loadedAssets.errors}<br>
+                ${tested === total ? (loadedAssets.errors === 0 ? '✅ All assets loaded successfully!' : '⚠️ Some assets failed to load') : 'Testing...'}
+            `;
+            
+            if (tested === total) {
+                setTimeout(() => {
+                    statusDiv.innerHTML += '<br><br>Loading actual game...';
+                    loadGame();
+                }, 1000);
+            }
+        }
+        
+        async function loadGame() {
+            try {
+                const Phaser = await import('phaser');
+                const GameScene = await import('./scenes/GameScene.js');
+                
+                const config = {
+                    type: Phaser.AUTO,
+                    width: 800,
+                    height: 600,
+                    parent: 'game-container',
+                    scene: GameScene.default,
+                    physics: {
+                        default: 'arcade',
+                        arcade: {
+                            gravity: { y: 0 },
+                            debug: false
+                        }
+                    },
+                    scale: {
+                        mode: Phaser.Scale.FIT,
+                        autoCenter: Phaser.Scale.CENTER_BOTH
+                    },
+                    render: {
+                        pixelArt: false,
+                        antialias: true,
+                        roundPixels: true
+                    }
+                };
+                
+                const game = new Phaser.Game(config);
+                document.getElementById('status').innerHTML = '🎮 Game loaded! Check console for any errors.';
+                
+            } catch (error) {
+                console.error('Error loading game:', error);
+                document.getElementById('status').innerHTML = '❌ Error loading game: ' + error.message;
+            }
+        }
+        
+        // Start testing
+        testAssets();
+    </script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+Need to do: Awesome Game UI UX  
+Game Mechanics -> every 5 rounds change background, create something new for my game for leaderboard. My game not full online just on Monad Testnet Leaderboard. 
+Vite project
+Leaderboard Huge
+Add new mecahnics with AI
