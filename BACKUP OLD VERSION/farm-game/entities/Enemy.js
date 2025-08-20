@@ -1,4 +1,4 @@
-
+'use client';
 
 export default class Enemy {
   constructor(scene, type, x, y) {
@@ -33,7 +33,7 @@ export default class Enemy {
       // Base properties
       this.baseSpeed = 1.8;
       this.baseHealth = 7; // Increased from 5
-      this.baseValue = 8; // Increased bird reward
+      this.baseValue = 6;
       
       // Scale with wave
       this.speed = this.baseSpeed + (currentWave * 0.12); // Slightly faster scaling
@@ -48,7 +48,7 @@ export default class Enemy {
       // Deer: Tougher, slower, higher value, appears later
       this.baseSpeed = 1.0; 
       this.baseHealth = 18; // Increased from 15
-      this.baseValue = 15; // Increased deer reward
+      this.baseValue = 12;
       
       // Scale with wave
       this.speed = this.baseSpeed + (currentWave * 0.07); // Slightly faster scaling
@@ -67,7 +67,7 @@ export default class Enemy {
       // Base properties
       this.baseSpeed = 1.5;
       this.baseHealth = 8; // Increased from 6
-      this.baseValue = 7; // Increased rabbit reward
+      this.baseValue = 5;
       
       // Scale with wave
       this.speed = this.baseSpeed + (currentWave * 0.09); // Slightly faster scaling
@@ -965,22 +965,6 @@ export default class Enemy {
       // Mark as inactive immediately to prevent multiple defeat calls
       this.active = false;
       this.dead = true;
-      
-      // Add enhanced particle effects if available
-      if (this.scene && this.scene.particleEffects) {
-        // Create explosion effect based on enemy type
-        const explosionColor = this.type === 'bird' ? 0x4488FF : 
-                              this.type === 'deer' ? 0x8B4513 : 
-                              this.type === 'bear' ? 0x654321 : 0xFF6600;
-        const explosionSize = this.type === 'bear' ? 'large' : 'medium';
-        
-        this.scene.particleEffects.createExplosion(this.x, this.y, explosionColor, explosionSize);
-        
-        // Add screen shake for dramatic effect if graphics settings allow
-        if (this.scene.graphicsSettings && this.scene.graphicsSettings.shouldShowScreenShake()) {
-          this.scene.particleEffects.createScreenShake(3, 150);
-        }
-      }
       this.destroyed = true;
       
       // Call the flying coin effect instead of directly updating coins here

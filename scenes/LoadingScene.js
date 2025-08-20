@@ -22,6 +22,7 @@ class LoadingScene extends Phaser.Scene {
     
     this.load.on('complete', () => {
       this.updateLoadingText('Complete! Starting game...');
+      console.log('All assets loaded successfully!');
       // Transition to game scene after a short delay
       this.time.delayedCall(500, () => {
         this.scene.start('GameScene');
@@ -140,38 +141,8 @@ class LoadingScene extends Phaser.Scene {
   }
 
   loadGameAssets() {
-    // Load all the game assets
-    
-    // Load tree/plant assets
-    this.load.image('Fruit_tree3', '/characters/craftpix-net-385863-free-top-down-trees-pixel-art/PNG/Assets_separately/Trees_shadow/Fruit_tree3.png');
-    this.load.image('Moss_tree3', '/characters/craftpix-net-385863-free-top-down-trees-pixel-art/PNG/Assets_separately/Trees_shadow/Moss_tree3.png');
-    
-    // Load effect assets
-    this.load.image('fireball', '/effects/fireball.png');
-    this.load.image('iceball', '/effects/iceball.png');
-    this.load.image('coin', '/effects/coin.png');
-    
-    // Load tileset assets
-    this.load.image('tileset', '/characters/craftpix-net-504452-free-village-pixel-tileset-for-top-down-defense/1 Tiles/FieldsTileset.png');
-    this.load.image('tileset2', '/characters/craftpix-net-504452-free-village-pixel-tileset-for-top-down-defense/1.1 Tiles/Tileset2.png');
-    
-    // Load individual tiles
-    this.load.image('grass1', '/characters/craftpix-net-504452-free-village-pixel-tileset-for-top-down-defense/1 Tiles/FieldsTile_01.png');
-    this.load.image('grass2', '/characters/craftpix-net-504452-free-village-pixel-tileset-for-top-down-defense/1 Tiles/FieldsTile_02.png');
-    this.load.image('soil1', '/characters/craftpix-net-504452-free-village-pixel-tileset-for-top-down-defense/1 Tiles/FieldsTile_11.png');
-    this.load.image('soil2', '/characters/craftpix-net-504452-free-village-pixel-tileset-for-top-down-defense/1 Tiles/FieldsTile_12.png');
-    
-    // Load decorative objects
-    this.load.image('towerPlace1', '/characters/craftpix-net-504452-free-village-pixel-tileset-for-top-down-defense/2 Objects/PlaceForTower1.png');
-    this.load.image('towerPlace2', '/characters/craftpix-net-504452-free-village-pixel-tileset-for-top-down-defense/2 Objects/PlaceForTower2.png');
-    
-    // Load enemy images
-    this.load.image('enemy_bird', 'characters/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon1.png');
-    this.load.image('enemy_rabbit', 'characters/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon2.png');
-    this.load.image('enemy_boss', 'characters/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon3.png');
-    this.load.image('enemy_fox', 'characters/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon9.png');
-    
-    // Load defense character textures
+    try {
+      // Load defense character textures (these exist)
     this.load.image('chog_idle', '/characters/chog_idle.png');
     this.load.image('chog_attack', '/characters/chog_idle.png');
     this.load.image('molandak_idle', '/characters/molandak_idle.png');
@@ -181,25 +152,150 @@ class LoadingScene extends Phaser.Scene {
     this.load.image('keon_idle', '/characters/keon_idle.png');
     this.load.image('keon_attack', '/characters/keon_idle.png');
     
-    // Load legacy defense textures
+      // Load legacy defense textures (these exist)
     this.load.image('ABS_idle', '/characters/abster idle.png');
     this.load.image('ABS_attack', '/characters/abster attacks.png');
     this.load.image('MON_idle', '/characters/noot idle.png');
     this.load.image('MON_attack', '/characters/noot attack.png');
     
-    // Load plant assets for crops
-    this.load.image('plant1_idle', '/characters/craftpix-net-922184-free-predator-plant-mobs-pixel-art-pack/PNG/Plant1/Idle/Plant1_Idle_head.png');
-    this.load.image('plant2_idle', '/characters/craftpix-net-922184-free-predator-plant-mobs-pixel-art-pack/PNG/Plant2/Idle/Plant2_Idle_head.png');
-    this.load.image('plant3_idle', '/characters/craftpix-net-922184-free-predator-plant-mobs-pixel-art-pack/PNG/Plant3/Idle/Plant3_Idle_head.png');
+      // Load wizard and cannon (these exist)
+      this.load.image('wizard_idle', '/characters/wizard idle.png');
+      this.load.image('wizard_attack', '/characters/wizard attack.png');
+      this.load.image('cannon_idle', '/characters/cannon idle.png');
+      this.load.image('cannon_attack', '/characters/cannon attack.png');
+      
+      // Load effects (these exist)
+      this.load.image('fireball', '/effects/fireball.png');
+      this.load.image('iceball', '/effects/iceball.png');
+      this.load.image('coin', '/effects/coin.png');
+      
+      // Load enemy sprites from monster packs (correct paths)
+      this.load.image('enemy_rabbit', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon1.png');
+      this.load.image('enemy_bird', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon2.png');
+      this.load.image('enemy_fox', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon3.png');
+      this.load.image('enemy_boss', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon4.png');
+      this.load.image('enemy_slime', '/logo/craftpix-net-879657-free-slime-mobs-pixel-art-top-down-sprite-pack/PNG/1.png');
+      this.load.image('enemy_ghost', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon5.png');
+      this.load.image('enemy_skeleton', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon6.png');
+      this.load.image('enemy_bat', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon7.png');
+      this.load.image('enemy_spider', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon8.png');
+      this.load.image('enemy_wolf', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon9.png');
+      this.load.image('enemy_snake', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon10.png');
+      this.load.image('enemy_goblin', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon11.png');
+      this.load.image('enemy_dragon', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon12.png');
+      this.load.image('enemy_demon', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon13.png');
+      
+      // Load tiles and backgrounds (correct paths)
+      this.load.image('grass1', '/logo/1 Tiles/FieldsTile_01.png');
+      this.load.image('grass2', '/logo/1 Tiles/FieldsTile_02.png');
+      this.load.image('soil1', '/logo/1 Tiles/FieldsTile_03.png');
+      this.load.image('soil2', '/logo/1 Tiles/FieldsTile_04.png');
+      this.load.image('tileset', '/logo/1 Tiles/FieldsTileset.png');
+      this.load.image('tileset2', '/logo/1 Tiles/FieldsTilesetTest.png');
+      
+      // Load trees and decorations (correct paths)
+      this.load.image('Fruit_tree3', '/logo/craftpix-net-385863-free-top-down-trees-pixel-art/PNG/Assets_separately/Trees/Fruit_tree3.png');
+      this.load.image('Moss_tree3', '/logo/craftpix-net-385863-free-top-down-trees-pixel-art/PNG/Assets_separately/Trees/Moss_tree3.png');
+      
+      // Load tower placement spots
+      this.load.image('towerPlace1', '/logo/2 Objects/PlaceForTower1.png');
+      this.load.image('towerPlace2', '/logo/2 Objects/PlaceForTower2.png');
+      
+      // Load plant sprites (correct paths)
+      this.load.image('plant1_idle', '/logo/craftpix-net-922184-free-predator-plant-mobs-pixel-art-pack/PNG/Plant1/Idle/Plant1_Idle_full.png');
+      this.load.image('plant2_idle', '/logo/craftpix-net-922184-free-predator-plant-mobs-pixel-art-pack/PNG/Plant2/Idle/Plant2_Idle_full.png');
+      this.load.image('plant3_idle', '/logo/craftpix-net-922184-free-predator-plant-mobs-pixel-art-pack/PNG/Plant3/Idle/Plant3_Idle_full.png');
+      
+      // Load sound effects
+      this.load.audio('bg_music', '/SFX/bg_music.mp3');
+      this.load.audio('ui_click', '/SFX/ui_click.mp3');
+      this.load.audio('coins', '/SFX/coins.mp3');
+      this.load.audio('enemy_hit', '/SFX/enemy_hit.mp3');
+      this.load.audio('enemy_defeat', '/SFX/enemy_defeat.mp3');
+      this.load.audio('dog_attack', '/SFX/dog_attack.mp3');
+      this.load.audio('fire_attack', '/SFX/fire_attack.mp3');
+      this.load.audio('victory', '/SFX/victory.mp3');
+      this.load.audio('you_win', '/SFX/you_win.mp3');
     
     // Load essential pixel for effects
     this.load.image('pixel', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==');
     
     // Add error handling
     this.load.on('loaderror', (fileObj) => {
-      console.warn(`Failed to load asset: ${fileObj.key}`);
-      this.updateLoadingText(`Warning: ${fileObj.key} failed to load`);
+        console.warn(`Failed to load asset: ${fileObj.key} from ${fileObj.url}`);
+        this.updateLoadingText(`Warning: ${fileObj.key} failed to load`);
+        // Create a fallback colored rectangle
+        this.createFallbackTexture(fileObj.key);
     });
+    
+    // Add success handling for debugging
+    this.load.on('filecomplete', (key, type, data) => {
+        console.log(`Successfully loaded: ${key}`);
+    });
+      
+      console.log("Started loading game assets...");
+      console.log("Loading enemy sprites...");
+      console.log("Loading tiles and backgrounds...");
+      console.log("Loading trees and decorations...");
+      console.log("Loading plant sprites...");
+      console.log("Loading sound effects...");
+      
+    } catch (error) {
+      console.error("Error in loadGameAssets:", error);
+    }
+  }
+  
+  // Create fallback texture for failed assets
+  createFallbackTexture(key) {
+    const colorMap = {
+      // Enemies
+      'enemy_rabbit': 0xFF69B4,
+      'enemy_bird': 0xFF0000,
+      'enemy_fox': 0xFF8C00,
+      'enemy_boss': 0x800080,
+      'enemy_slime': 0x00FF00,
+      'enemy_ghost': 0xFFFFFF,
+      'enemy_skeleton': 0xF5F5DC,
+      'enemy_bat': 0x2F4F4F,
+      'enemy_spider': 0x8B4513,
+      'enemy_wolf': 0x696969,
+      'enemy_snake': 0x9ACD32,
+      'enemy_goblin': 0x228B22,
+      'enemy_dragon': 0x8B0000,
+      'enemy_demon': 0x4B0082,
+      
+      // Environment
+      'grass1': 0x32CD32,
+      'grass2': 0x228B22,
+      'soil1': 0x8B4513,
+      'soil2': 0xA0522D,
+      'tileset': 0x8FBC8F,
+      'tileset2': 0x90EE90,
+      'Fruit_tree3': 0x228B22,
+      'Moss_tree3': 0x006400,
+      'towerPlace1': 0x696969,
+      'towerPlace2': 0x808080,
+      
+      // Plants
+      'plant1_idle': 0x00FF00,
+      'plant2_idle': 0x32CD32,
+      'plant3_idle': 0x228B22,
+      
+      // Effects
+      'fireball': 0xFF4500,
+      'iceball': 0x00FFFF,
+      'coin': 0xFFD700
+    };
+    
+    const color = colorMap[key] || 0xFF00FF; // Default magenta for unknown
+    
+    const graphics = this.add.graphics();
+    graphics.fillStyle(color, 1);
+    graphics.fillRect(0, 0, 32, 32);
+    graphics.generateTexture(key, 32, 32);
+    graphics.destroy();
+    
+    console.log(`Created fallback texture for ${key} with color ${color.toString(16)}`);
   }
 }
 

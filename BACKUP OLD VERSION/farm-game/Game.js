@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from 'react';
 import Phaser from 'phaser';
 import lottie from 'lottie-web';
 import GameScene from './scenes/GameScene';
-import MainMenuScene from './scenes/MainMenuScene';
 
 // Make Lottie available globally
 if (typeof window !== 'undefined') {
@@ -27,10 +26,10 @@ const Game = () => {
     
     const config = {
       type: Phaser.AUTO,
-      width: 1200,
-      height: 800,
+      width: 800,
+      height: 600,
       parent: gameRef.current,
-      scene: [MainMenuScene, GameScene],
+      scene: [GameScene],
       physics: {
         default: 'arcade',
         arcade: {
@@ -41,21 +40,21 @@ const Game = () => {
       scale: {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
-        width: 1200,
-        height: 800,
+        width: 800,
+        height: 600,
         min: {
-          width: 600,
-          height: 400
+          width: 320,
+          height: 240
         },
         max: {
-          width: 1920,
-          height: 1080
+          width: 1600,
+          height: 1200
         }
       },
       render: {
         pixelArt: false,
         antialias: true,
-        roundPixels: false
+        roundPixels: true
       },
       // Add fps limiting to ensure consistent speed on all devices
       fps: {

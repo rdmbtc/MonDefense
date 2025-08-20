@@ -16,10 +16,12 @@ function checkMobile() {
 function initGame() {
   checkMobile();
   
-  // Create game container
+  // Create game container full-viewport
   const gameContainer = document.createElement('div');
-  gameContainer.className = isMobile ? 'game-container mobile-game-container' : 'game-container desktop-game-container';
+  gameContainer.className = 'game-container desktop-game-container';
   gameContainer.id = 'game-container';
+  gameContainer.style.width = '100vw';
+  gameContainer.style.height = '100vh';
   
   // Add game container to app
   document.querySelector('#app').appendChild(gameContainer);
@@ -39,18 +41,9 @@ function initGame() {
       }
     },
     scale: {
-      mode: Phaser.Scale.FIT,
-      autoCenter: Phaser.Scale.CENTER_BOTH,
+      mode: Phaser.Scale.NONE,
       width: 1920,
-      height: 1080,
-      min: {
-        width: 960,
-        height: 540
-      },
-      max: {
-        width: 3840,
-        height: 2160
-      }
+      height: 1080
     },
     render: {
       pixelArt: false,
@@ -77,23 +70,27 @@ function initGame() {
     const factor = delta / targetFrameTime;
     return baseSpeed * Math.min(factor, 2.0); // Cap at 2x to prevent teleporting
   };
+
+  // Handle initial resize for consistent sizing
+  handleResize();
   
   // Expose game globally for debugging
   window.game = game;
 }
 
-// Handle resize
+// Handle resize - maintain Full HD
 function handleResize() {
-  const wasMobile = isMobile;
-  checkMobile();
-  
-  if (wasMobile !== isMobile && game) {
-    // Resize game container
-    const container = document.getElementById('game-container');
-    if (container) {
-      container.className = isMobile ? 'game-container mobile-game-container' : 'game-container desktop-game-container';
-    }
+  const container = document.getElementById('game-container');
+  if (container) {
+    // Keep container full viewport but game stays 1920x1080
+    container.style.width = '100vw';
+    container.style.height = '100vh';
+    container.style.display = 'flex';
+    container.style.justifyContent = 'center';
+    container.style.alignItems = 'center';
+    container.style.backgroundColor = '#000';
   }
+  // Don't resize the game - keep it at Full HD
 }
 
 // Add event listeners
