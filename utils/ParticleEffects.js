@@ -1,6 +1,6 @@
 /**
  * Particle Effects Manager for MonDefense
- * Handles various visual effects like explosions, coins, sparkles, etc.
+ * Handles various visual effects like explosions, coins, sparkles, level completion celebrations, etc.
  */
 
 class ParticleEffects {
@@ -8,12 +8,166 @@ class ParticleEffects {
     this.scene = scene;
     this.activeEffects = [];
     this.maxParticles = 50; // Default, can be overridden by graphics settings
+    this.confettiColors = [0xFF0000, 0x00FF00, 0x0000FF, 0xFFFF00, 0xFF00FF, 0x00FFFF, 0xFFFFFF, 0xFFA500];
   }
 
   setMaxParticles(max) {
     this.maxParticles = max;
   }
+  
+  // Create a celebration effect for level completion
+  createLevelCompletionCelebration() {
+    // Don't create particles if we're at the limit
+    if (this.activeEffects.length >= this.maxParticles) return;
+    
+    const width = this.scene.cameras.main.width;
+    const height = this.scene.cameras.main.height;
+    
+    // Create confetti from top of screen
+    for (let i = 0; i < 50; i++) {
+      if (this.activeEffects.length >= this.maxParticles) break;
+      
+      // Random position across top of screen
+      const x = Math.random() * width;
+      const y = -20;
+      
+      // Random confetti color
+      const color = this.confettiColors[Math.floor(Math.random() * this.confettiColors.length)];
+      
+      // Create confetti piece
+      const confetti = this.scene.add.rectangle(
+        x, y,
+        Math.random() * 10 + 5,
+        Math.random() * 10 + 5,
+        color
+      );
+      confetti.setDepth(2000);
+      confetti.setAlpha(0.8);
+      confetti.angle = Math.random() * 360;
+      this.activeEffects.push(confetti);
+      
+      // Animate confetti falling
+      this.scene.tweens.add({
+        targets: confetti,
+        y: height + 50,
+        x: x + (Math.random() - 0.5) * 300,
+        angle: confetti.angle + Math.random() * 720 - 360,
+        alpha: { start: 0.8, from: 0.8, to: 0 },
+        scaleX: { start: 1, from: 1, to: 0.5 },
+        scaleY: { start: 1, from: 1, to: 0.5 },
+        duration: 3000 + Math.random() * 2000,
+        ease: 'Sine.easeInOut',
+        delay: Math.random() * 3000,
+        onComplete: () => {
+          confetti.destroy();
+          this.removeEffect(confetti);
+        }
+      });
+    }
+    
+    // Create fireworks
+    this.createFireworks(5);
+    
+    // Add screen flash
+    const flash = this.scene.add.rectangle(
+      width / 2, height / 2,
+      width, height,
+      0xFFFFFF
+    );
+    flash.setAlpha(0);
+    flash.setDepth(1999);
+    
+    this.scene.tweens.add({
+      targets: flash,
+      alpha: { from: 0.5, to: 0 },
+      duration: 500,
+      ease: 'Sine.easeOut',
+      onComplete: () => flash.destroy()
+    });
+    
+    // Add screen shake for dramatic effect
+    if (this.scene.graphicsSettings && this.scene.graphicsSettings.shouldShowScreenShake()) {
+      this.createScreenShake(5, 500);
+    }
+  }
 
+  // Create fireworks effect for celebrations
+  createFireworks(count = 3) {
+    if (this.activeEffects.length >= this.maxParticles) return;
+    
+    const width = this.scene.cameras.main.width;
+    const height = this.scene.cameras.main.height;
+    
+    for (let i = 0; i < count; i++) {
+      // Random position for firework
+      const x = Math.random() * width * 0.8 + width * 0.1;
+      const y = Math.random() * height * 0.5 + height * 0.1;
+      
+      // Random color for this firework
+      const color = this.confettiColors[Math.floor(Math.random() * this.confettiColors.length)];
+      
+      // Create rocket trail
+      const startY = height + 50;
+      const rocketTrail = [];
+      
+      // Create rocket
+      const rocket = this.scene.add.circle(x, startY, 3, color);
+      rocket.setDepth(2000);
+      this.activeEffects.push(rocket);
+      
+      // Animate rocket upward
+      this.scene.tweens.add({
+        targets: rocket,
+        y: y,
+        duration: 1000 + Math.random() * 500,
+        delay: i * 300 + Math.random() * 500,
+        ease: 'Quad.easeOut',
+        onUpdate: (tween) => {
+          // Create trail particles
+          if (Math.random() > 0.7) {
+            const trail = this.scene.add.circle(
+              rocket.x + (Math.random() - 0.5) * 5,
+              rocket.y + 10 + Math.random() * 5,
+              2,
+              0xFFFFAA
+            );
+            trail.setAlpha(0.7);
+            trail.setDepth(1999);
+            rocketTrail.push(trail);
+            this.activeEffects.push(trail);
+            
+            // Fade out trail
+            this.scene.tweens.add({
+              targets: trail,
+              alpha: 0,
+              scaleX: 0.5,
+              scaleY: 0.5,
+              duration: 300,
+              onComplete: () => {
+                trail.destroy();
+                this.removeEffect(trail);
+              }
+            });
+          }
+        },
+        onComplete: () => {
+          // Explode at destination
+          rocket.destroy();
+          this.removeEffect(rocket);
+          
+          // Create explosion with same color
+          this.createExplosion(x, y, color, 'large');
+          
+          // Play sound if available
+          if (this.scene.sound && this.scene.sound.add) {
+            const sound = this.scene.sound.add('explosion', { volume: 0.3 });
+            if (sound) sound.play();
+          }
+        }
+      });
+    }
+  }
+  
   // Create explosion effect when enemies are defeated
   createExplosion(x, y, color = 0xFF6600, size = 'medium') {
     if (this.activeEffects.length >= this.maxParticles) return;
@@ -294,6 +448,90 @@ class ParticleEffects {
     if (index > -1) {
       this.activeEffects.splice(index, 1);
     }
+  }
+  
+  // Create a floating power-up effect
+  createPowerUpEffect(x, y, type = 'damage') {
+    if (this.activeEffects.length >= this.maxParticles) return;
+    
+    // Define colors based on power-up type
+    const colors = {
+      'damage': 0xFF0000,
+      'speed': 0x00FF00,
+      'range': 0x0000FF,
+      'coins': 0xFFD700
+    };
+    
+    const color = colors[type] || 0xFFFFFF;
+    
+    // Create main power-up icon
+    const powerUp = this.scene.add.star(x, y, 5, 5, 10, color);
+    powerUp.setDepth(1000);
+    powerUp.setAlpha(0.9);
+    this.activeEffects.push(powerUp);
+    
+    // Add glow effect
+    const glow = this.scene.add.circle(x, y, 15, color, 0.3);
+    glow.setDepth(999);
+    this.activeEffects.push(glow);
+    
+    // Create orbiting particles
+    const particles = [];
+    const particleCount = 5;
+    
+    for (let i = 0; i < particleCount; i++) {
+      const particle = this.scene.add.circle(x, y, 3, color);
+      particle.setAlpha(0.7);
+      particle.setDepth(1000);
+      particles.push(particle);
+      this.activeEffects.push(particle);
+      
+      // Orbit animation
+      this.scene.tweens.add({
+        targets: particle,
+        angle: 360,
+        loop: -1,
+        duration: 2000,
+        onUpdate: (tween, target) => {
+          const angle = Phaser.Math.DegToRad(target.angle);
+          const radius = 20;
+          target.x = powerUp.x + Math.cos(angle) * radius;
+          target.y = powerUp.y + Math.sin(angle) * radius;
+        }
+      });
+    }
+    
+    // Floating animation
+    this.scene.tweens.add({
+      targets: [powerUp, glow],
+      y: y - 10,
+      duration: 1000,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+    
+    // Pulsing animation
+    this.scene.tweens.add({
+      targets: glow,
+      scaleX: 1.2,
+      scaleY: 1.2,
+      duration: 800,
+      yoyo: true,
+      repeat: -1,
+      ease: 'Sine.easeInOut'
+    });
+    
+    // Rotation animation
+    this.scene.tweens.add({
+      targets: powerUp,
+      angle: 360,
+      duration: 6000,
+      repeat: -1,
+      ease: 'Linear'
+    });
+    
+    return { powerUp, glow, particles };
   }
 
   // Clear all effects (useful for scene cleanup)

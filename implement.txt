@@ -3,3 +3,8 @@ Game Mechanics -> every 5 rounds change background, create something new for my 
 Vite project
 Leaderboard Huge
 Add new mecahnics with AI
+
+
+Weather changes every 5 waves: snow, rainy, sunny
+Trailer Game: Players can skip it with holding spacebar button (loading skip animation need!)
+Chapter One for newbie players. 
