@@ -201,10 +201,11 @@ class LoadingScene extends Phaser.Scene {
       this.load.image('towerPlace1', '/logo/2 Objects/PlaceForTower1.png');
       this.load.image('towerPlace2', '/logo/2 Objects/PlaceForTower2.png');
       
-      // Load plant sprites (correct paths)
-      this.load.image('plant1_idle', '/logo/craftpix-net-922184-free-predator-plant-mobs-pixel-art-pack/PNG/Plant1/Idle/Plant1_Idle_full.png');
-      this.load.image('plant2_idle', '/logo/craftpix-net-922184-free-predator-plant-mobs-pixel-art-pack/PNG/Plant2/Idle/Plant2_Idle_full.png');
-      this.load.image('plant3_idle', '/logo/craftpix-net-922184-free-predator-plant-mobs-pixel-art-pack/PNG/Plant3/Idle/Plant3_Idle_full.png');
+      // Load plant growth stage sprites (numbered 1-4 for growth stages)
+    this.load.image('plant1', '/logo/plants/1.png'); // Seedling stage
+    this.load.image('plant2', '/logo/plants/2.png'); // Growing stage
+    this.load.image('plant3', '/logo/plants/3.png'); // Mature stage
+    this.load.image('plant4', '/logo/plants/4.png'); // Harvestable stage
       
       // Load sound effects
       this.load.audio('bg_music', '/SFX/bg_music.mp3');

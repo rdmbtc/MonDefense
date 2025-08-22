@@ -212,7 +212,7 @@ class PowerUpManager {
         // Add coins immediately
         if (this.scene.gameState) {
           this.scene.gameState.farmCoins += effect.amount;
-          this.scene.updateCoinsText();
+          this.scene.updateFarmCoinsText();
         }
         break;
     }

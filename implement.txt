@@ -7,4 +7,8 @@ Add new mecahnics with AI
 
 Weather changes every 5 waves: snow, rainy, sunny
 Trailer Game: Players can skip it with holding spacebar button (loading skip animation need!)
-Chapter One for newbie players. 
+Chapter One for newbie players. Ask Player Name, save his progress in blockchain. 
+
+Monad Testnet Leaderboard
+Game Stop when user click to other tab or push esc button 
+Update Credits, Graphics menu

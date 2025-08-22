@@ -4,6 +4,7 @@ import Phaser from 'phaser';
 import ParticleEffects from '../utils/ParticleEffects.js';
 import GraphicsSettings from '../utils/GraphicsSettings.js';
 import PowerUpManager from '../utils/PowerUpManager.js';
+import Crop2 from '../classes/Crop2.js';
 
 class GameScene extends Phaser.Scene {
   constructor() {
@@ -110,10 +111,11 @@ class GameScene extends Phaser.Scene {
     this.load.image('shadow1', '/logo/2 Objects/1 Shadow/1.png');
     this.load.image('shadow2', '/logo/2 Objects/1 Shadow/2.png');
     
-    // Load plant sprites for crops
-    this.load.image('plant1_idle', '/logo/craftpix-net-922184-free-predator-plant-mobs-pixel-art-pack/PNG/Plant1/Idle/Plant1_Idle_head.png');
-    this.load.image('plant2_idle', '/logo/craftpix-net-922184-free-predator-plant-mobs-pixel-art-pack/PNG/Plant2/Idle/Plant2_Idle_head.png');
-    this.load.image('plant3_idle', '/logo/craftpix-net-922184-free-predator-plant-mobs-pixel-art-pack/PNG/Plant3/Idle/Plant3_Idle_head.png');
+    // Load plant growth stage sprites (numbered 1-4 for growth stages)
+    this.load.image('plant1', '/logo/plants/1.png'); // Seedling stage
+    this.load.image('plant2', '/logo/plants/2.png'); // Growing stage
+    this.load.image('plant3', '/logo/plants/3.png'); // Mature stage
+    this.load.image('plant4', '/logo/plants/4.png'); // Harvestable stage
     
     // Load UI icons from available collections
     this.load.image('icon1', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon1.png');
@@ -334,6 +336,47 @@ class GameScene extends Phaser.Scene {
       console.error("Error updating mana:", error);
     }
   }
+
+  // Update mana text and bar display
+  updateManaText() {
+    try {
+      if (this.manaText) {
+        this.manaText.setText(`Mana: ${this.gameState.mana}/${this.gameState.maxMana}`);
+      }
+      if (this.manaBarFill) {
+        const manaPercentage = this.gameState.mana / this.gameState.maxMana;
+        this.manaBarFill.setSize(200 * manaPercentage, 15);
+        // Change color based on mana level
+        if (manaPercentage < 0.25) {
+          this.manaBarFill.setFillStyle(0xFF4444); // Red when low
+        } else if (manaPercentage < 0.5) {
+          this.manaBarFill.setFillStyle(0xFFAA44); // Orange when medium
+        } else {
+          this.manaBarFill.setFillStyle(0x00AAFF); // Blue when high
+        }
+      }
+      
+      // Update individual defense mana displays
+      if (this.defenses && this.defenses.length > 0) {
+        this.defenses.forEach(defense => {
+          if (defense.manaDisplay) {
+            defense.manaDisplay.setText(`${this.gameState.mana}`);
+            // Change color based on mana level
+            const manaPercentage = this.gameState.mana / this.gameState.maxMana;
+            if (manaPercentage < 0.25) {
+              defense.manaDisplay.setFill('#ff4444'); // Red when low
+            } else if (manaPercentage < 0.5) {
+              defense.manaDisplay.setFill('#ffaa44'); // Orange when medium
+            } else {
+              defense.manaDisplay.setFill('#00ffff'); // Cyan when high
+            }
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Error updating mana text:", error);
+    }
+  }
   
   // Update defenses to fire at enemies
   updateDefenses() {
@@ -369,9 +412,68 @@ class GameScene extends Phaser.Scene {
     });
   }
   
+  // Show low mana message above defense
+  showLowManaMessage(defense) {
+    try {
+      // Create "Low Mana" text above the defense
+      const lowManaText = this.add.text(defense.x, defense.y - 60, 'Low Mana', {
+        fontSize: '12px',
+        fill: '#ff4444',
+        fontFamily: 'Arial',
+        stroke: '#000000',
+        strokeThickness: 2
+      });
+      lowManaText.setOrigin(0.5, 0.5);
+      lowManaText.setDepth(20);
+      
+      // Animate the text (fade in, stay, fade out)
+      this.tweens.add({
+        targets: lowManaText,
+        alpha: { from: 0, to: 1 },
+        y: defense.y - 80,
+        duration: 300,
+        ease: 'Power2',
+        onComplete: () => {
+          // Keep visible for a moment then fade out
+          this.time.delayedCall(800, () => {
+            this.tweens.add({
+              targets: lowManaText,
+              alpha: 0,
+              duration: 300,
+              onComplete: () => lowManaText.destroy()
+            });
+          });
+        }
+      });
+    } catch (error) {
+      console.error("Error showing low mana message:", error);
+    }
+  }
+  
   // Fire defense projectile at enemy
   fireDefenseAt(defense, enemy) {
     try {
+      // Define mana costs for firing defenses
+      const fireCosts = {
+        abster: 5,
+        noot: 8, 
+        wizard: 12,
+        cannon: 15
+      };
+      
+      const manaCost = fireCosts[defense.defenseType] || 5;
+      
+      // Check if player has enough mana to fire
+      if (this.gameState.mana < manaCost) {
+        // Show "Low Mana" message above the defense
+        this.showLowManaMessage(defense);
+        return; // Not enough mana, skip firing
+      }
+      
+      // Deduct mana for firing
+      this.gameState.mana -= manaCost;
+      this.updateManaText();
+      
       // Create projectile based on defense type
       let projectileColor = 0xFFFF00;
       let projectileSize = 8;
@@ -835,7 +937,7 @@ class GameScene extends Phaser.Scene {
     try {
       console.log("Starting game with original gameplay");
       
-      // Initialize game state
+      // Initialize game state (preserve mana properties)
       this.gameState = {
         isActive: true,
         isPaused: false,
@@ -845,7 +947,11 @@ class GameScene extends Phaser.Scene {
         farmCoins: 120,
         clickDamage: 0.5,
         canPlant: true,
-        autoWave: true
+        autoWave: true,
+        mana: 100, // Current mana amount
+        maxMana: 100, // Maximum mana capacity
+        manaRegenRate: 5, // Mana regeneration per second
+        lastManaRegen: 0 // Timestamp of last mana regeneration
       };
       
       // Initialize arrays
@@ -1318,7 +1424,7 @@ class GameScene extends Phaser.Scene {
     }
   }
 
-  // Setup input handling with resolution synchronization
+  // Setup input handling with fixed coordinate transformation
   setupInputHandling() {
     try {
       // Disable browser context menu on right-click
@@ -1326,37 +1432,26 @@ class GameScene extends Phaser.Scene {
       
       // General click handler for attacks with both left and right click support
       this.input.on('pointerdown', (pointer) => {
-        console.log(`Click at: ${pointer.x}, ${pointer.y}. Toolbar top: ${this.cameras.main.height - 115}`);
+        // Calculate toolbar boundary properly
+        const toolbarBoundary = this.cameras.main.height - 115;
+        
         // Ignore clicks on the toolbar area
-        if (pointer.y > this.cameras.main.height - 115) {
-            console.log("Click on toolbar ignored");
+        if (pointer.y > toolbarBoundary) {
             return;
         }
         
-        // Get world coordinates accounting for camera, scale, and resolution settings
+        // Get world coordinates
         const worldPoint = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
-        
-        // Apply resolution scaling factor for accurate targeting
-        const resolutionScale = this.scale.displayScale;
-        const adjustedWorldPoint = {
-          x: worldPoint.x / resolutionScale.x,
-          y: worldPoint.y / resolutionScale.y
-        };
-        
-        console.log(`Resolution scale: ${resolutionScale.x}, ${resolutionScale.y}`);
-        console.log(`Adjusted world coords: ${adjustedWorldPoint.x}, ${adjustedWorldPoint.y}`);
         
         if (pointer.rightButtonDown()) {
           // Right-click for double damage on enemies
-          console.log('Right-click detected at adjusted world coords:', adjustedWorldPoint.x, adjustedWorldPoint.y);
-          // Double the click damage temporarily for right-click
           const originalDamage = this.gameState.clickDamage;
           this.gameState.clickDamage *= 2;
-          this.handleClick(adjustedWorldPoint.x, adjustedWorldPoint.y);
+          this.handleClick(worldPoint.x, worldPoint.y);
           this.gameState.clickDamage = originalDamage;
         } else {
           // Normal left-click
-          this.handleClick(adjustedWorldPoint.x, adjustedWorldPoint.y);
+          this.handleClick(worldPoint.x, worldPoint.y);
         }
       });
       
@@ -1578,8 +1673,8 @@ class GameScene extends Phaser.Scene {
       
       // Click to attack (both left and right click)
       enemy.on('pointerdown', (pointer) => {
-        // Always allow attack on right-click regardless of current tool mode
-        if (pointer.rightButtonDown() || this.toolMode === 'attack') {
+        // Allow attack on any click when in attack mode, or right-click in any mode
+        if (this.toolMode === 'attack' || pointer.rightButtonDown()) {
           this.attackEnemy(enemy);
         }
       });
@@ -1760,13 +1855,20 @@ class GameScene extends Phaser.Scene {
         enemy.healthBar.fillRect(0, 0, 40 * healthPercent, 6);
       }
       
-      // Visual feedback
+      // Visual feedback - preserve original scale
+      const originalScaleX = enemy.scaleX;
+      const originalScaleY = enemy.scaleY;
+      
       this.tweens.add({
         targets: enemy,
-        scaleX: 1.3,
-        scaleY: 1.3,
+        scaleX: originalScaleX * 1.3,
+        scaleY: originalScaleY * 1.3,
         duration: 100,
-        yoyo: true
+        yoyo: true,
+        onComplete: () => {
+          // Ensure scale is restored to original values
+          enemy.setScale(originalScaleX, originalScaleY);
+        }
       });
       
       // Play sound
@@ -2332,6 +2434,19 @@ class GameScene extends Phaser.Scene {
       // Clear game arrays
       this.enemies = [];
       this.crops = {};
+      
+      // Clean up defense mana displays before clearing defenses
+      if (this.defenses && this.defenses.length > 0) {
+        this.defenses.forEach(defense => {
+          if (defense.manaDisplay) {
+            defense.manaDisplay.destroy();
+          }
+          if (defense.rangeIndicator) {
+            defense.rangeIndicator.destroy();
+          }
+        });
+      }
+      
       this.defenses = [];
       this.isSpawningEnemies = false;
       this.waveInProgress = false;
@@ -2810,6 +2925,28 @@ class GameScene extends Phaser.Scene {
       this.toolbarButtons = {};
       this.toolbarIcons = {};
       
+      // Add descriptive text for selected tool
+      this.selectedToolText = this.add.text(centerX, toolbarY - 60, 'Selected: Attack Mode', {
+        fontSize: '16px',
+        fontFamily: 'Arial',
+        fill: '#00ddff',
+        stroke: '#000000',
+        strokeThickness: 2,
+        align: 'center'
+      }).setOrigin(0.5).setDepth(2000);
+      
+      // Add tool description text
+      this.toolDescriptionText = this.add.text(centerX, toolbarY - 40, 'Click enemies to attack them directly', {
+        fontSize: '12px',
+        fontFamily: 'Arial',
+        fill: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 1,
+        align: 'center'
+      }).setOrigin(0.5).setDepth(2000);
+      
+      this.toolbarContainer.add([this.selectedToolText, this.toolDescriptionText]);
+      
       // Modern button configuration
       const buttonConfig = {
         width: 65,
@@ -3070,6 +3207,42 @@ class GameScene extends Phaser.Scene {
     try {
       this.toolMode = mode;
       
+      // Update descriptive text based on selected tool
+      const toolDescriptions = {
+        attack: {
+          title: 'Selected: Attack Mode',
+          description: 'Click enemies to attack them directly'
+        },
+        plant: {
+          title: 'Selected: Plant Mode',
+          description: 'Click farm plots to plant crops'
+        },
+        abster: {
+          title: 'Selected: Abster Defense',
+          description: 'Cost: 50 coins, 20 mana per shot - Basic ranged defense'
+        },
+        noot: {
+          title: 'Selected: Noot Defense',
+          description: 'Cost: 60 coins, 25 mana per shot - Fast firing defense'
+        },
+        wizard: {
+          title: 'Selected: Wizard Defense',
+          description: 'Cost: 75 coins, 35 mana per shot - Magic area damage'
+        },
+        cannon: {
+          title: 'Selected: Cannon Defense',
+          description: 'Cost: 100 coins, 40 mana per shot - Heavy damage defense'
+        }
+      };
+      
+      const toolInfo = toolDescriptions[mode] || toolDescriptions.attack;
+      if (this.selectedToolText) {
+        this.selectedToolText.setText(toolInfo.title);
+      }
+      if (this.toolDescriptionText) {
+        this.toolDescriptionText.setText(toolInfo.description);
+      }
+      
       // Update button visual states for the modern system
       Object.keys(this.toolbarButtons).forEach(key => {
         const button = this.toolbarButtons[key];
@@ -3173,36 +3346,12 @@ class GameScene extends Phaser.Scene {
       this.gameState.farmCoins -= 25;
       this.updateFarmCoinsText();
       
-      // Create crop visual with STATIC PNG sprite (no GIF, no animation)
-      const plantSprites = ['plant1_idle', 'plant2_idle', 'plant3_idle'];
-      const selectedSprite = plantSprites[Math.floor(Math.random() * plantSprites.length)];
-      
-      // Create static image sprite
-      const crop = this.add.image(gridX, gridY, selectedSprite);
-      crop.setScale(1.5); // Fixed scale, smaller to prevent overlap
-      crop.setDepth(10);
-      crop.setInteractive(); // Make clickable for manual harvest
+      // Create new Crop2 instance with wave-based growth system
+      const crop = new Crop2(this, gridX, gridY);
       
       // Add green placement indicator
       const placementIndicator = this.add.circle(gridX, gridY, this.gridCellSize/2, 0x00ff00, 0.2);
       placementIndicator.setDepth(9);
-      
-      // Simple one-time placement effect
-      crop.setScale(0.1);
-      crop.setAlpha(0);
-      this.tweens.add({
-        targets: crop,
-        scaleX: 1.5,
-        scaleY: 1.5,
-        alpha: 1,
-        duration: 500,
-        ease: 'Back.easeOut',
-        onComplete: () => {
-          // Lock the scale and ensure no further animations
-          crop.setScale(1.5);
-          crop.setAlpha(1);
-        }
-      });
       
       // Fade in placement indicator
       this.tweens.add({
@@ -3211,40 +3360,10 @@ class GameScene extends Phaser.Scene {
         duration: 300
       });
       
-      // Growth timer visual
-      const timerBar = this.add.rectangle(gridX, gridY + 40, 40, 4, 0x00ff00);
-      timerBar.setDepth(11);
-      
-      // Animate growth timer
-      this.tweens.add({
-        targets: timerBar,
-        scaleX: 0,
-        duration: 10000,
-        ease: 'Linear'
-      });
-      
-      // Auto harvest after 10 seconds
-      this.time.delayedCall(10000, () => {
-        if (crop && crop.active) {
-          this.harvestCrop(crop, plotKey);
-          placementIndicator.destroy();
-          timerBar.destroy();
-        }
-      });
-      
-      // Manual harvest on click
-      crop.on('pointerdown', () => {
-        // Check if crop is ready (optional - could add growth stages)
-        this.harvestCrop(crop, plotKey);
-        placementIndicator.destroy();
-        timerBar.destroy();
-      });
-      
       // Store crop reference with metadata
       this.crops[plotKey] = {
-        sprite: crop,
+        crop: crop,
         indicator: placementIndicator,
-        timer: timerBar,
         plantTime: Date.now()
       };
       
@@ -3323,19 +3442,30 @@ class GameScene extends Phaser.Scene {
         return;
       }
       
-      // Defense costs
+      // Defense costs (coins and mana)
       const defenseCosts = {
-        abster: 50,
-        noot: 60, 
-        wizard: 75,
-        cannon: 100
+        abster: { coins: 50, mana: 20 },
+        noot: { coins: 60, mana: 25 }, 
+        wizard: { coins: 75, mana: 35 },
+        cannon: { coins: 100, mana: 40 }
       };
       
-      const cost = defenseCosts[defenseType] || 50;
+      const cost = defenseCosts[defenseType] || { coins: 50, mana: 20 };
       
-      // Check if player has enough coins
-      if (this.gameState.farmCoins < cost) {
-        console.log(`Not enough coins for ${defenseType} (need ${cost})`);
+      // Check if player has enough coins (mana is only required for firing, not placement)
+      if (this.gameState.farmCoins < cost.coins) {
+        console.log(`Not enough coins for ${defenseType} (need ${cost.coins})`);
+        return;
+      }
+      
+      // Check mana regeneration cooldown (prevent spam placement)
+      const currentTime = Date.now();
+      if (!this.lastDefensePlacement) this.lastDefensePlacement = 0;
+      const manaCooldown = 2000; // 2 second cooldown between defense placements
+      
+      if (currentTime - this.lastDefensePlacement < manaCooldown) {
+        const remainingCooldown = Math.ceil((manaCooldown - (currentTime - this.lastDefensePlacement)) / 1000);
+        console.log(`Defense placement on cooldown. Wait ${remainingCooldown} seconds.`);
         return;
       }
       
@@ -3353,8 +3483,8 @@ class GameScene extends Phaser.Scene {
         return;
       }
       
-      // Deduct coins
-      this.gameState.farmCoins -= cost;
+      // Deduct only coins (mana is only used for firing, not placement)
+      this.gameState.farmCoins -= cost.coins;
       this.updateFarmCoinsText();
       
       // Create defense sprite
@@ -3434,6 +3564,18 @@ class GameScene extends Phaser.Scene {
         });
       });
       
+      // Create individual mana display above defense
+      const manaDisplay = this.add.text(gridX, gridY - 40, `${this.gameState.mana}`, {
+        fontSize: '14px',
+        fill: '#00ffff',
+        fontFamily: 'Arial',
+        stroke: '#000000',
+        strokeThickness: 2
+      });
+      manaDisplay.setOrigin(0.5, 0.5);
+      manaDisplay.setDepth(15);
+      defense.manaDisplay = manaDisplay;
+      
       // Add to defenses array
       this.defenses.push(defense);
       
@@ -3512,8 +3654,12 @@ class GameScene extends Phaser.Scene {
       this.updateFarmCoinsText();
       this.updateScoreText();
       
+      // Get crop position for effects
+      const cropX = cropData.crop.x;
+      const cropY = cropData.crop.y;
+      
       // Harvest animation
-      const harvestEffect = this.add.circle(cropData.sprite.x, cropData.sprite.y, 40, 0xffff00, 0.5);
+      const harvestEffect = this.add.circle(cropX, cropY, 40, 0xffff00, 0.5);
       harvestEffect.setDepth(12);
       this.tweens.add({
         targets: harvestEffect,
@@ -3524,7 +3670,7 @@ class GameScene extends Phaser.Scene {
       });
       
       // Show coins earned
-      const coinText = this.add.text(cropData.sprite.x, cropData.sprite.y, `+${coinsEarned} coins`, {
+      const coinText = this.add.text(cropX, cropY, `+${coinsEarned} coins`, {
         fontFamily: 'Arial',
         fontSize: '20px',
         color: '#ffff00',
@@ -3535,21 +3681,18 @@ class GameScene extends Phaser.Scene {
       
       this.tweens.add({
         targets: coinText,
-        y: cropData.sprite.y - 50,
+        y: cropY - 50,
         alpha: 0,
         duration: 1500,
         onComplete: () => coinText.destroy()
       });
       
       // Remove crop and its visual elements
-      if (cropData.sprite && cropData.sprite.active) {
-        cropData.sprite.destroy();
+      if (cropData.crop && cropData.crop.destroy) {
+        cropData.crop.destroy();
       }
       if (cropData.indicator && cropData.indicator.active) {
         cropData.indicator.destroy();
-      }
-      if (cropData.timer && cropData.timer.active) {
-        cropData.timer.destroy();
       }
       
       // Clear from crops object
