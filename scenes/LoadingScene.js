@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import UIStyleSystem from '../systems/UIStyleSystem.js';
 
 class LoadingScene extends Phaser.Scene {
   constructor() {
@@ -34,56 +35,57 @@ class LoadingScene extends Phaser.Scene {
   }
 
   createLoadingUI() {
+    // Initialize UI Style System
+    this.uiStyle = new UIStyleSystem(this);
+    
     const centerX = this.cameras.main.width / 2;
     const centerY = this.cameras.main.height / 2;
 
-    // Create gradient background
+    // Create modern gradient background
     const graphics = this.add.graphics();
-    graphics.fillGradientStyle(0x1e3c72, 0x1e3c72, 0x2a5298, 0x2a5298, 1);
+    graphics.fillGradientStyle(0x0f0f23, 0x0f0f23, 0x1a1a2e, 0x1a1a2e, 1);
     graphics.fillRect(0, 0, this.cameras.main.width, this.cameras.main.height);
 
-    // Game title
-    this.add.text(centerX, centerY - 200, 'MonDefense', {
-      fontFamily: 'Arial',
-      fontSize: '72px',
-      fontWeight: 'bold',
-      color: '#FFFFFF',
-      stroke: '#000000',
-      strokeThickness: 4
-    }).setOrigin(0.5);
+    // Modern game title
+    this.uiStyle.createStyledText(
+      centerX, centerY - 200, 
+      '🛡️ MonDefense', 
+      'title',
+      { 
+        glow: { color: this.uiStyle.colors.primary.light },
+        animated: true 
+      }
+    ).setOrigin(0.5);
 
-    // Subtitle
-    this.add.text(centerX, centerY - 130, 'Tower Defense Game', {
-      fontFamily: 'Arial',
-      fontSize: '32px',
-      color: '#CCCCCC'
-    }).setOrigin(0.5);
+    // Modern subtitle
+    this.uiStyle.createStyledText(
+      centerX, centerY - 130, 
+      'Epic Tower Defense Adventure', 
+      'h2',
+      { color: this.uiStyle.colors.text.secondary }
+    ).setOrigin(0.5);
 
-    // Loading text
-    this.loadingText = this.add.text(centerX, centerY - 50, 'Loading assets...', {
-      fontFamily: 'Arial',
-      fontSize: '24px',
-      color: '#FFFFFF'
-    }).setOrigin(0.5);
+    // Modern loading text
+    this.loadingText = this.uiStyle.createStyledText(
+      centerX, centerY - 50, 
+      '⚡ Loading assets...', 
+      'h3'
+    ).setOrigin(0.5);
 
-    // Progress bar background
-    this.progressBarBg = this.add.graphics();
-    this.progressBarBg.fillStyle(0x333333, 1);
-    this.progressBarBg.fillRoundedRect(centerX - 300, centerY, 600, 30, 15);
-    this.progressBarBg.lineStyle(2, 0xFFFFFF, 1);
-    this.progressBarBg.strokeRoundedRect(centerX - 300, centerY, 600, 30, 15);
+    // Modern progress bar
+    this.progressBarContainer = this.uiStyle.createProgressBar(
+      centerX, centerY, 600, 0
+    );
 
-    // Progress bar fill
-    this.progressBar = this.add.graphics();
+    // Modern progress percentage text
+    this.progressText = this.uiStyle.createStyledText(
+      centerX, centerY + 50, 
+      '0%', 
+      'h3',
+      { color: this.uiStyle.colors.primary.main }
+    ).setOrigin(0.5);
 
-    // Progress percentage text
-    this.progressText = this.add.text(centerX, centerY + 50, '0%', {
-      fontFamily: 'Arial',
-      fontSize: '18px',
-      color: '#FFFFFF'
-    }).setOrigin(0.5);
-
-    // Tips text
+    // Modern tips text
     const tips = [
       '💡 Tip: Plant crops on the LEFT to earn coins',
       '💡 Tip: Place defenders on the RIGHT to protect crops',
@@ -93,20 +95,23 @@ class LoadingScene extends Phaser.Scene {
     ];
     
     const randomTip = tips[Math.floor(Math.random() * tips.length)];
-    this.add.text(centerX, centerY + 120, randomTip, {
-      fontFamily: 'Arial',
-      fontSize: '20px',
-      color: '#FFFF88',
-      align: 'center',
-      wordWrap: { width: 800 }
-    }).setOrigin(0.5);
+    this.uiStyle.createStyledText(
+      centerX, centerY + 120, 
+      randomTip, 
+      'body',
+      { 
+        color: this.uiStyle.colors.warning.main,
+        glow: { color: this.uiStyle.colors.warning.light }
+      }
+    ).setOrigin(0.5);
 
-    // Version text
-    this.add.text(centerX, this.cameras.main.height - 50, 'Built with Vite + Phaser', {
-      fontFamily: 'Arial',
-      fontSize: '16px',
-      color: '#888888'
-    }).setOrigin(0.5);
+    // Modern version text
+    this.uiStyle.createStyledText(
+      centerX, this.cameras.main.height - 50, 
+      '⚡ Built with Vite + Phaser ⚡', 
+      'mono',
+      { color: this.uiStyle.colors.text.muted }
+    ).setOrigin(0.5);
   }
 
   updateProgressBar(progress) {

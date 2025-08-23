@@ -351,15 +351,10 @@ export default class Defense {
   }
   
   createCooldownText() {
-    // Create a text object to display cooldown
-    const color = this.getColor(); // Use helper method for color
-    this.cooldownText = this.scene.add.text(this.x, this.y - 30, '', {
-      fontFamily: 'Arial',
-      fontSize: '14px',
-      color: color,
-      stroke: '#000000',
-      strokeThickness: 2
-    }).setOrigin(0.5);
+    // Create modern styled text for cooldown display
+    this.cooldownText = this.scene.uiStyle.createStyledText(this.x, this.y - 30, '', 'small', {
+      color: this.getColor()
+    });
     
     // Set depth to ensure it's visible above other elements
     this.cooldownText.setDepth(300);
@@ -367,22 +362,21 @@ export default class Defense {
     // Hide initially
     this.cooldownText.visible = false;
     
-    // Create ready indicator using color from helper
-    const readyColor = Phaser.Display.Color.HexStringToColor(this.getColor()).color; 
-    this.readyIndicator = this.scene.add.circle(this.x, this.y - 25, 5, readyColor, 0.8);
-    this.readyIndicator.setStrokeStyle(1, 0xFFFFFF);
+    // Create modern ready indicator with gradient and glow
+    const readyColor = Phaser.Display.Color.HexStringToColor(this.getColor()).color;
+    this.readyIndicator = this.scene.add.graphics();
+    this.readyIndicator.fillGradientStyle(readyColor, readyColor, 0xFFFFFF, readyColor, 0.8);
+    this.readyIndicator.fillCircle(this.x, this.y - 25, 5);
+    this.readyIndicator.lineStyle(1, 0xFFFFFF, 0.9);
+    this.readyIndicator.strokeCircle(this.x, this.y - 25, 5);
     this.readyIndicator.setDepth(300);
     this.readyIndicator.visible = true;
   }
   
   createNoManaText() {
-    this.noManaText = this.scene.add.text(this.x, this.y - 45, 'No mana', {
-      fontFamily: 'Arial',
-      fontSize: '12px',
-      color: '#FF8888', // Light red
-      stroke: '#000000',
-      strokeThickness: 2
-    }).setOrigin(0.5);
+    this.noManaText = this.scene.uiStyle.createStyledText(this.x, this.y - 45, 'No mana', 'small', {
+      color: '#FF8888' // Light red
+    });
     this.noManaText.setDepth(301); // Above cooldown text
     this.noManaText.visible = false; // Initially hidden
   }
@@ -447,14 +441,16 @@ export default class Defense {
       this.cooldownContainer = this.scene.add.container(this.x, this.y);
       this.cooldownContainer.setDepth(120);
       
-      // Background circle - semi-transparent black
-      this.cooldownBg = this.scene.add.circle(0, -40, 15, 0x000000, 0.5);
+      // Modern styled background circle with gradient
+      this.cooldownBg = this.scene.add.graphics();
+      this.cooldownBg.fillGradientStyle(0x1a1a1a, 0x333333, 0x333333, 0x1a1a1a, 0.8);
+      this.cooldownBg.fillCircle(0, -40, 15);
+      this.cooldownBg.lineStyle(2, 0x555555, 0.6);
+      this.cooldownBg.strokeCircle(0, -40, 15);
       this.cooldownContainer.add(this.cooldownBg);
       
-      // Foreground arc for indicating progress - starts empty
+      // Foreground arc for indicating progress with modern styling
       this.cooldownIndicator = this.scene.add.graphics();
-      const indicatorColor = Phaser.Display.Color.HexStringToColor(this.getColor()).color;
-      this.cooldownIndicator.fillStyle(indicatorColor, 1);
       this.cooldownContainer.add(this.cooldownIndicator);
       
       // Add this to our container if it exists
@@ -478,8 +474,10 @@ export default class Defense {
         if (!this.cooldownIndicator) return;
       }
       
-      // Define indicatorColor earlier in the scope
-      const indicatorColor = Phaser.Display.Color.HexStringToColor(this.getColor()).color;
+      // Get modern color scheme based on defense type
+      const baseColor = Phaser.Display.Color.HexStringToColor(this.getColor()).color;
+      const lightColor = Phaser.Display.Color.Interpolate.ColorWithColor(baseColor, 0xFFFFFF, 100, 30);
+      const darkColor = Phaser.Display.Color.Interpolate.ColorWithColor(baseColor, 0x000000, 100, 20);
 
       // Make visible
       this.cooldownContainer.setVisible(true);
@@ -493,19 +491,26 @@ export default class Defense {
       
       // Only draw if actually on cooldown
       if (remainingPercent > 0) {
-        this.cooldownIndicator.fillStyle(indicatorColor, 1);
+        // Modern gradient fill with glow effect
+        this.cooldownIndicator.fillGradientStyle(lightColor, baseColor, baseColor, darkColor, 0.9);
         
         // Calculate end angle based on remaining percent (radians)
         // 0 at top, increases clockwise
         const startAngle = -Math.PI / 2; // Start at top (-90 degrees)
         const endAngle = startAngle + (Math.PI * 2 * (1 - remainingPercent)); // Full circle is 2*PI
         
-        // Draw the arc
+        // Draw the arc with proper positioning relative to container
         this.cooldownIndicator.beginPath();
-        this.cooldownIndicator.arc(this.x, this.y, 25, startAngle, endAngle, false);
-        this.cooldownIndicator.lineTo(this.x, this.y);
+        this.cooldownIndicator.arc(0, -40, 13, startAngle, endAngle, false);
+        this.cooldownIndicator.lineTo(0, -40);
         this.cooldownIndicator.closePath();
         this.cooldownIndicator.fillPath();
+        
+        // Add subtle glow border
+        this.cooldownIndicator.lineStyle(1, lightColor, 0.6);
+        this.cooldownIndicator.beginPath();
+        this.cooldownIndicator.arc(0, -40, 13, startAngle, endAngle, false);
+        this.cooldownIndicator.strokePath();
       } else {
         // Hide when cooldown is complete
         this.cooldownContainer.setVisible(false);
@@ -1056,28 +1061,37 @@ export default class Defense {
     if (!this.scene) return;
     
     try {
-      // Create text object for damage number
-      const damageText = this.scene.add.text(
+      // Create modern styled text object for damage number
+      const damageText = this.uiStyle.createStyledText(
+        this.scene,
         x, 
         y - 20, // Position above the target
         Math.round(amount).toString(),
         { 
-          fontFamily: 'Arial', 
-          fontSize: '16px', 
-          color: color ? '#' + color.toString(16).padStart(6, '0') : '#FFFFFF',
+          fontSize: '18px', 
+          fill: color ? '#' + color.toString(16).padStart(6, '0') : '#FFFFFF',
           stroke: '#000000',
-          strokeThickness: 2
+          strokeThickness: 3,
+          shadow: {
+            offsetX: 2,
+            offsetY: 2,
+            color: '#000000',
+            blur: 4,
+            fill: true
+          }
         }
       );
       damageText.setDepth(300); // Very high depth to be above everything
       
-      // Animate the damage number
+      // Animate the damage number with modern effects
       this.scene.tweens.add({
         targets: damageText,
-        y: y - 40, // Float upward
+        y: y - 50, // Float upward more
         alpha: 0,
-        scale: 1.2, // Grow slightly
-        duration: 800,
+        scaleX: 1.3, // Grow slightly
+        scaleY: 1.3,
+        duration: 1000,
+        ease: 'Back.easeOut',
         onComplete: () => damageText.destroy()
       });
     } catch (error) {
@@ -1338,21 +1352,6 @@ export default class Defense {
          return;
       }
       
-      // Create text style - improve visibility
-      const textStyle = {
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '18px', // Slightly smaller than default floating text
-        color: Phaser.Display.Color.ValueToColor(color).rgba,
-        stroke: '#000000',
-        strokeThickness: 3, // Thicker stroke
-        shadow: {
-          offsetX: 1,
-          offsetY: 1,
-          color: '#000000',
-          blur: 2
-        }
-      };
-      
       // --- START FIX for amount.toFixed error ---
       let displayAmount = '';
       if (typeof amount === 'number') {
@@ -1371,9 +1370,26 @@ export default class Defense {
       }
       // --- END FIX ---
       
-      // Create the text object slightly offset from the target
-      // Use the processed displayAmount
-      const text = this.scene.add.text(target.x, target.y - 40, displayAmount, textStyle);
+      // Create modern styled text object
+      const text = this.uiStyle.createStyledText(
+        this.scene,
+        target.x, 
+        target.y - 40, 
+        displayAmount, 
+        {
+          fontSize: '20px',
+          fill: Phaser.Display.Color.ValueToColor(color).rgba,
+          stroke: '#000000',
+          strokeThickness: 4,
+          shadow: {
+            offsetX: 2,
+            offsetY: 2,
+            color: '#000000',
+            blur: 4,
+            fill: true
+          }
+        }
+      );
       text.setOrigin(0.5);
       text.setDepth(2000); // Ensure visibility
       
@@ -1818,17 +1834,30 @@ export default class Defense {
         repeat: -1
       });
       
-      // Add text "SPECIAL" above the mage
+      // Add modern styled "SPECIAL" text above the mage
       if (!this.specialAttackText) {
-        this.specialAttackText = this.scene.add.text(this.x, this.y - 60, "SPECIAL", {
-          fontFamily: 'Arial',
-          fontSize: '12px',
-          color: this.type === 'chog' ? '#00AA00' :
-                 this.type === 'molandak' ? '#0088FF' :
-                 this.type === 'moyaki' ? '#FF4400' : '#FFD700',
-          stroke: '#000000',
-          strokeThickness: 2
-        }).setOrigin(0.5);
+        this.specialAttackText = this.uiStyle.createStyledText(
+          this.scene,
+          this.x, 
+          this.y - 60, 
+          "SPECIAL", 
+          {
+            fontSize: '14px',
+            fill: this.type === 'chog' ? '#00FF00' :
+                   this.type === 'molandak' ? '#00AAFF' :
+                   this.type === 'moyaki' ? '#FF6600' : '#FFD700',
+            stroke: '#000000',
+            strokeThickness: 3,
+            shadow: {
+              offsetX: 1,
+              offsetY: 1,
+              color: '#000000',
+              blur: 3,
+              fill: true
+            }
+          }
+        );
+        this.specialAttackText.setOrigin(0.5);
         this.specialAttackText.setDepth(300);
       }
     }

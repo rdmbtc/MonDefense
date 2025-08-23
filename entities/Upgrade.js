@@ -1,8 +1,10 @@
 'use client';
+import UIStyleSystem from '../utils/UIStyleSystem.js';
 
 export default class Upgrade {
   constructor(scene) {
     this.scene = scene;
+    this.uiStyle = new UIStyleSystem(scene);
     
     // Set initial upgrade levels
     this.levels = {
@@ -259,16 +261,33 @@ export default class Upgrade {
     const panelX = this.scene.sys.game.config.width - panelWidth / 2;
     const panelY = panelHeight / 2;
     
-    this.uiElements.panel = this.scene.add.rectangle(panelX, panelY, panelWidth, panelHeight, 0x333333, 0.8);
+    // Create modern glass panel
+    const glassPanel = this.uiStyle.createGlassPanel(panelX - panelWidth/2, panelY - panelHeight/2, panelWidth, panelHeight);
+    this.uiElements.panel = glassPanel.panel;
+    this.uiElements.panelGlow = glassPanel.glow;
     this.uiElements.panel.setDepth(1000); // Ensure panel is above game elements
+    this.uiElements.panelGlow.setDepth(999);
     
-    // Title
-    this.uiElements.title = this.scene.add.text(panelX, 20, 'UPGRADES', {
-      fontFamily: 'Arial',
-      fontSize: '18px',
-      color: '#FFFFFF',
-      align: 'center'
-    }).setOrigin(0.5, 0);
+    // Modern styled title
+    this.uiElements.title = this.uiStyle.createStyledText(
+      this.scene,
+      panelX, 
+      20, 
+      '⬆️ UPGRADES', 
+      {
+        fontSize: '20px',
+        fill: '#FFFFFF',
+        stroke: '#000000',
+        strokeThickness: 2,
+        shadow: {
+          offsetX: 2,
+          offsetY: 2,
+          color: '#000000',
+          blur: 4,
+          fill: true
+        }
+      }
+    ).setOrigin(0.5, 0);
     this.uiElements.title.setDepth(1001); // Ensure title is above panel
     
     // Create buttons for each upgrade
@@ -302,40 +321,80 @@ export default class Upgrade {
     availableUpgrades.forEach((type, index) => {
       const buttonY = currentY;
       
-      // Button background
-      const button = this.scene.add.rectangle(panelX, buttonY, 180, buttonHeight, 0x555555);
-      button.setInteractive();
-      button.on('pointerdown', () => this.upgrade(type));
-      button.setDepth(1001); // Ensure button is above panel
-      
-      // Button text
+      // Modern upgrade button
       const level = this.levels[type];
       const maxLevel = this.maxLevels[type];
       const cost = this.getUpgradeCost(type);
-      const text = this.scene.add.text(panelX - 85, buttonY - 10, `${this.formatUpgradeName(type)} (${level}/${maxLevel})`, {
-        fontFamily: 'Arial',
-        fontSize: '12px',
-        color: '#FFFFFF'
-      });
-      text.setDepth(1001); // Ensure text is above panel
+      const isMaxed = level >= maxLevel;
       
-      // Cost text
-      const costText = level < maxLevel 
-        ? this.scene.add.text(panelX - 85, buttonY + 5, `Cost: ${cost} coins`, {
-            fontFamily: 'Arial',
-            fontSize: '10px',
-            color: '#FFFF00'
-          })
-        : this.scene.add.text(panelX - 85, buttonY + 5, 'MAXED', {
-            fontFamily: 'Arial',
-            fontSize: '10px',
-            color: '#00FF00'
-          });
-      costText.setDepth(1001); // Ensure cost text is above panel
+      // Create modern button with gradient background
+      const buttonContainer = this.scene.add.container(panelX, buttonY);
+      
+      // Button background with modern styling
+      const buttonBg = this.scene.add.graphics();
+      const buttonColor = isMaxed ? 0x444444 : 0x2a5298;
+      buttonBg.fillGradientStyle(buttonColor, buttonColor, buttonColor * 0.8, buttonColor * 0.8, 1, 1, 1, 1);
+      buttonBg.fillRoundedRect(-90, -20, 180, buttonHeight, 8);
+      buttonBg.lineStyle(2, isMaxed ? 0x666666 : 0x4a90e2, 1);
+      buttonBg.strokeRoundedRect(-90, -20, 180, buttonHeight, 8);
+      
+      // Button text with modern styling
+      const buttonText = this.uiStyle.createStyledText(
+        this.scene,
+        -85, 
+        -10, 
+        `${this.formatUpgradeName(type)} (${level}/${maxLevel})`, 
+        {
+          fontSize: '13px',
+          fill: '#FFFFFF',
+          stroke: '#000000',
+          strokeThickness: 1
+        }
+      ).setOrigin(0, 0.5);
+      
+      // Cost text with modern styling
+      const costText = this.uiStyle.createStyledText(
+        this.scene,
+        -85, 
+        5, 
+        isMaxed ? '✓ MAXED' : `💰 ${cost} coins`, 
+        {
+          fontSize: '11px',
+          fill: isMaxed ? '#00FF00' : '#FFFF88',
+          stroke: '#000000',
+          strokeThickness: 1
+        }
+      ).setOrigin(0, 0.5);
+      
+      buttonContainer.add([buttonBg, buttonText, costText]);
+      buttonContainer.setDepth(1001);
+      
+      // Make interactive if not maxed
+      if (!isMaxed) {
+        buttonContainer.setInteractive(new Phaser.Geom.Rectangle(-90, -20, 180, buttonHeight), Phaser.Geom.Rectangle.Contains);
+        buttonContainer.on('pointerdown', () => this.upgrade(type));
+        
+        // Hover effects
+        buttonContainer.on('pointerover', () => {
+          buttonBg.clear();
+          buttonBg.fillGradientStyle(0x3a6bb8, 0x3a6bb8, 0x2a5298, 0x2a5298, 1, 1, 1, 1);
+          buttonBg.fillRoundedRect(-90, -20, 180, buttonHeight, 8);
+          buttonBg.lineStyle(2, 0x5aa0f2, 1);
+          buttonBg.strokeRoundedRect(-90, -20, 180, buttonHeight, 8);
+        });
+        
+        buttonContainer.on('pointerout', () => {
+          buttonBg.clear();
+          buttonBg.fillGradientStyle(buttonColor, buttonColor, buttonColor * 0.8, buttonColor * 0.8, 1, 1, 1, 1);
+          buttonBg.fillRoundedRect(-90, -20, 180, buttonHeight, 8);
+          buttonBg.lineStyle(2, 0x4a90e2, 1);
+          buttonBg.strokeRoundedRect(-90, -20, 180, buttonHeight, 8);
+        });
+      }
       
       // Store UI elements
-      this.uiElements[`${type}Button`] = button;
-      this.uiElements[`${type}Text`] = text;
+      this.uiElements[`${type}Button`] = buttonContainer;
+      this.uiElements[`${type}Text`] = buttonText;
       this.uiElements[`${type}CostText`] = costText;
       
       currentY += buttonHeight + spacing;
@@ -353,32 +412,78 @@ export default class Upgrade {
       
       const buttonY = currentY;
       
-      // Button background
-      const button = this.scene.add.rectangle(panelX, buttonY, 180, buttonHeight, 0x553366);
-      button.setInteractive();
-      button.on('pointerdown', () => this.unlockDefense(type));
-      button.setDepth(1001); // Ensure button is above panel
-      
-      // Button text
+      // Modern unlock button
       const requirements = this.unlockRequirements[type];
-      const text = this.scene.add.text(panelX - 85, buttonY - 10, `Unlock ${type} Defense`, {
-        fontFamily: 'Arial',
-        fontSize: '12px',
-        color: '#FFFFFF'
-      });
-      text.setDepth(1001); // Ensure text is above panel
+      const canUnlock = this.canUnlockDefense(type);
       
-      // Requirements text
-      const reqText = this.scene.add.text(panelX - 85, buttonY + 5, `Req: Wave ${requirements.wave}, ${requirements.cost} coins`, {
-        fontFamily: 'Arial',
-        fontSize: '10px',
-        color: '#FFAA00'
-      });
-      reqText.setDepth(1001); // Ensure text is above panel
+      // Create modern unlock button container
+      const unlockContainer = this.scene.add.container(panelX, buttonY);
+      
+      // Button background with modern styling
+      const unlockBg = this.scene.add.graphics();
+      const unlockColor = canUnlock ? 0x553366 : 0x333333;
+      unlockBg.fillGradientStyle(unlockColor, unlockColor, unlockColor * 0.8, unlockColor * 0.8, 1, 1, 1, 1);
+      unlockBg.fillRoundedRect(-90, -20, 180, buttonHeight, 8);
+      unlockBg.lineStyle(2, canUnlock ? 0x7755aa : 0x555555, 1);
+      unlockBg.strokeRoundedRect(-90, -20, 180, buttonHeight, 8);
+      
+      // Button text with modern styling
+      const unlockText = this.uiStyle.createStyledText(
+        this.scene,
+        -85, 
+        -10, 
+        `🔓 Unlock ${type} Defense`, 
+        {
+          fontSize: '13px',
+          fill: canUnlock ? '#FFFFFF' : '#AAAAAA',
+          stroke: '#000000',
+          strokeThickness: 1
+        }
+      ).setOrigin(0, 0.5);
+      
+      // Requirements text with modern styling
+      const reqText = this.uiStyle.createStyledText(
+        this.scene,
+        -85, 
+        5, 
+        `⚡ Wave ${requirements.wave} • 💰 ${requirements.cost} coins`, 
+        {
+          fontSize: '11px',
+          fill: canUnlock ? '#FFAA88' : '#777777',
+          stroke: '#000000',
+          strokeThickness: 1
+        }
+      ).setOrigin(0, 0.5);
+      
+      unlockContainer.add([unlockBg, unlockText, reqText]);
+      unlockContainer.setDepth(1001);
+      
+      // Make interactive if can unlock
+      if (canUnlock) {
+        unlockContainer.setInteractive(new Phaser.Geom.Rectangle(-90, -20, 180, buttonHeight), Phaser.Geom.Rectangle.Contains);
+        unlockContainer.on('pointerdown', () => this.unlockDefense(type));
+        
+        // Hover effects
+        unlockContainer.on('pointerover', () => {
+          unlockBg.clear();
+          unlockBg.fillGradientStyle(0x6644aa, 0x6644aa, 0x553366, 0x553366, 1, 1, 1, 1);
+          unlockBg.fillRoundedRect(-90, -20, 180, buttonHeight, 8);
+          unlockBg.lineStyle(2, 0x9977cc, 1);
+          unlockBg.strokeRoundedRect(-90, -20, 180, buttonHeight, 8);
+        });
+        
+        unlockContainer.on('pointerout', () => {
+          unlockBg.clear();
+          unlockBg.fillGradientStyle(unlockColor, unlockColor, unlockColor * 0.8, unlockColor * 0.8, 1, 1, 1, 1);
+          unlockBg.fillRoundedRect(-90, -20, 180, buttonHeight, 8);
+          unlockBg.lineStyle(2, 0x7755aa, 1);
+          unlockBg.strokeRoundedRect(-90, -20, 180, buttonHeight, 8);
+        });
+      }
       
       // Store UI elements
-      this.uiElements[`${type}UnlockButton`] = button;
-      this.uiElements[`${type}UnlockText`] = text;
+      this.uiElements[`${type}UnlockButton`] = unlockContainer;
+      this.uiElements[`${type}UnlockText`] = unlockText;
       this.uiElements[`${type}UnlockReqText`] = reqText;
       
       currentY += buttonHeight + spacing;
@@ -517,4 +622,4 @@ export default class Upgrade {
   destroy() {
     this.destroyUI();
   }
-} 
+}

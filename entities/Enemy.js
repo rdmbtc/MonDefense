@@ -299,18 +299,18 @@ export default class Enemy {
       }
     }
     
-    // Add health bar with high visibility
-    this.healthBar = {
-      background: scene.add.rectangle(x, y - 35, 40, 8, 0xFF0000)
-        .setDepth(2001)
-        .setStrokeStyle(1, 0x000000),
-      fill: scene.add.rectangle(x, y - 35, 40, 8, 0x00FF00)
-        .setDepth(2002)
-    };
+    // Add modern health bar with high visibility
+    const healthProgress = this.health / this.maxHealth;
+    this.healthBarSystem = scene.uiStyle.createProgressBar(x, y - 35, 40, 8, healthProgress, 'danger');
+    this.healthBarSystem.container.setDepth(2001);
     
-    // CRITICAL FIX: Make health bar more visible
-    this.healthBar.background.setAlpha(1);
-    this.healthBar.fill.setAlpha(1);
+    // Store references for compatibility
+    this.healthBar = {
+      background: this.healthBarSystem.bg,
+      fill: this.healthBarSystem.fill,
+      container: this.healthBarSystem.container,
+      updateProgress: this.healthBarSystem.updateProgress
+    };
     
     // Add wave indicator for stronger enemies
     if (currentWave > 1) {
@@ -868,6 +868,10 @@ export default class Enemy {
       }
       
       // Always independently clean up health bars
+      if (this.healthBarSystem && this.healthBarSystem.container) {
+        this.healthBarSystem.container.destroy();
+        this.healthBarSystem = null;
+      }
       if (this.healthBar) {
         if (this.healthBar.background) {
           this.healthBar.background.destroy();
@@ -876,6 +880,10 @@ export default class Enemy {
         if (this.healthBar.fill) {
           this.healthBar.fill.destroy();
           this.healthBar.fill = null;
+        }
+        if (this.healthBar.container) {
+          this.healthBar.container.destroy();
+          this.healthBar.container = null;
         }
         this.healthBar = null;
       }
@@ -888,7 +896,7 @@ export default class Enemy {
   
   // Add updateHealthBar method to ensure health bar is properly updated
   updateHealthBar() {
-    if (!this.healthBar || !this.scene || !this.active) return;
+    if (!this.healthBarSystem || !this.scene || !this.active) return;
     
     // CRITICAL SAFETY CHECK: Ensure position is valid
     if (typeof this.x !== 'number') this.x = parseFloat(this.x) || 0;
@@ -896,23 +904,37 @@ export default class Enemy {
     
     // Position health bar above the enemy with offset
     const offsetY = -35; // Distance above the enemy
+    this.healthBarSystem.container.setPosition(this.x, this.y + offsetY);
+    this.healthBarSystem.container.setDepth(101);
     
-    this.healthBar.background.setPosition(this.x, this.y + offsetY);
-    this.healthBar.fill.setPosition(this.x, this.y + offsetY);
-    this.healthBar.background.setDepth(101); // LOWERED DEPTH
-    this.healthBar.fill.setDepth(102); // LOWERED DEPTH
-    
-    // Calculate health percentage and update health bar width
+    // Calculate health percentage and update progress
     const healthPercent = Math.max(0, Math.min(1, this.health / this.maxHealth));
-    const barWidth = 40; // Base width for health bar
+    this.healthBarSystem.updateProgress(healthPercent);
     
-    // Update health bar fill width based on current health
-    this.healthBar.fill.width = barWidth * healthPercent;
-    this.healthBar.fill.setDisplaySize(barWidth * healthPercent, 8);
+    // Update color based on health percentage
+    let colorStyle = 'danger';
+    if (healthPercent > 0.6) {
+      colorStyle = 'success';
+    } else if (healthPercent > 0.3) {
+      colorStyle = 'warning';
+    }
     
-    // CRITICAL FIX: Center the health bar fill based on healthPercent
-    this.healthBar.fill.setOrigin(0, 0.5); // Center vertically, left align horizontally  
-    this.healthBar.fill.setX(this.x - (barWidth / 2)); // Align left side with background
+    // Recreate with new color if health is low (optional optimization)
+    if (healthPercent <= 0.3 && this.lastHealthColorStyle !== 'danger') {
+      this.healthBarSystem.container.destroy();
+      this.healthBarSystem = this.scene.uiStyle.createProgressBar(this.x, this.y + offsetY, 40, 8, healthPercent, 'danger');
+      this.healthBarSystem.container.setDepth(101);
+      this.healthBar.container = this.healthBarSystem.container;
+      this.healthBar.updateProgress = this.healthBarSystem.updateProgress;
+      this.lastHealthColorStyle = 'danger';
+    } else if (healthPercent <= 0.6 && healthPercent > 0.3 && this.lastHealthColorStyle !== 'warning') {
+      this.healthBarSystem.container.destroy();
+      this.healthBarSystem = this.scene.uiStyle.createProgressBar(this.x, this.y + offsetY, 40, 8, healthPercent, 'warning');
+      this.healthBarSystem.container.setDepth(101);
+      this.healthBar.container = this.healthBarSystem.container;
+      this.healthBar.updateProgress = this.healthBarSystem.updateProgress;
+      this.lastHealthColorStyle = 'warning';
+    }
   }
   
   // Add a method to show damage text

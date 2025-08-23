@@ -75,19 +75,17 @@ export default class Crop extends Phaser.GameObjects.Container {
   }
   
   createHealthBar() {
-    // Create health bar background
-    this.healthBarBg = this.scene.add.rectangle(0, -25, 30, 4, 0x000000);
-    this.healthBarBg.setAlpha(0.7);
-    this.add(this.healthBarBg);
-    
-    // Create health bar fill
-    this.healthBar = this.scene.add.rectangle(-15, -25, 30, 4, 0x00FF00);
-    this.healthBar.setOrigin(0, 0.5);
-    this.add(this.healthBar);
+    // Create modern health bar using UIStyleSystem
+    const healthProgress = this.health / this.maxHealth;
+    this.healthBarSystem = this.scene.uiStyle.createProgressBar(0, -25, 30, 4, healthProgress, 'success');
+    this.add(this.healthBarSystem.container);
     
     // Hide health bar initially
-    this.healthBarBg.setVisible(false);
-    this.healthBar.setVisible(false);
+    this.healthBarSystem.container.setVisible(false);
+    
+    // Store references for compatibility
+    this.healthBarBg = this.healthBarSystem.bg;
+    this.healthBar = this.healthBarSystem.fill;
   }
   
   startGrowth() {
@@ -338,15 +336,25 @@ export default class Crop extends Phaser.GameObjects.Container {
     this.health -= amount;
     
     // Update health bar
-    this.healthBarBg.setVisible(true);
-    this.healthBar.setVisible(true);
-    this.healthBar.width = Math.max(0, (this.health / this.maxHealth) * 30);
+    this.healthBarSystem.container.setVisible(true);
+    const healthProgress = Math.max(0, this.health / this.maxHealth);
+    this.healthBarSystem.updateProgress(healthProgress);
     
-    // Change color based on health
+    // Change color scheme based on health
+    let colorStyle = 'success';
     if (this.health < this.maxHealth * 0.3) {
-      this.healthBar.fillColor = 0xFF0000;
+      colorStyle = 'danger';
     } else if (this.health < this.maxHealth * 0.6) {
-      this.healthBar.fillColor = 0xFFFF00;
+      colorStyle = 'warning';
+    }
+    
+    // Recreate with new color if needed
+    if (colorStyle !== 'success') {
+      this.healthBarSystem.container.destroy();
+      this.healthBarSystem = this.scene.uiStyle.createProgressBar(0, -25, 30, 4, healthProgress, colorStyle);
+      this.add(this.healthBarSystem.container);
+      this.healthBarBg = this.healthBarSystem.bg;
+      this.healthBar = this.healthBarSystem.fill;
     }
     
     // Check for destruction
@@ -357,9 +365,8 @@ export default class Crop extends Phaser.GameObjects.Container {
     
     // Hide health bar after delay
     this.scene.time.delayedCall(2000, () => {
-      if (this.healthBarBg) {
-        this.healthBarBg.setVisible(false);
-        this.healthBar.setVisible(false);
+      if (this.healthBarSystem && this.healthBarSystem.container) {
+        this.healthBarSystem.container.setVisible(false);
       }
     });
     
@@ -368,13 +375,13 @@ export default class Crop extends Phaser.GameObjects.Container {
   
   update() {
     // Update health bar visibility based on damage
-    if (this.healthBar) {
+    if (this.healthBarSystem) {
       const healthPercentage = this.health / this.maxHealth;
       if (healthPercentage < 1.0) {
-        this.healthBar.setVisible(true);
-        this.updateHealthBar();
+        this.healthBarSystem.container.setVisible(true);
+        this.healthBarSystem.updateProgress(healthPercentage);
       } else {
-        this.healthBar.setVisible(false);
+        this.healthBarSystem.container.setVisible(false);
       }
     }
 
@@ -474,4 +481,4 @@ export default class Crop extends Phaser.GameObjects.Container {
       console.log(`Crop growth multiplier updated to ${multiplier.toFixed(2)}`);
     }
   }
-} 
+}

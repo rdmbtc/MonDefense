@@ -209,11 +209,25 @@ class GameScene extends Phaser.Scene {
       this.frameTimeAvg = 0;
       this.frameCount = 0;
       this.lastFpsUpdate = 0;
-      this.fpsText = this.add.text(10, 10, 'FPS: 0', {
-        fontFamily: 'Arial',
-        fontSize: '16px',
-        color: '#00FF00'
-      }).setDepth(1000).setScrollFactor(0);
+      this.fpsText = this.uiStyle.createStyledText(
+        this,
+        10, 
+        10, 
+        'FPS: 0', 
+        {
+          fontSize: '16px',
+          fill: '#00FF88',
+          stroke: '#000000',
+          strokeThickness: 2,
+          shadow: {
+            offsetX: 1,
+            offsetY: 1,
+            color: '#000000',
+            blur: 2,
+            fill: true
+          }
+        }
+      ).setDepth(1000).setScrollFactor(0);
       this.fpsText.setVisible(false); // Hidden by default, toggle with F key
       
       // Add FPS toggle key
@@ -441,14 +455,26 @@ class GameScene extends Phaser.Scene {
   showLowManaMessage(defense) {
     try {
       // Create "Low Mana" text above the defense
-      const lowManaText = this.add.text(defense.x, defense.y - 70, `Low Mana!\n${defense.mana}/${defense.maxMana}`, {
-        fontSize: '16px',
-        fill: '#ff4444',
-        fontFamily: 'Arial Black',
-        stroke: '#000000',
-        strokeThickness: 3,
-        align: 'center'
-      });
+      const lowManaText = this.uiStyle.createStyledText(
+        this,
+        defense.x, 
+        defense.y - 70, 
+        `⚡ Low Mana!\n${defense.mana}/${defense.maxMana}`, 
+        {
+          fontSize: '18px',
+          fill: '#FF4444',
+          stroke: '#000000',
+          strokeThickness: 4,
+          align: 'center',
+          shadow: {
+            offsetX: 2,
+            offsetY: 2,
+            color: '#000000',
+            blur: 4,
+            fill: true
+          }
+        }
+      );
       lowManaText.setOrigin(0.5, 0.5);
       lowManaText.setDepth(20);
       
@@ -872,20 +898,34 @@ class GameScene extends Phaser.Scene {
       this.creditsButton.on('pointerdown', () => this.showCreditsMenu());
       
       // Add subtitle
-      this.subtitle = this.add.text(0, 220, "Defend Your Farm • Endless Adventure", {
-        fontFamily: 'Arial',
-        fontSize: '16px',
-        color: '#ffffff',
-        stroke: '#000000',
-        strokeThickness: 2
+      this.subtitle = this.uiStyle.createStyledText(0, 220, "Defend Your Farm • Endless Adventure", {
+        fontSize: '18px',
+        fill: '#e8f4fd',
+        stroke: '#1a365d',
+        strokeThickness: 3,
+        shadow: {
+          offsetX: 2,
+          offsetY: 2,
+          color: '#000000',
+          blur: 4,
+          fill: true
+        }
       }).setOrigin(0.5);
       this.menuContainer.add(this.subtitle);
       
       // Add version info
-      this.versionText = this.add.text(350, 280, "v2.0", {
-        fontFamily: 'Arial',
-        fontSize: '14px',
-        color: '#888888'
+      this.versionText = this.uiStyle.createStyledText(350, 280, "v2.0", {
+        fontSize: '16px',
+        fill: '#a0aec0',
+        stroke: '#2d3748',
+        strokeThickness: 1,
+        shadow: {
+          offsetX: 1,
+          offsetY: 1,
+          color: '#000000',
+          blur: 2,
+          fill: true
+        }
       }).setOrigin(1, 1);
       this.menuContainer.add(this.versionText);
       
@@ -1122,29 +1162,49 @@ class GameScene extends Phaser.Scene {
       this.loadingContainer.add(this.loadingBarShine);
       
       // Loading text with better styling
-      this.loadingText = this.add.text(0, 50, 'Preparing your adventure...', {
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '20px',
-        color: '#ffffff',
-        stroke: '#000000',
-        strokeThickness: 2,
+      this.loadingText = this.uiStyle.createStyledText(0, 50, 'Preparing your adventure...', {
+        fontSize: '22px',
+        fill: '#e8f4fd',
+        stroke: '#1a365d',
+        strokeThickness: 3,
         shadow: {
-          offsetX: 1,
-          offsetY: 1,
+          offsetX: 2,
+          offsetY: 2,
           color: '#000000',
-          blur: 2
+          blur: 4,
+          fill: true
         }
       }).setOrigin(0.5);
       this.loadingContainer.add(this.loadingText);
       
       // Loading tip with icon
-      const tipIcon = this.add.text(-180, 100, '💡', { fontSize: '24px' }).setOrigin(0.5);
+      const tipIcon = this.uiStyle.createStyledText(-180, 100, '💡', {
+        fontSize: 28,
+        fill: '#FFD700',
+        stroke: '#8B4513',
+        strokeThickness: 2,
+        shadow: {
+          offsetX: 1,
+          offsetY: 1,
+          color: '#000000',
+          blur: 2,
+          fill: true
+        }
+      }).setOrigin(0.5);
       this.loadingContainer.add(tipIcon);
       
-      this.loadingTip = this.add.text(-150, 100, 'TIP: Right-click enemies to attack them!', {
-        fontFamily: 'Arial, sans-serif',
-        fontSize: '16px',
-        color: '#aaffff',
+      this.loadingTip = this.uiStyle.createStyledText(-150, 100, 'TIP: Right-click enemies to attack them!', {
+        fontSize: '18px',
+        fill: '#a0d2eb',
+        stroke: '#2d3748',
+        strokeThickness: 2,
+        shadow: {
+          offsetX: 1,
+          offsetY: 1,
+          color: '#000000',
+          blur: 2,
+          fill: true
+        },
         wordWrap: { width: 350 }
       }).setOrigin(0, 0.5);
       this.loadingContainer.add(this.loadingTip);
@@ -1660,7 +1720,7 @@ class GameScene extends Phaser.Scene {
       // Calculate enemies for this wave
       this.totalEnemiesInWave = Math.min(5 + this.gameState.wave * 2, 20);
       
-      console.log(`Starting wave ${this.gameState.wave} with ${this.totalEnemiesInWave} enemies`);
+      console.log("`Starting wave ${this.gameState.wave} with ${this.totalEnemiesInWave} enemies`");
       
       // Start spawning enemies
       this.spawnEnemyWave();
@@ -1910,16 +1970,13 @@ class GameScene extends Phaser.Scene {
          this.pathLabels.push(difficultyText);
        });
        
-       // Add path visibility toggle button
-        this.pathToggleButton = this.add.text(20, 120, 'Show Paths [Shift+P]', {
-          fontSize: '14px',
-          fill: '#ffffff',
-          backgroundColor: '#333333',
-          padding: { x: 8, y: 4 }
-        });
+       // Add modern path visibility toggle button
+       this.pathToggleButton = this.uiStyle.createModernButton(
+         120, 120, '🛤️ Show Paths [Shift+P]', 
+         () => this.togglePathVisibility(),
+         { variant: 'secondary', size: 'small' }
+       );
        this.pathToggleButton.setDepth(20);
-       this.pathToggleButton.setInteractive({ useHandCursor: true });
-       this.pathToggleButton.on('pointerdown', () => this.togglePathVisibility());
        
        this.pathsVisible = false;
        
@@ -1955,7 +2012,10 @@ class GameScene extends Phaser.Scene {
        });
        
        // Update button text
-        this.pathToggleButton.setText(this.pathsVisible ? 'Hide Paths [Shift+P]' : 'Show Paths [Shift+P]');
+       const newText = this.pathsVisible ? '🛤️ Hide Paths [Shift+P]' : '🛤️ Show Paths [Shift+P]';
+       if (this.pathToggleButton.list && this.pathToggleButton.list[1]) {
+         this.pathToggleButton.list[1].setText(newText);
+       }
        
      } catch (error) {
        console.error("Error toggling path visibility:", error);
@@ -2007,27 +2067,21 @@ class GameScene extends Phaser.Scene {
           yOffset += 35;
         });
         
-        // Analytics toggle button
-         this.analyticsToggleButton = this.add.text(20, 370, 'Show Analytics [Shift+A]', {
-           fontSize: '14px',
-           fill: '#ffffff',
-           backgroundColor: '#333333',
-           padding: { x: 8, y: 4 }
-         });
+        // Modern Analytics toggle button
+        this.analyticsToggleButton = this.uiStyle.createModernButton(
+          140, 370, '📊 Show Analytics [Shift+A]', 
+          () => this.toggleAnalyticsDisplay(),
+          { variant: 'info', size: 'small' }
+        );
         this.analyticsToggleButton.setDepth(20);
-        this.analyticsToggleButton.setInteractive({ useHandCursor: true });
-        this.analyticsToggleButton.on('pointerdown', () => this.toggleAnalyticsDisplay());
         
-        // Specialization button
-        this.specializationButton = this.add.text(20, 410, 'Specializations [S]', {
-          fontSize: '14px',
-          fill: '#ffffff',
-          backgroundColor: '#4a90e2',
-          padding: { x: 8, y: 4 }
-        });
+        // Modern Specialization button
+        this.specializationButton = this.uiStyle.createModernButton(
+          140, 410, '⚡ Specializations [S]', 
+          () => this.showSpecializationMenu(),
+          { variant: 'primary', size: 'small' }
+        );
         this.specializationButton.setDepth(20);
-        this.specializationButton.setInteractive({ useHandCursor: true });
-        this.specializationButton.on('pointerdown', () => this.showSpecializationMenu());
         
         this.analyticsVisible = false;
         
@@ -2069,7 +2123,10 @@ class GameScene extends Phaser.Scene {
         });
         
         // Update button text
-         this.analyticsToggleButton.setText(this.analyticsVisible ? 'Hide Analytics [Shift+A]' : 'Show Analytics [Shift+A]');
+         const newAnalyticsText = this.analyticsVisible ? '📊 Hide Analytics [Shift+A]' : '📊 Show Analytics [Shift+A]';
+    if (this.analyticsToggleButton.list && this.analyticsToggleButton.list[1]) {
+      this.analyticsToggleButton.list[1].setText(newAnalyticsText);
+    }
         
       } catch (error) {
         console.error("Error toggling analytics display:", error);
@@ -2144,43 +2201,32 @@ class GameScene extends Phaser.Scene {
           fontStyle: 'bold'
         }).setOrigin(0.5).setDepth(1001);
         
-        // Defense type buttons
+        // Defense type buttons with modern styling
         this.specMenuButtons = [];
         defenseTypes.forEach((defenseType, index) => {
           const x = centerX - 150 + (index % 2) * 300;
           const y = centerY - 50 + Math.floor(index / 2) * 100;
           
-          const button = this.add.rectangle(x, y, 200, 60, 0x4a90e2);
-          button.setStrokeStyle(2, 0x6ab7ff);
+          const button = this.uiStyle.createModernButton(
+            x, y, 220, 70, `🛡️ ${defenseType.toUpperCase()}`, 'primary',
+            () => {
+              this.hideSpecializationMenu();
+              this.specializationUI.show(defenseType);
+            },
+            'large'
+          );
           button.setDepth(1001);
-          button.setInteractive({ useHandCursor: true });
           
-          const buttonText = this.add.text(x, y, defenseType.toUpperCase(), {
-            fontSize: '18px',
-            fontFamily: 'Arial',
-            fill: '#ffffff',
-            fontStyle: 'bold'
-          }).setOrigin(0.5).setDepth(1002);
-          
-          button.on('pointerover', () => button.setFillStyle(0x6ab7ff));
-          button.on('pointerout', () => button.setFillStyle(0x4a90e2));
-          button.on('pointerdown', () => {
-            this.hideSpecializationMenu();
-            this.specializationUI.show(defenseType);
-          });
-          
-          this.specMenuButtons.push(button, buttonText);
+          this.specMenuButtons.push(button);
         });
         
-        // Close button
-        this.specMenuClose = this.add.text(centerX + 270, centerY - 150, '✕', {
-          fontSize: '24px',
-          fontFamily: 'Arial',
-          fill: '#ff6b6b',
-          fontStyle: 'bold'
-        }).setOrigin(0.5).setDepth(1002);
-        this.specMenuClose.setInteractive({ useHandCursor: true });
-        this.specMenuClose.on('pointerdown', () => this.hideSpecializationMenu());
+        // Close button with modern styling
+        this.specMenuClose = this.uiStyle.createModernButton(
+          centerX + 270, centerY - 150, 50, 50, '✕', 'danger',
+          () => this.hideSpecializationMenu(),
+          'small'
+        );
+        this.specMenuClose.setDepth(1002);
         
         this.specializationMenuVisible = true;
         
@@ -2268,7 +2314,7 @@ class GameScene extends Phaser.Scene {
       const worldX = x;
       const worldY = y;
 
-      console.log(`Handling click at world coordinates: ${worldX}, ${worldY}`);
+      console.log("");
       
       // Check if click is on toolbar area to prevent accidental placement
       // Convert toolbar position to world coordinates for consistent comparison
@@ -2277,8 +2323,8 @@ class GameScene extends Phaser.Scene {
       const worldToolbarY = this.cameras.main.getWorldPoint(0, toolbarY).y;
       
       if (worldY > worldToolbarY - toolbarHeight/2) {
-        console.log("Click detected on toolbar area - ignoring placement");
-        return; // Ignore clicks on toolbar area
+        console.log("");
+         return; // Ignore clicks on toolbar area
       }
       
       // Create click effect at world coordinates using object pooling
@@ -3082,54 +3128,48 @@ class GameScene extends Phaser.Scene {
       
       // New high score notification
       if (this.gameState.score > currentHighScore) {
-        const newHighScoreText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2 + 100, 'NEW HIGH SCORE!', {
-          fontFamily: 'Arial Black',
-          fontSize: '28px',
-          color: '#00FF00',
-          stroke: '#000000',
-          strokeThickness: 3
+        const newHighScoreText = this.uiStyle.createStyledText(this.cameras.main.width / 2, this.cameras.main.height / 2 + 100, '🏆 NEW HIGH SCORE! 🏆', 'h3', {
+          color: this.uiStyle.colors.success.main,
+          glow: { color: this.uiStyle.colors.success.light }
         }).setOrigin(0.5).setDepth(5000);
         
-        // Glow effect
+        // Animated glow effect
         this.tweens.add({
           targets: newHighScoreText,
-          alpha: 0.5,
-          duration: 500,
+          alpha: 0.7,
+          scaleX: 1.1,
+          scaleY: 1.1,
+          duration: 800,
           yoyo: true,
-          repeat: -1
+          repeat: -1,
+          ease: 'Sine.easeInOut'
         });
       }
       
-      // Create semi-transparent background for game over screen
-      const gameOverBg = this.add.rectangle(this.cameras.main.width / 2, this.cameras.main.height / 2, 
-        this.cameras.main.width, this.cameras.main.height, 0x000000, 0.8);
-      gameOverBg.setDepth(4999);
+      // Create modern glass-morphism background
+      const gameOverPanel = this.uiStyle.createGlassPanel(this.cameras.main.width / 2, this.cameras.main.height / 2, 
+        this.cameras.main.width * 0.8, this.cameras.main.height * 0.8);
+      gameOverPanel.setDepth(4999);
       
-      // Buttons
-      const playAgainButton = this.add.rectangle(this.cameras.main.width / 2 - 120, this.cameras.main.height / 2 + 150, 200, 50, 0x00AA00, 0.9);
-      playAgainButton.setStrokeStyle(3, 0xffffff);
-      playAgainButton.setInteractive({ useHandCursor: true });
-      playAgainButton.on('pointerdown', () => this.restartGame());
+      // Modern Buttons
+      const playAgainButton = this.uiStyle.createModernButton(
+        this.cameras.main.width / 2 - 120, 
+        this.cameras.main.height / 2 + 150, 
+        '🔄 PLAY AGAIN', 
+        () => this.restartGame(),
+        { variant: 'success' }
+      );
       playAgainButton.setDepth(5000);
       
-      const playAgainText = this.add.text(this.cameras.main.width / 2 - 120, this.cameras.main.height / 2 + 150, 'PLAY AGAIN', {
-        fontFamily: 'Arial Black',
-        fontSize: '18px',
-        color: '#ffffff'
-      }).setOrigin(0.5).setDepth(5001);
-      
       // Return to menu button
-      const menuButton = this.add.rectangle(this.cameras.main.width / 2 + 120, this.cameras.main.height / 2 + 150, 200, 50, 0xff8800, 0.9);
-      menuButton.setStrokeStyle(3, 0xffffff);
-      menuButton.setInteractive({ useHandCursor: true });
-      menuButton.on('pointerdown', () => this.returnToMainMenu());
+      const menuButton = this.uiStyle.createModernButton(
+        this.cameras.main.width / 2 + 120, 
+        this.cameras.main.height / 2 + 150, 
+        '🏠 MAIN MENU', 
+        () => this.returnToMainMenu(),
+        { variant: 'warning' }
+      );
       menuButton.setDepth(5000);
-      
-      const menuText = this.add.text(this.cameras.main.width / 2 + 120, this.cameras.main.height / 2 + 150, 'MAIN MENU', {
-        fontFamily: 'Arial Black',
-        fontSize: '18px',
-        color: '#ffffff'
-      }).setOrigin(0.5).setDepth(5001);
       
     } catch (error) {
       console.error("Error in game over:", error);
@@ -3234,35 +3274,42 @@ class GameScene extends Phaser.Scene {
       this.settingsContainer.setVisible(false);
       
       // Settings background
-      const settingsBg = this.add.rectangle(0, 0, 600, 500, 0x000000, 0.9);
-      settingsBg.setStrokeStyle(4, 0x00ffff);
+      const settingsBg = this.uiStyle.createGlassPanel(0, 0, 600, 500, {
+        fillColor: 0x1a1a2e,
+        fillAlpha: 0.95,
+        strokeColor: 0x00ffff,
+        strokeWidth: 3,
+        cornerRadius: 15
+      });
       this.settingsContainer.add(settingsBg);
       
       // Settings title
-      const settingsTitle = this.add.text(0, -200, 'SETTINGS', {
-        fontFamily: 'Arial Black',
+      const settingsTitle = this.uiStyle.createStyledText(0, -200, 'SETTINGS', {
         fontSize: '36px',
         color: '#00ffff',
-        stroke: '#000000',
-        strokeThickness: 4
-      }).setOrigin(0.5);
+        fontWeight: 'bold',
+        shadow: true,
+        glow: true
+      });
+      settingsTitle.setOrigin(0.5);
       this.settingsContainer.add(settingsTitle);
       
       // Back button container
       const backButtonContainer = this.add.container(0, 180);
       
-      // Back button background
-      const backButton = this.add.rectangle(0, 0, 200, 50, 0xff0000, 0.9);
-      backButton.setStrokeStyle(3, 0xffffff);
+      // Back button
+      const backButton = this.uiStyle.createModernButton(0, 0, 200, 50, 'BACK', {
+        backgroundColor: 0xff4444,
+        textColor: '#ffffff',
+        fontSize: '20px',
+        cornerRadius: 8,
+        shadow: true,
+        glow: true
+      });
       backButton.setInteractive({ useHandCursor: true });
       backButton.on('pointerdown', () => this.showMainMenu());
       
-      // Back button text
-      const backText = this.add.text(0, 0, 'BACK', {
-        fontFamily: 'Arial Black',
-        fontSize: '20px',
-        color: '#ffffff'
-      }).setOrigin(0.5);
+      const backText = backButton.getByName('text');
       
       backButtonContainer.add([backButton, backText]);
       this.settingsContainer.add(backButtonContainer);
@@ -3283,18 +3330,24 @@ class GameScene extends Phaser.Scene {
       this.creditsContainer.setVisible(false);
       
       // Credits background
-      const creditsBg = this.add.rectangle(0, 0, 600, 500, 0x000000, 0.9);
-      creditsBg.setStrokeStyle(4, 0xff00ff);
+      const creditsBg = this.uiStyle.createGlassPanel(0, 0, 600, 500, {
+        fillColor: 0x2a1a2e,
+        fillAlpha: 0.95,
+        strokeColor: 0xff00ff,
+        strokeWidth: 3,
+        cornerRadius: 15
+      });
       this.creditsContainer.add(creditsBg);
       
       // Credits title
-      const creditsTitle = this.add.text(0, -200, 'CREDITS', {
-        fontFamily: 'Arial Black',
+      const creditsTitle = this.uiStyle.createStyledText(0, -200, 'CREDITS', {
         fontSize: '36px',
         color: '#ff00ff',
-        stroke: '#000000',
-        strokeThickness: 4
-      }).setOrigin(0.5);
+        fontWeight: 'bold',
+        shadow: true,
+        glow: true
+      });
+      creditsTitle.setOrigin(0.5);
       this.creditsContainer.add(creditsTitle);
       
       // Credits content
@@ -3310,29 +3363,31 @@ class GameScene extends Phaser.Scene {
       ];
       
       credits.forEach((line, index) => {
-        const text = this.add.text(0, -120 + (index * 30), line, {
-          fontFamily: 'Arial',
+        const text = this.uiStyle.createStyledText(0, -120 + (index * 30), line, {
           fontSize: '18px',
-          color: index === 0 || index === 3 ? '#ffff00' : '#ffffff'
-        }).setOrigin(0.5);
+          color: index === 0 || index === 3 ? '#ffff00' : '#ffffff',
+          shadow: true
+        });
+        text.setOrigin(0.5);
         this.creditsContainer.add(text);
       });
       
       // Back button container
       const backButtonContainer = this.add.container(0, 180);
       
-      // Back button background
-      const backButton = this.add.rectangle(0, 0, 200, 50, 0xff0000, 0.9);
-      backButton.setStrokeStyle(3, 0xffffff);
+      // Back button
+      const backButton = this.uiStyle.createModernButton(0, 0, 200, 50, 'BACK', {
+        backgroundColor: 0xff4444,
+        textColor: '#ffffff',
+        fontSize: '20px',
+        cornerRadius: 8,
+        shadow: true,
+        glow: true
+      });
       backButton.setInteractive({ useHandCursor: true });
       backButton.on('pointerdown', () => this.showMainMenu());
       
-      // Back button text
-      const backText = this.add.text(0, 0, 'BACK', {
-        fontFamily: 'Arial Black',
-        fontSize: '20px',
-        color: '#ffffff'
-      }).setOrigin(0.5);
+      const backText = backButton.getByName('text');
       
       backButtonContainer.add([backButton, backText]);
       this.creditsContainer.add(backButtonContainer);
@@ -3353,18 +3408,24 @@ class GameScene extends Phaser.Scene {
       this.leaderboardContainer.setVisible(false);
       
       // Leaderboard background
-      const leaderboardBg = this.add.rectangle(0, 0, 600, 500, 0x000000, 0.9);
-      leaderboardBg.setStrokeStyle(4, 0xff8800);
+      const leaderboardBg = this.uiStyle.createGlassPanel(0, 0, 600, 500, {
+        fillColor: 0x2e1a1a,
+        fillAlpha: 0.95,
+        strokeColor: 0xff8800,
+        strokeWidth: 3,
+        cornerRadius: 15
+      });
       this.leaderboardContainer.add(leaderboardBg);
       
       // Leaderboard title
-      const leaderboardTitle = this.add.text(0, -200, 'LEADERBOARD', {
-        fontFamily: 'Arial Black',
+      const leaderboardTitle = this.uiStyle.createStyledText(0, -200, 'LEADERBOARD', {
         fontSize: '36px',
         color: '#ff8800',
-        stroke: '#000000',
-        strokeThickness: 4
-      }).setOrigin(0.5);
+        fontWeight: 'bold',
+        shadow: true,
+        glow: true
+      });
+      leaderboardTitle.setOrigin(0.5);
       this.leaderboardContainer.add(leaderboardTitle);
       
       // Load and display high scores
@@ -3373,18 +3434,19 @@ class GameScene extends Phaser.Scene {
       // Back button container
       const backButtonContainer = this.add.container(0, 180);
       
-      // Back button background
-      const backButton = this.add.rectangle(0, 0, 200, 50, 0xff0000, 0.9);
-      backButton.setStrokeStyle(3, 0xffffff);
+      // Back button
+      const backButton = this.uiStyle.createModernButton(0, 0, 200, 50, 'BACK', {
+        backgroundColor: 0xff4444,
+        textColor: '#ffffff',
+        fontSize: '20px',
+        cornerRadius: 8,
+        shadow: true,
+        glow: true
+      });
       backButton.setInteractive({ useHandCursor: true });
       backButton.on('pointerdown', () => this.showMainMenu());
       
-      // Back button text
-      const backText = this.add.text(0, 0, 'BACK', {
-        fontFamily: 'Arial Black',
-        fontSize: '20px',
-        color: '#ffffff'
-      }).setOrigin(0.5);
+      const backText = backButton.getByName('text');
       
       backButtonContainer.add([backButton, backText]);
       this.leaderboardContainer.add(backButtonContainer);
@@ -3447,35 +3509,42 @@ class GameScene extends Phaser.Scene {
       this.pauseContainer.add(overlay);
       
       // Pause menu background
-      const pauseBg = this.add.rectangle(0, 0, 400, 300, 0x000000, 0.9);
-      pauseBg.setStrokeStyle(4, 0xffff00);
+      const pauseBg = this.uiStyle.createGlassPanel(0, 0, 400, 300, {
+        fillColor: 0x2e2e1a,
+        fillAlpha: 0.95,
+        strokeColor: 0xffff00,
+        strokeWidth: 3,
+        cornerRadius: 15
+      });
       this.pauseContainer.add(pauseBg);
       
       // Pause title
-      const pauseTitle = this.add.text(0, -100, 'PAUSED', {
-        fontFamily: 'Arial Black',
+      const pauseTitle = this.uiStyle.createStyledText(0, -100, 'PAUSED', {
         fontSize: '32px',
         color: '#ffff00',
-        stroke: '#000000',
-        strokeThickness: 4
-      }).setOrigin(0.5);
+        fontWeight: 'bold',
+        shadow: true,
+        glow: true
+      });
+      pauseTitle.setOrigin(0.5);
       this.pauseContainer.add(pauseTitle);
       
       // Resume button container
       const resumeButtonContainer = this.add.container(0, -20);
       
-      // Resume button background
-      const resumeButton = this.add.rectangle(0, 0, 200, 50, 0x00ff00, 0.9);
-      resumeButton.setStrokeStyle(3, 0xffffff);
+      // Resume button
+      const resumeButton = this.uiStyle.createModernButton(0, 0, 200, 50, 'RESUME', {
+        backgroundColor: 0x44ff44,
+        textColor: '#ffffff',
+        fontSize: '20px',
+        cornerRadius: 8,
+        shadow: true,
+        glow: true
+      });
       resumeButton.setInteractive({ useHandCursor: true });
       resumeButton.on('pointerdown', () => this.resumeGame());
       
-      // Resume button text
-      const resumeText = this.add.text(0, 0, 'RESUME', {
-        fontFamily: 'Arial Black',
-        fontSize: '20px',
-        color: '#ffffff'
-      }).setOrigin(0.5);
+      const resumeText = resumeButton.getByName('text');
       
       resumeButtonContainer.add([resumeButton, resumeText]);
       this.pauseContainer.add(resumeButtonContainer);
@@ -3483,18 +3552,19 @@ class GameScene extends Phaser.Scene {
       // Return to menu button container
       const menuButtonContainer = this.add.container(0, 50);
       
-      // Return to menu button background
-      const menuButton = this.add.rectangle(0, 0, 200, 50, 0xff8800, 0.9);
-      menuButton.setStrokeStyle(3, 0xffffff);
+      // Return to menu button
+      const menuButton = this.uiStyle.createModernButton(0, 0, 200, 50, 'MAIN MENU', {
+        backgroundColor: 0xff8844,
+        textColor: '#ffffff',
+        fontSize: '20px',
+        cornerRadius: 8,
+        shadow: true,
+        glow: true
+      });
       menuButton.setInteractive({ useHandCursor: true });
       menuButton.on('pointerdown', () => this.returnToMainMenu());
       
-      // Return to menu button text
-      const menuText = this.add.text(0, 0, 'MAIN MENU', {
-        fontFamily: 'Arial Black',
-        fontSize: '20px',
-        color: '#ffffff'
-      }).setOrigin(0.5);
+      const menuText = menuButton.getByName('text');
       
       menuButtonContainer.add([menuButton, menuText]);
       this.pauseContainer.add(menuButtonContainer);
@@ -3661,22 +3731,40 @@ class GameScene extends Phaser.Scene {
       this.toolbarIcons = {};
       
       // Add descriptive text for selected tool
-      this.selectedToolText = this.add.text(centerX, toolbarY - 60, 'Selected: Attack Mode', {
-        fontSize: '16px',
-        fontFamily: 'Arial',
-        fill: '#00ddff',
-        stroke: '#000000',
-        strokeThickness: 2,
-        align: 'center'
-      }).setOrigin(0.5).setDepth(2000);
+      this.selectedToolText = this.uiStyle.createStyledText(
+        this,
+        centerX, 
+        toolbarY - 60, 
+        'Selected: Attack Mode', 
+        {
+          fontSize: '18px',
+          fill: '#00DDFF',
+          stroke: '#000000',
+          strokeThickness: 3,
+          align: 'center',
+          shadow: {
+            offsetX: 1,
+            offsetY: 1,
+            color: '#000000',
+            blur: 3,
+            fill: true
+          }
+        }
+      ).setOrigin(0.5).setDepth(2000);
       
       // Add tool description text
-      this.toolDescriptionText = this.add.text(centerX, toolbarY - 40, 'Click enemies to attack them directly', {
-        fontSize: '12px',
-        fontFamily: 'Arial',
-        fill: '#ffffff',
-        stroke: '#000000',
-        strokeThickness: 1,
+      this.toolDescriptionText = this.uiStyle.createStyledText(centerX, toolbarY - 40, 'Click enemies to attack them directly', {
+        fontSize: '14px',
+        fill: '#e8f4fd',
+        stroke: '#1a365d',
+        strokeThickness: 2,
+        shadow: {
+          offsetX: 1,
+          offsetY: 1,
+          color: '#000000',
+          blur: 2,
+          fill: true
+        },
         align: 'center'
       }).setOrigin(0.5).setDepth(2000);
       
@@ -4440,12 +4528,18 @@ class GameScene extends Phaser.Scene {
   
   // Show placement error feedback
   showPlacementError(x, y, message) {
-    const errorText = this.add.text(x, y - 20, message, {
-      fontFamily: 'Arial',
-      fontSize: '16px',
-      color: '#ff0000',
-      stroke: '#000000',
-      strokeThickness: 2
+    const errorText = this.uiStyle.createStyledText(x, y - 20, message, {
+      fontSize: '18px',
+      fill: '#ff6b6b',
+      stroke: '#8b0000',
+      strokeThickness: 3,
+      shadow: {
+        offsetX: 2,
+        offsetY: 2,
+        color: '#000000',
+        blur: 4,
+        fill: true
+      }
     }).setOrigin(0.5);
     errorText.setDepth(100);
     
@@ -4471,12 +4565,18 @@ class GameScene extends Phaser.Scene {
   
   // Show placement success feedback
   showPlacementSuccess(x, y) {
-    const successText = this.add.text(x, y - 20, '✓ Planted!', {
-      fontFamily: 'Arial',
-      fontSize: '18px',
-      color: '#00ff00',
-      stroke: '#000000',
-      strokeThickness: 2
+    const successText = this.uiStyle.createStyledText(x, y - 20, '✓ Planted!', {
+      fontSize: '20px',
+      fill: '#68d391',
+      stroke: '#22543d',
+      strokeThickness: 3,
+      shadow: {
+        offsetX: 2,
+        offsetY: 2,
+        color: '#000000',
+        blur: 4,
+        fill: true
+      }
     }).setOrigin(0.5);
     successText.setDepth(100);
     
@@ -4740,12 +4840,18 @@ class GameScene extends Phaser.Scene {
       });
       
       // Show coins earned
-      const coinText = this.add.text(cropX, cropY, `+${coinsEarned} coins`, {
-        fontFamily: 'Arial',
-        fontSize: '20px',
-        color: '#ffff00',
-        stroke: '#000000',
-        strokeThickness: 2
+      const coinText = this.uiStyle.createStyledText(cropX, cropY, `💰 +${coinsEarned} coins`, {
+        fontSize: 24,
+        fill: '#FFD700',
+        stroke: '#8B4513',
+        strokeThickness: 3,
+        shadow: {
+          offsetX: 2,
+          offsetY: 2,
+          color: '#000000',
+          blur: 4,
+          fill: true
+        }
       }).setOrigin(0.5);
       coinText.setDepth(13);
       
