@@ -4,6 +4,9 @@ import Phaser from 'phaser';
 import ParticleEffects from '../utils/ParticleEffects.js';
 import GraphicsSettings from '../utils/GraphicsSettings.js';
 import PowerUpManager from '../utils/PowerUpManager.js';
+import UpgradeSystem from '../utils/UpgradeSystem.js';
+import SpecializationUI from '../ui/SpecializationUI.js';
+import UIStyleSystem from '../utils/UIStyleSystem.js';
 import Crop2 from '../classes/Crop2.js';
 
 class GameScene extends Phaser.Scene {
@@ -20,6 +23,7 @@ class GameScene extends Phaser.Scene {
     this.allowPlanting = false;
     this.waveTimer = null;
     this.waveInProgress = false;
+    this.specializationMenuVisible = false;
     
     // Initialize sounds object to prevent errors
     this.sounds = {};
@@ -40,6 +44,16 @@ class GameScene extends Phaser.Scene {
       lastManaRegen: 0 // Timestamp of last mana regeneration
     };
     
+    // Weather System
+    this.weatherSystem = {
+      currentWeather: 'sunny',
+      weatherTypes: ['sunny', 'rainy', 'snow'],
+      weatherEffects: null,
+      weatherParticles: null,
+      weatherOverlay: null,
+      weatherText: null
+    };
+    
     this.enemiesSpawned = 0;
     this.totalEnemiesInWave = 0;
     this.pendingDefensePlacement = false;
@@ -56,22 +70,14 @@ class GameScene extends Phaser.Scene {
     this.load.image('coin', '/effects/coin.png');
     
     // Load enemy sprites from monster icons collection
-    this.load.image('enemy_slime', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon1.png');
+
     this.load.image('enemy_goblin', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon5.png');
     this.load.image('enemy_orc', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon10.png');
     this.load.image('enemy_dragon', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon15.png');
     this.load.image('enemy_skeleton', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon20.png');
     this.load.image('enemy_demon', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon25.png');
     
-    // Load defender sprites
-    this.load.image('abster_attack', '/characters/abster attacks.png');
-    this.load.image('abster_idle', '/characters/abster idle.png');
-    this.load.image('noot_attack', '/characters/noot attack.png');
-    this.load.image('noot_idle', '/characters/noot idle.png');
-    this.load.image('wizard_attack', '/characters/wizard attack.png');
-    this.load.image('wizard_idle', '/characters/wizard idle.png');
-    this.load.image('cannon_attack', '/characters/cannon attack.png');
-    this.load.image('cannon_idle', '/characters/cannon idle.png');
+    // Defender sprites are loaded in LoadingScene.js
     
     // Load tileset assets
     this.load.image('tileset', '/logo/1 Tiles/FieldsTileset.png');
@@ -158,6 +164,15 @@ class GameScene extends Phaser.Scene {
       
       // Initialize power-up manager
       this.powerUpManager = new PowerUpManager(this);
+      
+      // Initialize upgrade system
+      this.upgradeSystem = new UpgradeSystem(this);
+      
+      // Initialize UI style system
+      this.uiStyle = new UIStyleSystem(this);
+      
+      // Initialize specialization UI
+      this.specializationUI = new SpecializationUI(this);
       
       // Initialize object pools for better performance
       this.projectilePool = [];
@@ -337,30 +352,15 @@ class GameScene extends Phaser.Scene {
     }
   }
 
-  // Update mana text and bar display
+  // Update defense mana displays
   updateManaText() {
     try {
-      if (this.manaText) {
-        this.manaText.setText(`Mana: ${this.gameState.mana}/${this.gameState.maxMana}`);
-      }
-      if (this.manaBarFill) {
-        const manaPercentage = this.gameState.mana / this.gameState.maxMana;
-        this.manaBarFill.setSize(200 * manaPercentage, 15);
-        // Change color based on mana level
-        if (manaPercentage < 0.25) {
-          this.manaBarFill.setFillStyle(0xFF4444); // Red when low
-        } else if (manaPercentage < 0.5) {
-          this.manaBarFill.setFillStyle(0xFFAA44); // Orange when medium
-        } else {
-          this.manaBarFill.setFillStyle(0x00AAFF); // Blue when high
-        }
-      }
       
       // Update individual defense mana displays
       if (this.defenses && this.defenses.length > 0) {
         this.defenses.forEach(defense => {
           if (defense.manaDisplay) {
-            defense.manaDisplay.setText(`${this.gameState.mana}`);
+            defense.manaDisplay.setText(`Mana: ${this.gameState.mana}/${this.gameState.maxMana}`);
             // Change color based on mana level
             const manaPercentage = this.gameState.mana / this.gameState.maxMana;
             if (manaPercentage < 0.25) {
@@ -386,6 +386,31 @@ class GameScene extends Phaser.Scene {
     
     this.defenses.forEach(defense => {
       if (!defense || !defense.active) return;
+      
+      // Regenerate individual defense mana (affected by weather)
+      const weatherManaBonus = this.weatherSystem ? this.weatherSystem.manaBonus : 1.0;
+      const adjustedRegenRate = Math.max(500, 1000 / weatherManaBonus); // Faster regen with weather bonus
+      if (currentTime - defense.lastManaRegen >= adjustedRegenRate) {
+        defense.mana = Math.min(
+          defense.maxMana,
+          defense.mana + defense.manaRegenRate
+        );
+        defense.lastManaRegen = currentTime;
+        
+        // Update individual mana display
+        if (defense.manaDisplay) {
+          defense.manaDisplay.setText(`Mana: ${defense.mana}/${defense.maxMana}`);
+          // Change color based on mana level
+          const manaPercentage = defense.mana / defense.maxMana;
+          if (manaPercentage < 0.25) {
+            defense.manaDisplay.setFill('#ff4444'); // Red when low
+          } else if (manaPercentage < 0.5) {
+            defense.manaDisplay.setFill('#ffaa44'); // Orange when medium
+          } else {
+            defense.manaDisplay.setFill('#00ffff'); // Cyan when high
+          }
+        }
+      }
       
       // Check if defense can fire - fireRate already includes speed multiplier
       if (currentTime - defense.lastFired < defense.fireRate) return;
@@ -416,32 +441,46 @@ class GameScene extends Phaser.Scene {
   showLowManaMessage(defense) {
     try {
       // Create "Low Mana" text above the defense
-      const lowManaText = this.add.text(defense.x, defense.y - 60, 'Low Mana', {
-        fontSize: '12px',
+      const lowManaText = this.add.text(defense.x, defense.y - 70, `Low Mana!\n${defense.mana}/${defense.maxMana}`, {
+        fontSize: '16px',
         fill: '#ff4444',
-        fontFamily: 'Arial',
+        fontFamily: 'Arial Black',
         stroke: '#000000',
-        strokeThickness: 2
+        strokeThickness: 3,
+        align: 'center'
       });
       lowManaText.setOrigin(0.5, 0.5);
       lowManaText.setDepth(20);
       
-      // Animate the text (fade in, stay, fade out)
+      // Animate the text with pulsing effect
       this.tweens.add({
         targets: lowManaText,
         alpha: { from: 0, to: 1 },
-        y: defense.y - 80,
-        duration: 300,
-        ease: 'Power2',
+        y: defense.y - 90,
+        scaleX: { from: 0.8, to: 1.2 },
+        scaleY: { from: 0.8, to: 1.2 },
+        duration: 400,
+        ease: 'Back.easeOut',
         onComplete: () => {
-          // Keep visible for a moment then fade out
-          this.time.delayedCall(800, () => {
-            this.tweens.add({
-              targets: lowManaText,
-              alpha: 0,
-              duration: 300,
-              onComplete: () => lowManaText.destroy()
-            });
+          // Pulsing effect
+          this.tweens.add({
+            targets: lowManaText,
+            scaleX: 1.0,
+            scaleY: 1.0,
+            duration: 200,
+            yoyo: true,
+            repeat: 2,
+            onComplete: () => {
+              // Keep visible for a moment then fade out
+              this.time.delayedCall(600, () => {
+                this.tweens.add({
+                  targets: lowManaText,
+                  alpha: 0,
+                  duration: 400,
+                  onComplete: () => lowManaText.destroy()
+                });
+              });
+            }
           });
         }
       });
@@ -455,43 +494,47 @@ class GameScene extends Phaser.Scene {
     try {
       // Define mana costs for firing defenses
       const fireCosts = {
-        abster: 5,
-        noot: 8, 
-        wizard: 12,
-        cannon: 15
+        chog: 5,
+        molandak: 8, 
+        moyaki: 12,
+        keon: 15
       };
       
       const manaCost = fireCosts[defense.defenseType] || 5;
       
-      // Check if player has enough mana to fire
-      if (this.gameState.mana < manaCost) {
+      // Check if defense has enough mana to fire
+      if (defense.mana < manaCost) {
         // Show "Low Mana" message above the defense
         this.showLowManaMessage(defense);
         return; // Not enough mana, skip firing
       }
       
-      // Deduct mana for firing
-      this.gameState.mana -= manaCost;
-      this.updateManaText();
+      // Deduct mana from individual defense
+      defense.mana -= manaCost;
+      
+      // Update defense mana display
+      if (defense.manaDisplay) {
+        defense.manaDisplay.setText(`Mana: ${defense.mana}/${defense.maxMana}`);
+      }
       
       // Create projectile based on defense type
       let projectileColor = 0xFFFF00;
       let projectileSize = 8;
       
       switch(defense.defenseType) {
-        case 'abster':
+        case 'chog':
           projectileColor = 0x00FFFF;
           projectileSize = 10;
           break;
-        case 'noot':
+        case 'molandak':
           projectileColor = 0xFF6600;
           projectileSize = 10;
           break;
-        case 'wizard':
+        case 'moyaki':
           projectileColor = 0xFF00FF;
           projectileSize = 12;
           break;
-        case 'cannon':
+        case 'keon':
           projectileColor = 0x666666;
           projectileSize = 14;
           break;
@@ -590,9 +633,11 @@ class GameScene extends Phaser.Scene {
             glow.setVisible(false);
           }
           
-          // Damage enemy
+          // Damage enemy (affected by weather)
           if (enemy && enemy.active) {
-            enemy.health -= defense.damage;
+            const weatherDefenseBonus = this.weatherSystem ? this.weatherSystem.defenseBonus : 1.0;
+            const effectiveDamage = defense.damage * weatherDefenseBonus;
+            enemy.health -= effectiveDamage;
             
             // Update health bar
             if (enemy.healthBar) {
@@ -986,6 +1031,9 @@ class GameScene extends Phaser.Scene {
       
       // Start power-up manager
       this.powerUpManager.start();
+      
+      // Initialize weather system
+      this.setWeather('sunny'); // Start with sunny weather
       
       // Start first wave
       this.startWave();
@@ -1381,41 +1429,93 @@ class GameScene extends Phaser.Scene {
       this.farmArea.setStrokeStyle(5, 0x3a6b3a);
       
       // Define enemy path from right to left with multiple lanes - SPAWN AT RIGHT EDGE
+      // Enhanced multi-path system with strategic routing
       this.gameState.enemyPaths = [
-        // Path 1 (top) - Start from right edge of screen
-        [
-          { x: 1920, y: 200 },  // Start at right edge
-          { x: 1700, y: 210 },
-          { x: 1400, y: 220 },
-          { x: 1100, y: 230 },
-          { x: 800, y: 240 },
-          { x: 500, y: 250 },
-          { x: 200, y: 260 },
-          { x: -50, y: 270 }    // Exit at left edge
-        ],
-        // Path 2 (middle) - Start from right edge
-        [
-          { x: 1920, y: 400 },  // Start at right edge
-          { x: 1700, y: 400 },
-          { x: 1400, y: 400 },
-          { x: 1100, y: 400 },
-          { x: 800, y: 400 },
-          { x: 500, y: 400 },
-          { x: 200, y: 400 },
-          { x: -50, y: 400 }    // Exit at left edge
-        ],
-        // Path 3 (bottom) - Start from right edge
-        [
-          { x: 1920, y: 600 },  // Start at right edge
-          { x: 1700, y: 590 },
-          { x: 1400, y: 580 },
-          { x: 1100, y: 570 },
-          { x: 800, y: 560 },
-          { x: 500, y: 550 },
-          { x: 200, y: 540 },
-          { x: -50, y: 530 }    // Exit at left edge
-        ]
+        // Path 1 (Northern Route) - Fast but exposed
+        {
+          id: 'north',
+          difficulty: 'easy',
+          speedModifier: 1.2,
+          preferredEnemies: ['basic', 'fast'],
+          points: [
+            { x: 1920, y: 150 },  // Start at right edge
+            { x: 1600, y: 160 },
+            { x: 1200, y: 180 },
+            { x: 800, y: 200 },
+            { x: 400, y: 220 },
+            { x: -50, y: 240 }    // Exit at left edge
+          ]
+        },
+        // Path 2 (Central Winding Route) - Balanced
+        {
+          id: 'central',
+          difficulty: 'medium',
+          speedModifier: 1.0,
+          preferredEnemies: ['basic', 'armored'],
+          points: [
+            { x: 1920, y: 400 },  // Start at right edge
+            { x: 1700, y: 350 },
+            { x: 1500, y: 450 },
+            { x: 1200, y: 380 },
+            { x: 900, y: 420 },
+            { x: 600, y: 360 },
+            { x: 300, y: 400 },
+            { x: -50, y: 400 }    // Exit at left edge
+          ]
+        },
+        // Path 3 (Southern Maze Route) - Slow but protected
+        {
+          id: 'south',
+          difficulty: 'hard',
+          speedModifier: 0.8,
+          preferredEnemies: ['armored', 'boss'],
+          points: [
+            { x: 1920, y: 650 },  // Start at right edge
+            { x: 1750, y: 600 },
+            { x: 1600, y: 650 },
+            { x: 1400, y: 580 },
+            { x: 1200, y: 620 },
+            { x: 1000, y: 560 },
+            { x: 800, y: 600 },
+            { x: 600, y: 540 },
+            { x: 400, y: 580 },
+            { x: 200, y: 520 },
+            { x: -50, y: 550 }    // Exit at left edge
+          ]
+        },
+        // Path 4 (Surprise Diagonal Route) - Unlocked after wave 10
+        {
+          id: 'diagonal',
+          difficulty: 'expert',
+          speedModifier: 1.1,
+          preferredEnemies: ['fast', 'boss'],
+          unlockWave: 10,
+          points: [
+            { x: 1920, y: 300 },  // Start at right edge
+            { x: 1600, y: 250 },
+            { x: 1300, y: 350 },
+            { x: 1000, y: 300 },
+            { x: 700, y: 450 },
+            { x: 400, y: 350 },
+            { x: 100, y: 500 },
+            { x: -50, y: 450 }    // Exit at left edge
+          ]
+        }
       ];
+      
+      // Initialize path analytics
+      this.gameState.pathAnalytics = {
+        north: { enemiesSpawned: 0, enemiesDefeated: 0, threatLevel: 'low' },
+        central: { enemiesSpawned: 0, enemiesDefeated: 0, threatLevel: 'medium' },
+        south: { enemiesSpawned: 0, enemiesDefeated: 0, threatLevel: 'high' },
+        diagonal: { enemiesSpawned: 0, enemiesDefeated: 0, threatLevel: 'extreme' }
+      };
+      
+      // Create path visualization
+      this.createPathVisualization();
+      
+      // Create path analytics display
+      this.createPathAnalyticsDisplay();
       
       console.log("Background created successfully");
     } catch (error) {
@@ -1455,17 +1555,55 @@ class GameScene extends Phaser.Scene {
         }
       });
       
-      // Add keyboard shortcuts
-      this.input.keyboard.on('keydown-P', () => {
-        this.setToolMode('plant');
+      // Enhanced keyboard shortcuts with visual feedback
+      const keyboardShortcuts = {
+        'keydown-A': 'attack',
+        'keydown-P': 'plant',
+        'keydown-ONE': 'chog',
+        'keydown-TWO': 'molandak',
+        'keydown-THREE': 'moyaki',
+        'keydown-FOUR': 'keon'
+      };
+      
+      Object.entries(keyboardShortcuts).forEach(([key, mode]) => {
+        this.input.keyboard.on(key, () => {
+          this.setToolMode(mode);
+          
+          // Visual feedback for keyboard shortcut usage
+          this.showKeyboardShortcutFeedback(mode, key.replace('keydown-', ''));
+        });
       });
       
-      this.input.keyboard.on('keydown-ONE', () => {
-        this.setToolMode('abster');
+      // Display keyboard shortcuts help
+      this.input.keyboard.on('keydown-H', () => {
+        this.toggleKeyboardHelp();
       });
       
-      this.input.keyboard.on('keydown-TWO', () => {
-        this.setToolMode('noot');
+      // Path visibility toggle (Shift+P to avoid conflict with plant mode)
+      this.input.keyboard.on('keydown-P', (event) => {
+        if (event.shiftKey) {
+          this.togglePathVisibility();
+        } else {
+          // Default plant mode behavior
+          this.setToolMode('plant');
+          this.showKeyboardShortcutFeedback('plant', 'P');
+        }
+      });
+      
+      // Analytics display toggle (Shift+A to avoid conflict with attack mode)
+      this.input.keyboard.on('keydown-A', (event) => {
+        if (event.shiftKey) {
+          this.toggleAnalyticsDisplay();
+        } else {
+          // Default attack mode behavior
+          this.setToolMode('attack');
+          this.showKeyboardShortcutFeedback('attack', 'A');
+        }
+      });
+      
+      // Specialization menu toggle
+      this.input.keyboard.on('keydown-S', () => {
+        this.showSpecializationMenu();
       });
       
     } catch (error) {
@@ -1479,77 +1617,27 @@ class GameScene extends Phaser.Scene {
       const padding = 30;
       const spacing = 50;
       
-      // Score text
-      this.scoreText = this.add.text(padding, padding, "Score: 0", {
-        fontFamily: 'Arial',
-        fontSize: '32px',
-        color: '#FFFFFF',
-        stroke: '#000000',
-        strokeThickness: 3
-      });
+      // Modern HUD Elements
+      const scoreHUD = this.uiStyle.createHUDElement(padding + 80, padding + 20, 'SCORE', '0', '🎯');
+      this.scoreText = scoreHUD.value;
       
-      // Farm coins text
-      this.farmCoinsText = this.add.text(padding, padding + spacing, "Farm Coins: 120", {
-        fontFamily: 'Arial',
-        fontSize: '32px',
-        color: '#FFFF00',
-        stroke: '#000000',
-        strokeThickness: 3
-      });
+      const coinsHUD = this.uiStyle.createHUDElement(padding + 80, padding + spacing + 20, 'COINS', '120', '💰');
+      this.farmCoinsText = coinsHUD.value;
       
-      // Wave text
-      this.waveText = this.add.text(padding, padding + spacing * 2, "Wave: 1", {
-        fontFamily: 'Arial',
-        fontSize: '32px',
-        color: '#FFFFFF',
-        stroke: '#000000',
-        strokeThickness: 3
-      });
+      const waveHUD = this.uiStyle.createHUDElement(padding + 80, padding + spacing * 2 + 20, 'WAVE', '1', '⚔️');
+      this.waveText = waveHUD.value;
       
-      // Lives text
-      this.livesText = this.add.text(padding, padding + spacing * 3, "Lives: 3", {
-        fontFamily: 'Arial',
-        fontSize: '32px',
-        color: '#FF0000',
-        stroke: '#000000',
-        strokeThickness: 3
-      });
+      const livesHUD = this.uiStyle.createHUDElement(padding + 80, padding + spacing * 3 + 20, 'LIVES', '3', '❤️');
+      this.livesText = livesHUD.value;
       
-      // Mana text
-      this.manaText = this.add.text(padding, padding + spacing * 4, `Mana: ${this.gameState.mana}/${this.gameState.maxMana}`, {
-        fontFamily: 'Arial',
-        fontSize: '32px',
-        color: '#00AAFF',
-        stroke: '#000000',
-        strokeThickness: 3
-      });
+      // Mana text and bar removed from top UI section
       
-      // Create mana bar background
-      this.manaBarBg = this.add.rectangle(padding + 100, padding + spacing * 4 + 25, 200, 15, 0x000000, 0.5);
-      this.manaBarBg.setOrigin(0, 0.5);
+      // Modern Instructions Panel
+      const instructionsPanel = this.uiStyle.createModernPanel(padding, this.cameras.main.height - 140, 400, 120, 'dark');
       
-      // Create mana bar fill
-      this.manaBarFill = this.add.rectangle(padding + 100, padding + spacing * 4 + 25, 200 * (this.gameState.mana / this.gameState.maxMana), 15, 0x00AAFF, 1);
-      this.manaBarFill.setOrigin(0, 0.5);
-      
-      // Instructions
-      this.add.text(padding, this.cameras.main.height - 120, "Click farm plots to plant crops", {
-        fontFamily: 'Arial',
-        fontSize: '20px',
-        color: '#FFFFFF'
-      });
-      
-      this.add.text(padding, this.cameras.main.height - 90, "Click enemies to attack them", {
-        fontFamily: 'Arial',
-        fontSize: '20px',
-        color: '#FFFFFF'
-      });
-      
-      this.add.text(padding, this.cameras.main.height - 60, "Defend your farm from waves of enemies!", {
-        fontFamily: 'Arial',
-        fontSize: '20px',
-        color: '#FFFFFF'
-      });
+      this.uiStyle.createStyledText(padding + 20, this.cameras.main.height - 120, "🌱 Click farm plots to plant crops", 'bodySmall');
+      this.uiStyle.createStyledText(padding + 20, this.cameras.main.height - 95, "⚔️ Click enemies to attack them", 'bodySmall');
+      this.uiStyle.createStyledText(padding + 20, this.cameras.main.height - 70, "🛡️ Defend your farm from waves of enemies!", 'bodySmall');
       
       console.log("Game UI created");
       
@@ -1618,7 +1706,6 @@ class GameScene extends Phaser.Scene {
     try {
       // Enemy types based on available enemy sprites from logo folder
       const enemyTypes = [
-        { sprite: 'enemy_slime', health: 2, speed: 50, value: 10, name: 'slime', scale: 2.0 },
         { sprite: 'enemy_goblin', health: 3, speed: 60, value: 15, name: 'goblin', scale: 2.0 },
         { sprite: 'enemy_orc', health: 4, speed: 40, value: 20, name: 'orc', scale: 2.2 },
         { sprite: 'enemy_dragon', health: 6, speed: 30, value: 30, name: 'dragon', scale: 2.5 },
@@ -1629,22 +1716,24 @@ class GameScene extends Phaser.Scene {
       // Choose enemy type based on wave
       let enemyType;
       if (this.gameState.wave >= 8 && Math.random() < 0.15) {
-        enemyType = enemyTypes[5]; // Demon (Ultimate Boss)
+        enemyType = enemyTypes[4]; // Demon (Ultimate Boss)
       } else if (this.gameState.wave >= 6 && Math.random() < 0.2) {
-        enemyType = enemyTypes[4]; // Skeleton
+        enemyType = enemyTypes[3]; // Skeleton
       } else if (this.gameState.wave >= 4 && Math.random() < 0.25) {
-        enemyType = enemyTypes[3]; // Dragon (Boss)
+        enemyType = enemyTypes[2]; // Dragon (Boss)
       } else if (this.gameState.wave >= 3 && Math.random() < 0.3) {
-        enemyType = enemyTypes[2]; // Orc
-      } else if (this.gameState.wave >= 2 && Math.random() < 0.4) {
-        enemyType = enemyTypes[1]; // Goblin
+        enemyType = enemyTypes[1]; // Orc
       } else {
-        enemyType = enemyTypes[0]; // Slime
+        enemyType = enemyTypes[0]; // Goblin
       }
       
-      // Choose random path from available paths
-      const pathIndex = Math.floor(Math.random() * this.gameState.enemyPaths.length);
-      const selectedPath = this.gameState.enemyPaths[pathIndex];
+      // Intelligent path selection based on enemy type and wave progression
+      const availablePaths = this.getAvailablePathsForWave(this.gameState.wave);
+      const selectedPathData = this.selectOptimalPath(enemyType, availablePaths);
+      const selectedPath = selectedPathData.points;
+      
+      // Update path analytics
+      this.gameState.pathAnalytics[selectedPathData.id].enemiesSpawned++;
       
       // Create enemy sprite using loaded image
       const startPoint = selectedPath[0];
@@ -1654,14 +1743,18 @@ class GameScene extends Phaser.Scene {
       enemy.setInteractive({ useHandCursor: true });
       enemy.setDepth(12); // Set proper depth for enemies
       
-      // Enemy properties
+      // Enemy properties with path modifiers
       enemy.health = enemyType.health + Math.floor(this.gameState.wave / 3);
       enemy.maxHealth = enemy.health;
-      enemy.speed = enemyType.speed;
+      enemy.speed = enemyType.speed * selectedPathData.speedModifier;
       enemy.value = enemyType.value;
       enemy.type = enemyType.name;
-      enemy.pathIndex = pathIndex;
+      enemy.pathData = selectedPathData;
+      enemy.pathIndex = this.gameState.enemyPaths.indexOf(selectedPathData);
       enemy.currentPointIndex = 0;
+      
+      // Add path indicator visual
+      this.showPathIndicator(enemy, selectedPathData);
       
       // Health bar
       enemy.healthBar = this.add.graphics();
@@ -1689,7 +1782,436 @@ class GameScene extends Phaser.Scene {
     }
   }
   
-  // Move enemy along predefined path
+  // Get available paths for current wave
+  getAvailablePathsForWave(wave) {
+    return this.gameState.enemyPaths.filter(path => {
+      return !path.unlockWave || wave >= path.unlockWave;
+    });
+  }
+  
+  // Select optimal path based on enemy type and current game state
+  selectOptimalPath(enemyType, availablePaths) {
+    // Calculate path scores based on multiple factors
+    const pathScores = availablePaths.map(path => {
+      let score = 0;
+      
+      // Preference for enemy type
+      if (path.preferredEnemies.includes(enemyType.name) || 
+          (enemyType.name === 'demon' && path.preferredEnemies.includes('boss')) ||
+          (enemyType.name === 'dragon' && path.preferredEnemies.includes('boss'))) {
+        score += 50;
+      }
+      
+      // Balance path usage (avoid overusing same path)
+      const analytics = this.gameState.pathAnalytics[path.id];
+      const usageRatio = analytics.enemiesSpawned / Math.max(1, this.gameState.wave);
+      score -= usageRatio * 20; // Penalty for overused paths
+      
+      // Difficulty scaling with wave
+      if (this.gameState.wave >= 5 && path.difficulty === 'easy') {
+        score -= 10; // Reduce easy path usage in later waves
+      }
+      if (this.gameState.wave >= 10 && path.difficulty === 'expert') {
+        score += 15; // Favor expert paths in late game
+      }
+      
+      // Random factor for unpredictability
+      score += Math.random() * 30;
+      
+      return { path, score };
+    });
+    
+    // Sort by score and select the best path
+    pathScores.sort((a, b) => b.score - a.score);
+    return pathScores[0].path;
+  }
+  
+  // Show visual indicator for enemy path
+  showPathIndicator(enemy, pathData) {
+    // Create a small colored indicator above the enemy
+    const colors = {
+      'north': 0x00FF00,    // Green for easy/fast
+      'central': 0xFFFF00,  // Yellow for balanced
+      'south': 0xFF8800,    // Orange for hard
+      'diagonal': 0xFF0000  // Red for expert
+    };
+    
+    const indicator = this.add.circle(enemy.x, enemy.y - 45, 4, colors[pathData.id]);
+    indicator.setDepth(14);
+    indicator.setAlpha(0.8);
+    
+    // Attach indicator to enemy for movement
+    enemy.pathIndicator = indicator;
+    
+    // Add pulsing effect for expert paths
+    if (pathData.difficulty === 'expert') {
+      this.tweens.add({
+        targets: indicator,
+        scaleX: 1.5,
+        scaleY: 1.5,
+        alpha: 0.4,
+        duration: 800,
+        yoyo: true,
+        repeat: -1
+      });
+    }
+   }
+   
+   // Create path visualization overlay
+   createPathVisualization() {
+     try {
+       this.pathOverlays = [];
+       this.pathLabels = [];
+       
+       const pathColors = {
+         'north': { color: 0x00FF00, alpha: 0.3 },    // Green for easy
+         'central': { color: 0xFFFF00, alpha: 0.3 },  // Yellow for balanced
+         'south': { color: 0xFF8800, alpha: 0.3 },    // Orange for hard
+         'diagonal': { color: 0xFF0000, alpha: 0.3 }  // Red for expert
+       };
+       
+       this.gameState.enemyPaths.forEach((pathData, index) => {
+         const pathColor = pathColors[pathData.id];
+         
+         // Create path line graphics
+         const pathGraphics = this.add.graphics();
+         pathGraphics.setDepth(1); // Behind most game elements
+         pathGraphics.setAlpha(0); // Initially hidden
+         
+         // Draw path line
+         pathGraphics.lineStyle(8, pathColor.color, pathColor.alpha);
+         pathGraphics.beginPath();
+         
+         pathData.points.forEach((point, pointIndex) => {
+           if (pointIndex === 0) {
+             pathGraphics.moveTo(point.x, point.y);
+           } else {
+             pathGraphics.lineTo(point.x, point.y);
+           }
+         });
+         
+         pathGraphics.strokePath();
+         
+         // Add path difficulty indicators
+         const midPoint = pathData.points[Math.floor(pathData.points.length / 2)];
+         const difficultyText = this.add.text(midPoint.x, midPoint.y - 20, 
+           `${pathData.id.toUpperCase()}\n${pathData.difficulty}\nSpeed: ${pathData.speedModifier}x`, {
+           fontSize: '12px',
+           fill: '#ffffff',
+           backgroundColor: '#000000',
+           padding: { x: 4, y: 2 },
+           align: 'center'
+         });
+         difficultyText.setOrigin(0.5);
+         difficultyText.setDepth(2);
+         difficultyText.setAlpha(0); // Initially hidden
+         
+         this.pathOverlays.push(pathGraphics);
+         this.pathLabels.push(difficultyText);
+       });
+       
+       // Add path visibility toggle button
+        this.pathToggleButton = this.add.text(20, 120, 'Show Paths [Shift+P]', {
+          fontSize: '14px',
+          fill: '#ffffff',
+          backgroundColor: '#333333',
+          padding: { x: 8, y: 4 }
+        });
+       this.pathToggleButton.setDepth(20);
+       this.pathToggleButton.setInteractive({ useHandCursor: true });
+       this.pathToggleButton.on('pointerdown', () => this.togglePathVisibility());
+       
+       this.pathsVisible = false;
+       
+     } catch (error) {
+       console.error("Error creating path visualization:", error);
+     }
+   }
+   
+   // Toggle path visibility
+   togglePathVisibility() {
+     try {
+       this.pathsVisible = !this.pathsVisible;
+       const targetAlpha = this.pathsVisible ? 1 : 0;
+       
+       // Animate path overlays
+       this.pathOverlays.forEach(overlay => {
+         this.tweens.add({
+           targets: overlay,
+           alpha: targetAlpha,
+           duration: 300,
+           ease: 'Power2'
+         });
+       });
+       
+       // Animate path labels
+       this.pathLabels.forEach(label => {
+         this.tweens.add({
+           targets: label,
+           alpha: targetAlpha,
+           duration: 300,
+           ease: 'Power2'
+         });
+       });
+       
+       // Update button text
+        this.pathToggleButton.setText(this.pathsVisible ? 'Hide Paths [Shift+P]' : 'Show Paths [Shift+P]');
+       
+     } catch (error) {
+       console.error("Error toggling path visibility:", error);
+     }
+   }
+    
+    // Create path analytics display
+    createPathAnalyticsDisplay() {
+      try {
+        // Analytics panel background
+        this.analyticsPanel = this.add.graphics();
+        this.analyticsPanel.fillStyle(0x000000, 0.8);
+        this.analyticsPanel.fillRoundedRect(20, 160, 280, 200, 10);
+        this.analyticsPanel.lineStyle(2, 0x444444, 1);
+        this.analyticsPanel.strokeRoundedRect(20, 160, 280, 200, 10);
+        this.analyticsPanel.setDepth(19);
+        this.analyticsPanel.setAlpha(0); // Initially hidden
+        
+        // Analytics title
+        this.analyticsTitle = this.add.text(30, 170, 'PATH ANALYTICS', {
+          fontSize: '16px',
+          fill: '#ffffff',
+          fontStyle: 'bold'
+        });
+        this.analyticsTitle.setDepth(20);
+        this.analyticsTitle.setAlpha(0);
+        
+        // Path statistics texts
+        this.pathStatsTexts = {};
+        const pathColors = {
+          'north': '#00FF00',
+          'central': '#FFFF00', 
+          'south': '#FF8800',
+          'diagonal': '#FF0000'
+        };
+        
+        let yOffset = 200;
+        Object.keys(this.gameState.pathAnalytics).forEach((pathId, index) => {
+          const pathColor = pathColors[pathId];
+          
+          this.pathStatsTexts[pathId] = this.add.text(30, yOffset, '', {
+            fontSize: '12px',
+            fill: pathColor,
+            fontFamily: 'monospace'
+          });
+          this.pathStatsTexts[pathId].setDepth(20);
+          this.pathStatsTexts[pathId].setAlpha(0);
+          
+          yOffset += 35;
+        });
+        
+        // Analytics toggle button
+         this.analyticsToggleButton = this.add.text(20, 370, 'Show Analytics [Shift+A]', {
+           fontSize: '14px',
+           fill: '#ffffff',
+           backgroundColor: '#333333',
+           padding: { x: 8, y: 4 }
+         });
+        this.analyticsToggleButton.setDepth(20);
+        this.analyticsToggleButton.setInteractive({ useHandCursor: true });
+        this.analyticsToggleButton.on('pointerdown', () => this.toggleAnalyticsDisplay());
+        
+        // Specialization button
+        this.specializationButton = this.add.text(20, 410, 'Specializations [S]', {
+          fontSize: '14px',
+          fill: '#ffffff',
+          backgroundColor: '#4a90e2',
+          padding: { x: 8, y: 4 }
+        });
+        this.specializationButton.setDepth(20);
+        this.specializationButton.setInteractive({ useHandCursor: true });
+        this.specializationButton.on('pointerdown', () => this.showSpecializationMenu());
+        
+        this.analyticsVisible = false;
+        
+        // Update analytics every second
+        this.time.addEvent({
+          delay: 1000,
+          callback: this.updatePathAnalyticsDisplay,
+          callbackScope: this,
+          loop: true
+        });
+        
+      } catch (error) {
+        console.error("Error creating path analytics display:", error);
+      }
+    }
+    
+    // Toggle analytics display
+    toggleAnalyticsDisplay() {
+      try {
+        this.analyticsVisible = !this.analyticsVisible;
+        const targetAlpha = this.analyticsVisible ? 1 : 0;
+        
+        // Animate analytics panel
+        this.tweens.add({
+          targets: [this.analyticsPanel, this.analyticsTitle],
+          alpha: targetAlpha,
+          duration: 300,
+          ease: 'Power2'
+        });
+        
+        // Animate path stats texts
+        Object.values(this.pathStatsTexts).forEach(text => {
+          this.tweens.add({
+            targets: text,
+            alpha: targetAlpha,
+            duration: 300,
+            ease: 'Power2'
+          });
+        });
+        
+        // Update button text
+         this.analyticsToggleButton.setText(this.analyticsVisible ? 'Hide Analytics [Shift+A]' : 'Show Analytics [Shift+A]');
+        
+      } catch (error) {
+        console.error("Error toggling analytics display:", error);
+      }
+    }
+    
+    // Update path analytics display
+    updatePathAnalyticsDisplay() {
+      try {
+        if (!this.analyticsVisible || !this.pathStatsTexts) return;
+        
+        Object.entries(this.gameState.pathAnalytics).forEach(([pathId, analytics]) => {
+          const successRate = analytics.enemiesSpawned > 0 ? 
+            Math.round((analytics.enemiesDefeated / analytics.enemiesSpawned) * 100) : 0;
+          
+          const threatIndicator = {
+            'low': '●',
+            'medium': '●●',
+            'high': '●●●',
+            'extreme': '●●●●'
+          }[analytics.threatLevel] || '●';
+          
+          const statsText = `${pathId.toUpperCase()}:\n` +
+                           `Spawned: ${analytics.enemiesSpawned}\n` +
+                           `Defeated: ${analytics.enemiesDefeated}\n` +
+                           `Success: ${successRate}%\n` +
+                           `Threat: ${threatIndicator}`;
+          
+          if (this.pathStatsTexts[pathId]) {
+            this.pathStatsTexts[pathId].setText(statsText);
+          }
+        });
+        
+      } catch (error) {
+        console.error("Error updating path analytics display:", error);
+      }
+    }
+    
+    // Show specialization menu
+    showSpecializationMenu() {
+      try {
+        // Create a simple defense type selector
+        if (this.specializationMenuVisible) {
+          this.hideSpecializationMenu();
+          return;
+        }
+        
+        const defenseTypes = ['chog', 'molandak', 'moyaki', 'keon'];
+        const centerX = this.cameras.main.centerX;
+        const centerY = this.cameras.main.centerY;
+        
+        // Create overlay
+        this.specMenuOverlay = this.add.rectangle(
+          centerX, centerY,
+          this.cameras.main.width, this.cameras.main.height,
+          0x000000, 0.5
+        );
+        this.specMenuOverlay.setDepth(999);
+        this.specMenuOverlay.setInteractive();
+        this.specMenuOverlay.on('pointerdown', () => this.hideSpecializationMenu());
+        
+        // Create menu panel
+        this.specMenuPanel = this.add.rectangle(centerX, centerY, 600, 400, 0x2a2a2a);
+        this.specMenuPanel.setStrokeStyle(3, 0x4a90e2);
+        this.specMenuPanel.setDepth(1000);
+        
+        // Title
+        this.specMenuTitle = this.add.text(centerX, centerY - 150, 'Select Defense Type to Specialize', {
+          fontSize: '24px',
+          fontFamily: 'Arial',
+          fill: '#ffffff',
+          fontStyle: 'bold'
+        }).setOrigin(0.5).setDepth(1001);
+        
+        // Defense type buttons
+        this.specMenuButtons = [];
+        defenseTypes.forEach((defenseType, index) => {
+          const x = centerX - 150 + (index % 2) * 300;
+          const y = centerY - 50 + Math.floor(index / 2) * 100;
+          
+          const button = this.add.rectangle(x, y, 200, 60, 0x4a90e2);
+          button.setStrokeStyle(2, 0x6ab7ff);
+          button.setDepth(1001);
+          button.setInteractive({ useHandCursor: true });
+          
+          const buttonText = this.add.text(x, y, defenseType.toUpperCase(), {
+            fontSize: '18px',
+            fontFamily: 'Arial',
+            fill: '#ffffff',
+            fontStyle: 'bold'
+          }).setOrigin(0.5).setDepth(1002);
+          
+          button.on('pointerover', () => button.setFillStyle(0x6ab7ff));
+          button.on('pointerout', () => button.setFillStyle(0x4a90e2));
+          button.on('pointerdown', () => {
+            this.hideSpecializationMenu();
+            this.specializationUI.show(defenseType);
+          });
+          
+          this.specMenuButtons.push(button, buttonText);
+        });
+        
+        // Close button
+        this.specMenuClose = this.add.text(centerX + 270, centerY - 150, '✕', {
+          fontSize: '24px',
+          fontFamily: 'Arial',
+          fill: '#ff6b6b',
+          fontStyle: 'bold'
+        }).setOrigin(0.5).setDepth(1002);
+        this.specMenuClose.setInteractive({ useHandCursor: true });
+        this.specMenuClose.on('pointerdown', () => this.hideSpecializationMenu());
+        
+        this.specializationMenuVisible = true;
+        
+      } catch (error) {
+        console.error("Error showing specialization menu:", error);
+      }
+    }
+    
+    // Hide specialization menu
+    hideSpecializationMenu() {
+      try {
+        if (this.specMenuOverlay) this.specMenuOverlay.destroy();
+        if (this.specMenuPanel) this.specMenuPanel.destroy();
+        if (this.specMenuTitle) this.specMenuTitle.destroy();
+        if (this.specMenuClose) this.specMenuClose.destroy();
+        
+        if (this.specMenuButtons) {
+          this.specMenuButtons.forEach(button => {
+            if (button && button.destroy) button.destroy();
+          });
+          this.specMenuButtons = [];
+        }
+        
+        this.specializationMenuVisible = false;
+        
+      } catch (error) {
+        console.error("Error hiding specialization menu:", error);
+      }
+    }
+    
+    // Move enemy along predefined path
   moveEnemyAlongPath(enemy, path) {
     try {
       if (enemy.currentPointIndex >= path.length - 1) {
@@ -1717,6 +2239,11 @@ class GameScene extends Phaser.Scene {
           if (enemy.healthBar) {
             enemy.healthBar.x = enemy.x - 20;
             enemy.healthBar.y = enemy.y - 35;
+          }
+          // Update path indicator position
+          if (enemy.pathIndicator) {
+            enemy.pathIndicator.x = enemy.x;
+            enemy.pathIndicator.y = enemy.y - 45;
           }
         },
         onComplete: () => {
@@ -1760,26 +2287,34 @@ class GameScene extends Phaser.Scene {
       // Handle different tool modes with world coordinates
       switch (this.toolMode) {
         case 'attack':
-          // Check if we hit any enemies with larger hit area for easier clicking
+          // Find the closest enemy within hit radius to attack only one enemy per click
+          let closestEnemy = null;
+          let closestDistance = Infinity;
+          const hitAreaSize = 80 * (this.scale.displayScale.x + this.scale.displayScale.y) / 2;
+          
           this.enemies.forEach(enemy => {
             if (!enemy.active) return;
             const distance = Phaser.Math.Distance.Between(worldX, worldY, enemy.x, enemy.y);
-            // Scale hit area based on resolution for consistent experience
-            const hitAreaSize = 80 * (this.scale.displayScale.x + this.scale.displayScale.y) / 2;
-            if (distance < hitAreaSize) {
-              this.attackEnemy(enemy);
+            if (distance < hitAreaSize && distance < closestDistance) {
+              closestEnemy = enemy;
+              closestDistance = distance;
             }
           });
+          
+          // Attack only the closest enemy if found
+          if (closestEnemy) {
+            this.attackEnemy(closestEnemy);
+          }
           break;
           
         case 'plant':
           this.handlePlantPlacement(worldX, worldY);
           break;
           
-        case 'abster':
-        case 'noot':
-        case 'wizard':
-        case 'cannon':
+        case 'chog':
+        case 'molandak':
+        case 'moyaki':
+        case 'keon':
           this.handleDefensePlacement(worldX, worldY, this.toolMode);
           break;
       }
@@ -1892,6 +2427,11 @@ class GameScene extends Phaser.Scene {
       this.gameState.score += enemy.value;
       this.gameState.farmCoins += 5;
       
+      // Update path analytics - enemy was defeated
+      if (enemy.pathData && this.gameState.pathAnalytics[enemy.pathData.id]) {
+        this.gameState.pathAnalytics[enemy.pathData.id].enemiesDefeated++;
+      }
+      
       // Update UI
       this.updateScoreText();
       this.updateFarmCoinsText();
@@ -1905,6 +2445,7 @@ class GameScene extends Phaser.Scene {
         onComplete: () => {
           enemy.destroy();
           if (enemy.healthBar) enemy.healthBar.destroy();
+          if (enemy.pathIndicator) enemy.pathIndicator.destroy();
         }
       });
       
@@ -1933,9 +2474,22 @@ class GameScene extends Phaser.Scene {
       this.gameState.lives--;
       this.updateLivesText();
       
+      // Path analytics - enemy reached end (not defeated)
+      if (enemy.pathData && this.gameState.pathAnalytics[enemy.pathData.id]) {
+        // Increase threat level for paths that let enemies through
+        const analytics = this.gameState.pathAnalytics[enemy.pathData.id];
+        const escapeRate = (analytics.enemiesSpawned - analytics.enemiesDefeated) / analytics.enemiesSpawned;
+        if (escapeRate > 0.3) {
+          analytics.threatLevel = 'high';
+        } else if (escapeRate > 0.1) {
+          analytics.threatLevel = 'medium';
+        }
+      }
+      
       // Remove enemy
       enemy.destroy();
       if (enemy.healthBar) enemy.healthBar.destroy();
+      if (enemy.pathIndicator) enemy.pathIndicator.destroy();
       
       const index = this.enemies.indexOf(enemy);
       if (index > -1) {
@@ -1972,10 +2526,10 @@ class GameScene extends Phaser.Scene {
       const completedWave = this.gameState.wave;
       this.gameState.wave++;
 
-      // Special celebration for milestone waves (every 5 waves)
+      // Weather changes every 5 waves
       const isMilestoneWave = completedWave % 5 === 0;
       if (isMilestoneWave) {
-        this.changeBackground();
+        this.changeWeather();
       }
       
       console.log(`Wave ${completedWave} complete! Starting wave ${this.gameState.wave}`);
@@ -2075,10 +2629,202 @@ class GameScene extends Phaser.Scene {
     }
   }
 
-  // Change background color
-  changeBackground() {
-    const newTintColor = Phaser.Math.RND.integerInRange(0x000000, 0x666666); // Darker colors
-    this.cameras.main.setBackgroundColor(newTintColor);
+  // Weather System Implementation
+  changeWeather() {
+    // Cycle through weather types
+    const currentIndex = this.weatherSystem.weatherTypes.indexOf(this.weatherSystem.currentWeather);
+    const nextIndex = (currentIndex + 1) % this.weatherSystem.weatherTypes.length;
+    const newWeather = this.weatherSystem.weatherTypes[nextIndex];
+    
+    this.setWeather(newWeather);
+  }
+  
+  setWeather(weatherType) {
+    // Clean up previous weather effects
+    this.clearWeatherEffects();
+    
+    this.weatherSystem.currentWeather = weatherType;
+    
+    // Apply weather effects
+    switch (weatherType) {
+      case 'sunny':
+        this.applySunnyWeather();
+        break;
+      case 'rainy':
+        this.applyRainyWeather();
+        break;
+      case 'snow':
+        this.applySnowWeather();
+        break;
+    }
+    
+    // Show weather change notification
+    this.showWeatherChangeNotification(weatherType);
+  }
+  
+  applySunnyWeather() {
+    // Bright, warm lighting
+    this.cameras.main.setBackgroundColor('#87CEEB'); // Sky blue
+    
+    // Sunny weather effects: increased mana regeneration
+    this.weatherSystem.manaBonus = 1.5;
+    this.weatherSystem.enemySpeedModifier = 1.0;
+    
+    // Add sun rays effect
+    if (this.particleEffects) {
+      this.weatherSystem.weatherParticles = this.add.particles(0, 0, 'coin', {
+        x: { min: 0, max: this.cameras.main.width },
+        y: { min: -50, max: 0 },
+        scale: { start: 0.1, end: 0.05 },
+        alpha: { start: 0.3, end: 0 },
+        speed: { min: 20, max: 40 },
+        lifespan: 3000,
+        frequency: 2000,
+        tint: 0xFFD700,
+        blendMode: 'ADD'
+      });
+      this.weatherSystem.weatherParticles.setDepth(10);
+    }
+  }
+  
+  applyRainyWeather() {
+    // Dark, stormy atmosphere
+    this.cameras.main.setBackgroundColor('#2F4F4F'); // Dark slate gray
+    
+    // Rainy weather effects: reduced enemy speed, increased defense damage
+    this.weatherSystem.manaBonus = 1.0;
+    this.weatherSystem.enemySpeedModifier = 0.7;
+    this.weatherSystem.defenseBonus = 1.3;
+    
+    // Add rain particles
+    if (this.add.particles) {
+      this.weatherSystem.weatherParticles = this.add.particles(0, 0, 'iceball', {
+        x: { min: -100, max: this.cameras.main.width + 100 },
+        y: { min: -50, max: 0 },
+        scale: { start: 0.05, end: 0.02 },
+        alpha: { start: 0.8, end: 0.3 },
+        speedX: { min: -20, max: 20 },
+        speedY: { min: 200, max: 400 },
+        lifespan: 2000,
+        frequency: 50,
+        tint: 0x87CEEB
+      });
+      this.weatherSystem.weatherParticles.setDepth(1000);
+    }
+  }
+  
+  applySnowWeather() {
+    // Cold, winter atmosphere
+    this.cameras.main.setBackgroundColor('#B0C4DE'); // Light steel blue
+    
+    // Snow weather effects: slower enemy movement, reduced mana regen
+    this.weatherSystem.manaBonus = 0.7;
+    this.weatherSystem.enemySpeedModifier = 0.5;
+    this.weatherSystem.defenseBonus = 1.0;
+    
+    // Add snow particles
+    if (this.add.particles) {
+      this.weatherSystem.weatherParticles = this.add.particles(0, 0, 'coin', {
+        x: { min: 0, max: this.cameras.main.width },
+        y: { min: -50, max: 0 },
+        scale: { start: 0.08, end: 0.12 },
+        alpha: { start: 0.9, end: 0.4 },
+        speedX: { min: -30, max: 30 },
+        speedY: { min: 50, max: 150 },
+        lifespan: 4000,
+        frequency: 100,
+        tint: 0xFFFFFF,
+        bounce: 0.2
+      });
+      this.weatherSystem.weatherParticles.setDepth(1000);
+    }
+  }
+  
+  clearWeatherEffects() {
+    if (this.weatherSystem.weatherParticles) {
+      this.weatherSystem.weatherParticles.destroy();
+      this.weatherSystem.weatherParticles = null;
+    }
+    if (this.weatherSystem.weatherOverlay) {
+      this.weatherSystem.weatherOverlay.destroy();
+      this.weatherSystem.weatherOverlay = null;
+    }
+    
+    // Reset weather modifiers
+    this.weatherSystem.manaBonus = 1.0;
+    this.weatherSystem.enemySpeedModifier = 1.0;
+    this.weatherSystem.defenseBonus = 1.0;
+  }
+  
+  showWeatherChangeNotification(weatherType) {
+    const weatherNames = {
+      'sunny': '☀️ Sunny Weather',
+      'rainy': '🌧️ Rainy Weather', 
+      'snow': '❄️ Snow Weather'
+    };
+    
+    const weatherEffects = {
+      'sunny': 'Mana regeneration increased!',
+      'rainy': 'Enemies slowed, defenses boosted!',
+      'snow': 'Enemies frozen, mana regen reduced!'
+    };
+    
+    // Create weather notification
+    const weatherText = this.add.text(
+      this.cameras.main.width / 2,
+      this.cameras.main.height / 2 - 100,
+      weatherNames[weatherType],
+      {
+        fontFamily: 'Arial',
+        fontSize: '42px',
+        color: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 4,
+        align: 'center'
+      }
+    );
+    weatherText.setOrigin(0.5);
+    weatherText.setDepth(2500);
+    
+    const effectText = this.add.text(
+      this.cameras.main.width / 2,
+      this.cameras.main.height / 2 - 50,
+      weatherEffects[weatherType],
+      {
+        fontFamily: 'Arial',
+        fontSize: '24px',
+        color: '#ffff00',
+        stroke: '#000000',
+        strokeThickness: 2,
+        align: 'center'
+      }
+    );
+    effectText.setOrigin(0.5);
+    effectText.setDepth(2500);
+    
+    // Animate weather notification
+    this.tweens.add({
+      targets: [weatherText, effectText],
+      scaleX: { from: 0.3, to: 1 },
+      scaleY: { from: 0.3, to: 1 },
+      alpha: { from: 0, to: 1 },
+      duration: 800,
+      ease: 'Back.easeOut'
+    });
+    
+    // Remove notification after delay
+    this.time.delayedCall(3000, () => {
+      this.tweens.add({
+        targets: [weatherText, effectText],
+        alpha: 0,
+        y: '-=30',
+        duration: 500,
+        onComplete: () => {
+          weatherText.destroy();
+          effectText.destroy();
+        }
+      });
+    });
   }
 
   // Update UI methods
@@ -2321,28 +3067,17 @@ class GameScene extends Phaser.Scene {
       if (this.gameState.score > currentHighScore) {
       }
       
-      const gameOverText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2 - 50, 'GAME OVER', {
-        fontFamily: 'Arial Black',
-        fontSize: '64px',
-        color: '#FF0000',
-        stroke: '#000000',
-        strokeThickness: 6
-      }).setOrigin(0.5).setDepth(5000); // Very high depth for game over UI
-      
-      const finalScoreText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2 + 20, `Final Score: ${this.gameState.score}`, {
-        fontFamily: 'Arial',
-        fontSize: '32px',
-        color: '#FFFFFF',
-        stroke: '#000000',
-        strokeThickness: 3
+      // Modern Game Over Screen
+      const gameOverText = this.uiStyle.createStyledText(this.cameras.main.width / 2, this.cameras.main.height / 2 - 50, 'GAME OVER', 'h1', {
+        color: this.uiStyle.colors.danger.main,
+        glow: { color: this.uiStyle.colors.danger.light }
       }).setOrigin(0.5).setDepth(5000);
       
-      const waveReachedText = this.add.text(this.cameras.main.width / 2, this.cameras.main.height / 2 + 60, `Waves Survived: ${this.gameState.wave - 1}`, {
-        fontFamily: 'Arial',
-        fontSize: '24px',
-        color: '#FFFF00',
-        stroke: '#000000',
-        strokeThickness: 2
+      const finalScoreText = this.uiStyle.createStyledText(this.cameras.main.width / 2, this.cameras.main.height / 2 + 20, `Final Score: ${this.gameState.score}`, 'h2')
+        .setOrigin(0.5).setDepth(5000);
+      
+      const waveReachedText = this.uiStyle.createStyledText(this.cameras.main.width / 2, this.cameras.main.height / 2 + 60, `Waves Survived: ${this.gameState.wave - 1}`, 'h3', {
+        color: this.uiStyle.colors.warning.main
       }).setOrigin(0.5).setDepth(5000);
       
       // New high score notification
@@ -2979,65 +3714,65 @@ class GameScene extends Phaser.Scene {
           action: () => this.setToolMode('plant')
         },
         {
-          key: 'abster',
+          key: 'chog',
           x: startX + buttonSpacing * 2,
           color: 0x3366ff,
           glowColor: 0x6699ff,
           icon: '🧙‍♂️',
-          label: 'Ice Mage',
-          sprite: 'abster_idle',
+          label: 'Chog Defense',
+          sprite: 'chog_idle',
           action: () => {
-            this.pendingDefenseType = 'abster';
+            this.pendingDefenseType = 'chog';
             this.pendingDefensePlacement = true;
-            this.setToolMode('abster');
+            this.setToolMode('chog');
             // Clear any auto-placement to prevent placing defense on toolbar
             this.input.setDefaultCursor('url(assets/cursors/tower.cur), pointer');
           }
         },
         {
-          key: 'noot',
+          key: 'molandak',
           x: startX + buttonSpacing * 3,
           color: 0xff6633,
           glowColor: 0xff9966,
           icon: '🔥',
-          label: 'Fire Mage',
-          sprite: 'noot_idle',
+          label: 'Molandak Defense',
+          sprite: 'molandak_idle',
           action: () => {
-            this.pendingDefenseType = 'noot';
+            this.pendingDefenseType = 'molandak';
             this.pendingDefensePlacement = true;
-            this.setToolMode('noot');
+            this.setToolMode('molandak');
             // Clear any auto-placement to prevent placing defense on toolbar
             this.input.setDefaultCursor('url(assets/cursors/tower.cur), pointer');
           }
         },
         {
-          key: 'wizard',
+          key: 'moyaki',
           x: startX + buttonSpacing * 4,
           color: 0x9933ff,
           glowColor: 0xbb66ff,
           icon: '✨',
-          label: 'Wizard',
-          sprite: 'wizard_idle',
+          label: 'Moyaki Defense',
+          sprite: 'moyaki_idle',
           action: () => {
-            this.pendingDefenseType = 'wizard';
+            this.pendingDefenseType = 'moyaki';
             this.pendingDefensePlacement = true;
-            this.setToolMode('wizard');
+            this.setToolMode('moyaki');
             // Clear any auto-placement to prevent placing defense on toolbar
             this.input.setDefaultCursor('url(assets/cursors/tower.cur), pointer');
           }
         },
         {
-          key: 'cannon',
+          key: 'keon',
           x: startX + buttonSpacing * 5,
           color: 0xdd3333,
           glowColor: 0xff6666,
           icon: '💥',
-          label: 'Cannon',
-          sprite: 'cannon_idle',
+          label: 'Keon Defense',
+          sprite: 'keon_idle',
           action: () => {
-            this.pendingDefenseType = 'cannon';
+            this.pendingDefenseType = 'keon';
             this.pendingDefensePlacement = true;
-            this.setToolMode('cannon');
+            this.setToolMode('keon');
             // Clear any auto-placement to prevent placing defense on toolbar
             this.input.setDefaultCursor('url(assets/cursors/tower.cur), pointer');
           }
@@ -3127,71 +3862,161 @@ class GameScene extends Phaser.Scene {
         glowColor: glowColor
       };
       
-      // Add modern hover effects
+      // Add enhanced hover effects with better visual feedback
       buttonContainer.on('pointerover', () => {
+        // Scale animation with bounce effect
         this.tweens.add({
           targets: buttonContainer,
+          scaleX: 1.15,
+          scaleY: 1.15,
+          duration: 300,
+          ease: 'Elastic.easeOut'
+        });
+        
+        // Enhanced glow effect
+        this.tweens.add({
+          targets: buttonGlow,
+          alpha: 0.6,
+          scaleX: 1.2,
+          scaleY: 1.2,
+          duration: 300,
+          ease: 'Power2.easeOut'
+        });
+        
+        // Brighten the button background
+        this.tweens.add({
+          targets: buttonBg,
+          alpha: 1,
+          duration: 200
+        });
+        
+        // Icon pulse effect
+        this.tweens.add({
+          targets: buttonIcon,
           scaleX: 1.1,
           scaleY: 1.1,
           duration: 200,
           ease: 'Back.easeOut'
         });
         
+        // Label highlight
         this.tweens.add({
-          targets: buttonGlow,
-          alpha: 0.4,
-          duration: 200
+          targets: buttonLabel,
+          alpha: 1,
+          y: config.radius + 12,
+          duration: 200,
+          ease: 'Power2.easeOut'
         });
       });
       
       buttonContainer.on('pointerout', () => {
         const isSelected = this.toolMode === key;
+        
+        // Smooth scale transition
         this.tweens.add({
           targets: buttonContainer,
           scaleX: isSelected ? 1.05 : 1,
           scaleY: isSelected ? 1.05 : 1,
-          duration: 200,
-          ease: 'Back.easeOut'
+          duration: 250,
+          ease: 'Power2.easeOut'
         });
         
+        // Reset glow if not selected
         if (!isSelected) {
           this.tweens.add({
             targets: buttonGlow,
             alpha: 0,
+            scaleX: 1,
+            scaleY: 1,
+            duration: 250
+          });
+          
+          // Reset button background
+          this.tweens.add({
+            targets: buttonBg,
+            alpha: 0.7,
             duration: 200
           });
         }
+        
+        // Reset icon scale
+        this.tweens.add({
+          targets: buttonIcon,
+          scaleX: 1,
+          scaleY: 1,
+          duration: 200,
+          ease: 'Power2.easeOut'
+        });
+        
+        // Reset label position and alpha
+        this.tweens.add({
+          targets: buttonLabel,
+          alpha: 0.8,
+          y: config.radius + 15,
+          duration: 200,
+          ease: 'Power2.easeOut'
+        });
       });
       
-      // Click animation and action
+      // Enhanced click animation and action with better feedback
       buttonContainer.on('pointerdown', (pointer, localX, localY, event) => {
         event.stopPropagation();
-        // Satisfying click animation
+        
+        // Satisfying click animation with bounce back
         this.tweens.add({
           targets: buttonContainer,
-          scaleX: 0.95,
-          scaleY: 0.95,
-          duration: 100,
-          ease: 'Power2',
-          yoyo: true,
+          scaleX: 0.9,
+          scaleY: 0.9,
+          duration: 80,
+          ease: 'Power3.easeIn',
           onComplete: () => {
-            // Execute button action
-            action();
-            
-            // Ripple effect
-            const ripple = this.add.graphics();
-            ripple.lineStyle(3, glowColor, 1);
-            ripple.strokeCircle(x, 0, config.radius);
-            this.toolbarContainer.add(ripple);
-            
             this.tweens.add({
-              targets: ripple,
-              scaleX: 2,
-              scaleY: 2,
-              alpha: 0,
-              duration: 400,
-              ease: 'Power2',
-              onComplete: () => ripple.destroy()
+              targets: buttonContainer,
+              scaleX: 1.1,
+              scaleY: 1.1,
+              duration: 120,
+              ease: 'Back.easeOut',
+              onComplete: () => {
+                // Execute button action
+                action();
+                
+                // Enhanced ripple effect with multiple rings
+                for (let i = 0; i < 3; i++) {
+                  setTimeout(() => {
+                    const ripple = this.add.graphics();
+                    ripple.lineStyle(2 - i * 0.5, glowColor, 0.8 - i * 0.2);
+                    ripple.strokeCircle(x, 0, config.radius + i * 5);
+                    this.toolbarContainer.add(ripple);
+                    
+                    this.tweens.add({
+                      targets: ripple,
+                      scaleX: 2.5 + i * 0.5,
+                      scaleY: 2.5 + i * 0.5,
+                      alpha: 0,
+                      duration: 500 + i * 100,
+                      ease: 'Power2.easeOut',
+                      onComplete: () => ripple.destroy()
+                    });
+                  }, i * 50);
+                }
+                
+                // Particle burst effect
+                this.createClickParticles(x, 0, glowColor);
+                
+                // Flash effect on button
+                const flash = this.add.graphics();
+                flash.fillStyle(0xffffff, 0.6);
+                flash.fillCircle(x, 0, config.radius);
+                this.toolbarContainer.add(flash);
+                
+                this.tweens.add({
+                  targets: flash,
+                  alpha: 0,
+                  duration: 150,
+                  ease: 'Power2.easeOut',
+                  onComplete: () => flash.destroy()
+                });
+              }
             });
           }
         });
@@ -3199,6 +4024,179 @@ class GameScene extends Phaser.Scene {
       
     } catch (error) {
       console.error("Error creating modern button:", error);
+    }
+  }
+  
+  // Create particle burst effect for button clicks
+  createClickParticles(x, y, color) {
+    try {
+      const particleCount = 8;
+      const particles = [];
+      
+      for (let i = 0; i < particleCount; i++) {
+        const angle = (i / particleCount) * Math.PI * 2;
+        const distance = 20 + Math.random() * 15;
+        const targetX = x + Math.cos(angle) * distance;
+        const targetY = y + Math.sin(angle) * distance;
+        
+        const particle = this.add.graphics();
+        particle.fillStyle(color, 0.8);
+        particle.fillCircle(x, y, 2 + Math.random() * 2);
+        this.toolbarContainer.add(particle);
+        
+        particles.push(particle);
+        
+        // Animate particle outward
+        this.tweens.add({
+          targets: particle,
+          x: targetX,
+          y: targetY,
+          alpha: 0,
+          scaleX: 0.2,
+          scaleY: 0.2,
+          duration: 300 + Math.random() * 200,
+          ease: 'Power2.easeOut',
+          onComplete: () => particle.destroy()
+        });
+      }
+    } catch (error) {
+      console.error("Error creating click particles:", error);
+    }
+  }
+  
+  // Show visual feedback for keyboard shortcut usage
+  showKeyboardShortcutFeedback(mode, key) {
+    try {
+      const keyText = this.add.text(this.cameras.main.centerX, this.cameras.main.centerY - 100, 
+        `${key.toUpperCase()} - ${mode.toUpperCase()} MODE`, {
+        fontFamily: 'Arial Black',
+        fontSize: '24px',
+        color: '#00ff00',
+        stroke: '#000000',
+        strokeThickness: 3,
+        align: 'center'
+      }).setOrigin(0.5).setDepth(2000);
+      
+      // Animate the feedback text
+      this.tweens.add({
+        targets: keyText,
+        y: keyText.y - 30,
+        alpha: 0,
+        scaleX: 1.2,
+        scaleY: 1.2,
+        duration: 1000,
+        ease: 'Power2.easeOut',
+        onComplete: () => keyText.destroy()
+      });
+      
+    } catch (error) {
+      console.error("Error showing keyboard shortcut feedback:", error);
+    }
+  }
+  
+  // Toggle keyboard shortcuts help display
+  toggleKeyboardHelp() {
+    try {
+      if (this.keyboardHelpVisible) {
+        // Hide help
+        if (this.keyboardHelpContainer) {
+          this.tweens.add({
+            targets: this.keyboardHelpContainer,
+            alpha: 0,
+            scaleX: 0.8,
+            scaleY: 0.8,
+            duration: 300,
+            ease: 'Power2.easeIn',
+            onComplete: () => {
+              this.keyboardHelpContainer.destroy();
+              this.keyboardHelpContainer = null;
+            }
+          });
+        }
+        this.keyboardHelpVisible = false;
+      } else {
+        // Show help
+        this.createKeyboardHelpDisplay();
+        this.keyboardHelpVisible = true;
+      }
+    } catch (error) {
+      console.error("Error toggling keyboard help:", error);
+    }
+  }
+  
+  // Create keyboard shortcuts help display
+  createKeyboardHelpDisplay() {
+    try {
+      const centerX = this.cameras.main.centerX;
+      const centerY = this.cameras.main.centerY;
+      
+      // Create container for help display
+      this.keyboardHelpContainer = this.add.container(centerX, centerY).setDepth(3000);
+      
+      // Background
+      const helpBg = this.add.graphics();
+      helpBg.fillStyle(0x000000, 0.8);
+      helpBg.fillRoundedRect(-200, -150, 400, 300, 10);
+      helpBg.lineStyle(2, 0x00ff00, 0.8);
+      helpBg.strokeRoundedRect(-200, -150, 400, 300, 10);
+      this.keyboardHelpContainer.add(helpBg);
+      
+      // Title
+      const title = this.add.text(0, -120, 'KEYBOARD SHORTCUTS', {
+        fontFamily: 'Arial Black',
+        fontSize: '20px',
+        color: '#00ff00',
+        stroke: '#000000',
+        strokeThickness: 2
+      }).setOrigin(0.5);
+      this.keyboardHelpContainer.add(title);
+      
+      // Shortcuts list
+      const shortcuts = [
+        'A - Attack Mode',
+        'P - Plant Mode',
+        '1 - Chog Defense',
+        '2 - Molandak Defense',
+        '3 - Moyaki Defense',
+        '4 - KEON Defense',
+        'H - Toggle This Help',
+        'ESC - Pause Game'
+      ];
+      
+      shortcuts.forEach((shortcut, index) => {
+        const shortcutText = this.add.text(0, -80 + (index * 20), shortcut, {
+          fontFamily: 'Arial',
+          fontSize: '14px',
+          color: '#ffffff',
+          stroke: '#000000',
+          strokeThickness: 1
+        }).setOrigin(0.5);
+        this.keyboardHelpContainer.add(shortcutText);
+      });
+      
+      // Close instruction
+      const closeText = this.add.text(0, 110, 'Press H again to close', {
+        fontFamily: 'Arial',
+        fontSize: '12px',
+        color: '#888888',
+        stroke: '#000000',
+        strokeThickness: 1
+      }).setOrigin(0.5);
+      this.keyboardHelpContainer.add(closeText);
+      
+      // Animate in
+      this.keyboardHelpContainer.setAlpha(0).setScale(0.8);
+      this.tweens.add({
+        targets: this.keyboardHelpContainer,
+        alpha: 1,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 300,
+        ease: 'Back.easeOut'
+      });
+      
+    } catch (error) {
+      console.error("Error creating keyboard help display:", error);
     }
   }
   
@@ -3217,20 +4215,20 @@ class GameScene extends Phaser.Scene {
           title: 'Selected: Plant Mode',
           description: 'Click farm plots to plant crops'
         },
-        abster: {
-          title: 'Selected: Abster Defense',
+        chog: {
+          title: 'Selected: Chog Defense',
           description: 'Cost: 50 coins, 20 mana per shot - Basic ranged defense'
         },
-        noot: {
-          title: 'Selected: Noot Defense',
+        molandak: {
+          title: 'Selected: Molandak Defense',
           description: 'Cost: 60 coins, 25 mana per shot - Fast firing defense'
         },
-        wizard: {
-          title: 'Selected: Wizard Defense',
+        moyaki: {
+          title: 'Selected: Moyaki Defense',
           description: 'Cost: 75 coins, 35 mana per shot - Magic area damage'
         },
-        cannon: {
-          title: 'Selected: Cannon Defense',
+        keon: {
+          title: 'Selected: Keon Defense',
           description: 'Cost: 100 coins, 40 mana per shot - Heavy damage defense'
         }
       };
@@ -3243,53 +4241,111 @@ class GameScene extends Phaser.Scene {
         this.toolDescriptionText.setText(toolInfo.description);
       }
       
-      // Update button visual states for the modern system
+      // Update button visual states with enhanced feedback
       Object.keys(this.toolbarButtons).forEach(key => {
         const button = this.toolbarButtons[key];
         if (key === mode) {
-          // Selected state - show glow and scale up
+          // Selected state - enhanced visual feedback
           this.tweens.add({
             targets: button.container,
+            scaleX: 1.08,
+            scaleY: 1.08,
+            duration: 300,
+            ease: 'Elastic.easeOut'
+          });
+          
+          // Enhanced glow with pulsing effect
+          this.tweens.add({
+            targets: button.glow,
+            alpha: 0.8,
+            scaleX: 1.3,
+            scaleY: 1.3,
+            duration: 300,
+            ease: 'Power2.easeOut'
+          });
+          
+          // Pulsing glow animation
+          this.tweens.add({
+            targets: button.glow,
+            alpha: 0.4,
+            duration: 1000,
+            ease: 'Sine.easeInOut',
+            yoyo: true,
+            repeat: -1
+          });
+          
+          // Update background with enhanced selected appearance
+          button.background.clear();
+          button.background.fillStyle(button.originalColor, 1.0);
+          button.background.fillCircle(0, 0, 32);
+          button.background.lineStyle(4, button.glowColor, 1.0);
+          button.background.strokeCircle(0, 0, 32);
+          
+          // Icon enhancement for selected state
+          this.tweens.add({
+            targets: button.icon,
             scaleX: 1.05,
             scaleY: 1.05,
             duration: 200,
             ease: 'Back.easeOut'
           });
           
+          // Label enhancement
           this.tweens.add({
-            targets: button.glow,
-            alpha: 0.6,
-            duration: 200
-          });
-          
-          // Update background color to be brighter
-          button.background.clear();
-          button.background.fillStyle(button.originalColor, 0.9);
-          button.background.fillCircle(0, 0, 32);
-          button.background.lineStyle(3, 0x00ff00, 0.8);
-          button.background.strokeCircle(0, 0, 32);
-        } else {
-          // Unselected state - normal appearance
-          this.tweens.add({
-            targets: button.container,
-            scaleX: 1,
-            scaleY: 1,
+            targets: button.label,
+            alpha: 1,
+            scaleX: 1.1,
+            scaleY: 1.1,
             duration: 200,
             ease: 'Back.easeOut'
           });
           
+        } else {
+          // Unselected state - smooth transition to normal
+          this.tweens.add({
+            targets: button.container,
+            scaleX: 1,
+            scaleY: 1,
+            duration: 250,
+            ease: 'Power2.easeOut'
+          });
+          
+          // Remove glow and stop pulsing
+          this.tweens.killTweensOf(button.glow);
           this.tweens.add({
             targets: button.glow,
             alpha: 0,
-            duration: 200
+            scaleX: 1,
+            scaleY: 1,
+            duration: 250,
+            ease: 'Power2.easeOut'
           });
           
-          // Reset background to normal
+          // Reset background to normal appearance
           button.background.clear();
           button.background.fillStyle(button.originalColor, 0.7);
           button.background.fillCircle(0, 0, 32);
           button.background.lineStyle(2, 0xffffff, 0.3);
           button.background.strokeCircle(0, 0, 32);
+          
+          // Reset icon scale
+          this.tweens.add({
+            targets: button.icon,
+            scaleX: 1,
+            scaleY: 1,
+            duration: 200,
+            ease: 'Power2.easeOut'
+          });
+          
+          // Reset label
+          this.tweens.add({
+            targets: button.label,
+            alpha: 0.8,
+            scaleX: 1,
+            scaleY: 1,
+            duration: 200,
+            ease: 'Power2.easeOut'
+          });
         }
       });
       
@@ -3444,10 +4500,10 @@ class GameScene extends Phaser.Scene {
       
       // Defense costs (coins and mana)
       const defenseCosts = {
-        abster: { coins: 50, mana: 20 },
-        noot: { coins: 60, mana: 25 }, 
-        wizard: { coins: 75, mana: 35 },
-        cannon: { coins: 100, mana: 40 }
+        chog: { coins: 50, mana: 20 },
+        molandak: { coins: 60, mana: 25 }, 
+        moyaki: { coins: 75, mana: 35 },
+        keon: { coins: 100, mana: 40 }
       };
       
       const cost = defenseCosts[defenseType] || { coins: 50, mana: 20 };
@@ -3564,13 +4620,27 @@ class GameScene extends Phaser.Scene {
         });
       });
       
+      // Add right-click handler for specialization UI
+      defense.on('pointerdown', (pointer, localX, localY, event) => {
+        if (pointer.rightButtonDown()) {
+          event.stopPropagation();
+          this.specializationUI.show(defenseType);
+        }
+      });
+      
+      // Initialize individual defense mana system
+      defense.mana = 50; // Starting mana for each defense
+      defense.maxMana = 100; // Maximum mana capacity
+      defense.manaRegenRate = 2; // Mana regeneration per second
+      defense.lastManaRegen = Date.now();
+      
       // Create individual mana display above defense
-      const manaDisplay = this.add.text(gridX, gridY - 40, `${this.gameState.mana}`, {
-        fontSize: '14px',
+      const manaDisplay = this.add.text(gridX, gridY - 50, `Mana: ${defense.mana}/${defense.maxMana}`, {
+        fontSize: '16px',
         fill: '#00ffff',
-        fontFamily: 'Arial',
+        fontFamily: 'Arial Black',
         stroke: '#000000',
-        strokeThickness: 2
+        strokeThickness: 3
       });
       manaDisplay.setOrigin(0.5, 0.5);
       manaDisplay.setDepth(15);
@@ -3602,14 +4672,14 @@ class GameScene extends Phaser.Scene {
 
   // Get defense stats
   getDefenseDamage(type) {
-    const damages = { abster: 1, noot: 1.5, wizard: 2, cannon: 3 };
+    const damages = { chog: 1, molandak: 1.5, moyaki: 2, keon: 3 };
     const baseDamage = damages[type] || 1;
     // Apply damage multiplier from power-ups if available
     return baseDamage * (this.powerUpManager ? this.powerUpManager.getEffectMultiplier('damage') : 1);
   }
   
   getDefenseRange(type) {
-    const ranges = { abster: 200, noot: 180, wizard: 250, cannon: 150 }; // Increased ranges
+    const ranges = { chog: 200, molandak: 180, moyaki: 250, keon: 150 }; // Increased ranges
     const baseRange = ranges[type] || 150;
     // Apply range multiplier from power-ups if available
     return baseRange * (this.powerUpManager ? this.powerUpManager.getEffectMultiplier('range') : 1);
@@ -3617,7 +4687,7 @@ class GameScene extends Phaser.Scene {
   
   // Get defense fire rate with speed multiplier from power-ups
   getDefenseFireRate(type) {
-    const fireRates = { abster: 1000, noot: 800, wizard: 1200, cannon: 2000 };
+    const fireRates = { chog: 1000, molandak: 800, moyaki: 1200, keon: 2000 };
     const baseFireRate = fireRates[type] || 1000;
     // Apply speed multiplier from power-ups if available (lower fire rate = faster firing)
     return baseFireRate / (this.powerUpManager ? this.powerUpManager.getEffectMultiplier('speed') : 1);
@@ -3626,10 +4696,10 @@ class GameScene extends Phaser.Scene {
   // Get defense range indicator color based on type
   getDefenseRangeColor(type) {
     const colors = {
-      abster: 0x00FFFF, // Cyan for ice mage
-      noot: 0xFF6600,   // Orange for fire mage
-      wizard: 0xFF00FF, // Purple for wizard
-      cannon: 0x666666  // Gray for cannon
+      chog: 0x00FFFF, // Cyan for chog
+      molandak: 0xFF6600,   // Orange for molandak
+      moyaki: 0xFF00FF, // Purple for moyaki
+      keon: 0x666666  // Gray for keon
     };
     return colors[type] || 0xFFFFFF;
   }

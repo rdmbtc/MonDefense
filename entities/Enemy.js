@@ -715,14 +715,7 @@ export default class Enemy {
           particleQuantity = 22;
           particleSpeed = 120;
           break;
-        case 'slime':
-          particleColor = 0x90EE90; // Light green goo
-          particleQuantity = 30;
-          particleLifespan = 1000;
-          particleScale = { start: 2.5, end: 0.5 }; // Larger, goo-like particles
-          particleSpeed = 50;
-          particleGravityY = 100; // Goo falls
-          break;
+
         case 'ghost':
           particleColor = 0xE6E6FA; // Lavender/ethereal
           particleQuantity = 15;
@@ -1091,9 +1084,11 @@ export default class Enemy {
       const dy = targetY - currentY;
       const angle = Math.atan2(dy, dx);
 
-      // Calculate velocity based on speed and angle
-      const velocityX = Math.cos(angle) * this.speed * 45;
-      const velocityY = Math.sin(angle) * this.speed * 45;
+      // Calculate velocity based on speed and angle (affected by weather)
+      const weatherSpeedModifier = this.scene.weatherSystem ? this.scene.weatherSystem.enemySpeedModifier : 1.0;
+      const effectiveSpeed = this.speed * weatherSpeedModifier;
+      const velocityX = Math.cos(angle) * effectiveSpeed * 45;
+      const velocityY = Math.sin(angle) * effectiveSpeed * 45;
 
       // Set the velocity on the physics body
       this.container.body.setVelocity(velocityX, velocityY);
@@ -1108,4 +1103,4 @@ export default class Enemy {
       }
     }
   }
-} 
+}

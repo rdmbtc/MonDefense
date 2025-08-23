@@ -14,7 +14,7 @@ export default class Defense {
     
     // Mana properties
     this.maxMana = 100; // Default max mana
-    this.currentMana = this.maxMana;
+    this.currentMana = this.maxMana * 0.5; // Start with 50% mana
     this.manaCostPerShot = 10; // Increased mana cost
     this.manaRegenRate = 3.5; // Reduced mana regen
     this.isOutOfMana = false;
@@ -44,7 +44,7 @@ export default class Defense {
       this.aoeRadius = 60; // Small AOE radius
       this.aoeDamageMultiplier = 0.3; // Basic AOE damage
       this.maxMana = 40;
-      this.currentMana = this.maxMana;
+      this.currentMana = this.maxMana * 0.5; // Start with 50% mana
       this.manaCostPerShot = 8; // Low mana cost
       this.manaRegenRate = 4.0; // Good mana regen
       this.createChogMage();
@@ -57,7 +57,7 @@ export default class Defense {
       this.aoeRadius = 70; // Moderate AOE radius
       this.aoeDamageMultiplier = 0.5; // Good AOE damage
       this.maxMana = 60;
-      this.currentMana = this.maxMana;
+      this.currentMana = this.maxMana * 0.5; // Start with 50% mana
       this.manaCostPerShot = 12; // Moderate mana cost
       this.manaRegenRate = 4.5; // Good mana regen
       this.createMolandakMage();
@@ -70,7 +70,7 @@ export default class Defense {
       this.aoeRadius = 65; // Moderate AOE radius
       this.aoeDamageMultiplier = 0.6; // Good AOE damage
       this.maxMana = 65;
-      this.currentMana = this.maxMana;
+      this.currentMana = this.maxMana * 0.5; // Start with 50% mana
       this.manaCostPerShot = 14; // Moderate mana cost
       this.manaRegenRate = 5.0; // Good mana regen
       this.createMoyakiMage();
@@ -79,11 +79,11 @@ export default class Defense {
       this.range = 280; // Excellent range
       this.cooldown = 2000; // Balanced cooldown for power
       this.damage = 2.5; // High damage
-      this.targetTypes = ['bird', 'rabbit', 'fox', 'slime', 'ghost', 'skeleton', 'bat', 'spider', 'wolf', 'snake', 'goblin'];
+      this.targetTypes = ['bird', 'rabbit', 'fox', 'ghost', 'skeleton', 'bat', 'spider', 'wolf', 'snake', 'goblin'];
       this.aoeRadius = 100; // Large AOE radius
       this.aoeDamageMultiplier = 0.8; // High AOE damage
       this.maxMana = 120;
-      this.currentMana = this.maxMana;
+      this.currentMana = this.maxMana * 0.5; // Start with 50% mana
       this.manaCostPerShot = 25; // High mana cost for power
       this.manaRegenRate = 8.0; // Fast mana regen to compensate
       this.createKeonMage();
@@ -2163,4 +2163,4 @@ export default class Defense {
           }
       }
   }
-} 
+}

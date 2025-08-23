@@ -174,7 +174,7 @@ class LoadingScene extends Phaser.Scene {
       this.load.image('enemy_bird', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon2.png');
       this.load.image('enemy_fox', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon3.png');
       this.load.image('enemy_boss', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon4.png');
-      this.load.image('enemy_slime', '/logo/craftpix-net-879657-free-slime-mobs-pixel-art-top-down-sprite-pack/PNG/1.png');
+  
       this.load.image('enemy_ghost', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon5.png');
       this.load.image('enemy_skeleton', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon6.png');
       this.load.image('enemy_bat', '/logo/craftpix-net-459799-free-low-level-monsters-pixel-icons-32x32/PNG/Transperent/Icon7.png');
@@ -254,7 +254,7 @@ class LoadingScene extends Phaser.Scene {
       'enemy_bird': 0xFF0000,
       'enemy_fox': 0xFF8C00,
       'enemy_boss': 0x800080,
-      'enemy_slime': 0x00FF00,
+
       'enemy_ghost': 0xFFFFFF,
       'enemy_skeleton': 0xF5F5DC,
       'enemy_bat': 0x2F4F4F,
