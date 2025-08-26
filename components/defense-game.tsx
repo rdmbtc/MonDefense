@@ -78,7 +78,15 @@ export default function DefenseGame({ onBack }: DefenseGameProps) {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-900 to-purple-900">
+    <div 
+      className="min-h-screen"
+      style={{
+        backgroundImage: 'url(/BG/background_menu.jpg)',
+        backgroundSize: 'cover',
+        backgroundPosition: 'center',
+        backgroundRepeat: 'no-repeat'
+      }}
+    >
       {/* Header with back button and game info */}
       <div className="absolute top-4 left-4 z-50">
         <Button 
