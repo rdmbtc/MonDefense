@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useGameContext } from "@/context/game-context";
 import dynamic from 'next/dynamic';
@@ -32,18 +32,84 @@ interface DefenseGameProps {
 }
 
 export default function DefenseGame({ onBack }: DefenseGameProps) {
+  const [gameMode, setGameMode] = useState<'chapter' | 'game'>('chapter');
+  const [chapterIndex, setChapterIndex] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const { farmCoins, addFarmCoins } = useGameContext();
+  const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
+  const soundEffectRef = useRef<HTMLAudioElement | null>(null);
+
+  // Chapter One assets (images 0-7, sounds for 1,3,5,6,7)
+  const chapterAssets = [
+    { image: '/Chapter One/0.png', sound: null },
+    { image: '/Chapter One/1.png', sound: '/Chapter One/1.wav' },
+    { image: '/Chapter One/2.png', sound: null },
+    { image: '/Chapter One/3.png', sound: '/Chapter One/3.wav' },
+    { image: '/Chapter One/4.png', sound: null },
+    { image: '/Chapter One/5.png', sound: '/Chapter One/5.wav' },
+    { image: '/Chapter One/6.png', sound: '/Chapter One/6.wav' },
+    { image: '/Chapter One/7.png', sound: '/Chapter One/7.wav' }
+  ];
+
+  // Handle chapter progression
+  const nextChapterSlide = useCallback(() => {
+    if (chapterIndex < chapterAssets.length - 1) {
+      setChapterIndex(chapterIndex + 1);
+    } else {
+      // End of chapter, start the game
+      if (backgroundMusicRef.current) {
+        backgroundMusicRef.current.pause();
+        backgroundMusicRef.current.currentTime = 0;
+      }
+      setGameMode('game');
+      setGameStarted(true);
+    }
+  }, [chapterIndex, chapterAssets.length]);
+
+  // Handle keyboard events for chapter
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (gameMode === 'chapter' && event.code === 'Space') {
+        event.preventDefault();
+        nextChapterSlide();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [gameMode, chapterIndex, nextChapterSlide]);
+
+  // Play background music and sound effects for chapter
+  useEffect(() => {
+    if (gameMode === 'chapter') {
+      // Start background music on first slide
+      if (chapterIndex === 0 && !backgroundMusicRef.current) {
+        backgroundMusicRef.current = new Audio('/Chapter One/background_music_chapter_one.mp3');
+        backgroundMusicRef.current.loop = true;
+        backgroundMusicRef.current.volume = 0.5;
+        backgroundMusicRef.current.play().catch(console.error);
+      }
+
+      // Play sound effect for current slide if it exists
+      if (chapterAssets[chapterIndex].sound) {
+        if (soundEffectRef.current) {
+          soundEffectRef.current.pause();
+        }
+        soundEffectRef.current = new Audio(chapterAssets[chapterIndex].sound!);
+        soundEffectRef.current.volume = 0.7;
+        soundEffectRef.current.play().catch(console.error);
+      }
+    }
+  }, [gameMode, chapterIndex]);
 
   useEffect(() => {
-    // Auto-start the defense game when component mounts
-    setGameStarted(true);
-    
-    // Initialize game state for defense mode
-    if (typeof window !== 'undefined') {
-      // Set up defense-specific global state
-      window._defenseMode = true;
-      window._farmMode = false;
+    // Initialize game state for defense mode when game starts
+    if (gameMode === 'game') {
+      if (typeof window !== 'undefined') {
+        // Set up defense-specific global state
+        window._defenseMode = true;
+        window._farmMode = false;
+      }
     }
 
     return () => {
@@ -61,8 +127,16 @@ export default function DefenseGame({ onBack }: DefenseGameProps) {
           }
         }
       }
+      
+      // Clean up audio
+      if (backgroundMusicRef.current) {
+        backgroundMusicRef.current.pause();
+      }
+      if (soundEffectRef.current) {
+        soundEffectRef.current.pause();
+      }
     };
-  }, []);
+  }, [gameMode]);
 
   const handleBackToMenu = () => {
     // Clean up game before going back
@@ -76,6 +150,59 @@ export default function DefenseGame({ onBack }: DefenseGameProps) {
     }
     onBack();
   };
+
+  // Chapter One intro screen
+  if (gameMode === 'chapter') {
+    return (
+      <div 
+        className="min-h-screen flex items-center justify-center cursor-pointer"
+        onClick={nextChapterSlide}
+        style={{
+          backgroundImage: `url(${chapterAssets[chapterIndex].image})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Click or spacebar instruction */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+          <div className="bg-black/50 backdrop-blur px-6 py-3 rounded-lg">
+            <p className="text-white text-center text-lg font-medium">
+              Click or press Spacebar to continue
+            </p>
+          </div>
+        </div>
+
+        {/* Progress indicator */}
+        <div className="absolute top-8 right-8">
+          <div className="bg-black/50 backdrop-blur px-4 py-2 rounded-lg">
+            <p className="text-white text-sm">
+              {chapterIndex + 1} / {chapterAssets.length}
+            </p>
+          </div>
+        </div>
+
+        {/* Skip button */}
+        <div className="absolute top-8 left-8">
+          <Button 
+            onClick={(e) => {
+              e.stopPropagation();
+              if (backgroundMusicRef.current) {
+                backgroundMusicRef.current.pause();
+                backgroundMusicRef.current.currentTime = 0;
+              }
+              setGameMode('game');
+              setGameStarted(true);
+            }}
+            variant="outline"
+            className="bg-black/50 backdrop-blur border-white/20 text-white hover:bg-white/20"
+          >
+            Skip Chapter
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div 
@@ -113,7 +240,7 @@ export default function DefenseGame({ onBack }: DefenseGameProps) {
 
       {/* Game Container */}
       <div className="w-full h-screen flex items-center justify-center">
-        {gameStarted ? (
+        {gameMode === 'game' && gameStarted ? (
           <ClientWrapper 
             key="defense-game-instance"
             farmCoins={farmCoins}
