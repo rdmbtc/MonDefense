@@ -951,15 +951,7 @@ if (isBrowser) {
             border.setStrokeStyle(4, 0x2d572d);
             
             // Add game title with pixel art style - moved to top of screen and made smaller
-            this.add.text(400, 10, "MONER'S FARM DEFENSE", {
-              fontFamily: 'monospace',
-              fontSize: '20px',
-              color: '#4a8f4a',
-              fontWeight: 'bold',
-              stroke: '#2d572d',
-              strokeThickness: 3,
-              shadow: { color: '#000000', blur: 5, stroke: true, fill: true }
-            }).setOrigin(0.5, 0);
+          
             
             console.log("Background created successfully");
           } catch (error) {

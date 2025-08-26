@@ -104,7 +104,7 @@ export default function DefenseGame({ onBack }: DefenseGameProps) {
       </div>
 
       {/* Game Container */}
-      <div className="w-full h-screen">
+      <div className="w-full h-screen flex items-center justify-center">
         {gameStarted ? (
           <ClientWrapper 
             key="defense-game-instance"
