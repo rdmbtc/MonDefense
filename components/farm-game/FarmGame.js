@@ -11,7 +11,7 @@ let CropClass = null;
 let GameSceneClass = null;
 
 // Create a dynamic component with SSR disabled
-const FarmGameInner = ({ farmCoins, addFarmCoins }) => {
+const FarmGameInner = ({ farmCoins, addFarmCoins, gameMode = 'farm', onGameEvent }) => {
   const [gameStarted, setGameStarted] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const isClient = useRef(false);
@@ -51,7 +51,7 @@ const FarmGameInner = ({ farmCoins, addFarmCoins }) => {
     isClient.current = true;
     
     // Trigger initialization once after mount
-    initializeGame(farmCoins, addFarmCoins); 
+    initializeGame(farmCoins, addFarmCoins, gameMode); 
 
     // Cleanup function remains the same
     return () => {
@@ -153,7 +153,7 @@ const FarmGameInner = ({ farmCoins, addFarmCoins }) => {
   };
 
   // Initialize game - Now takes dependencies as arguments
-  const initializeGame = useCallback(async (initialFarmCoins, addFarmCoinsCallback) => {
+  const initializeGame = useCallback(async (initialFarmCoins, addFarmCoinsCallback, gameMode = 'farm') => {
     if (!isClient.current || !gameContainerRef.current || isInitializing || gameInstanceRef.current) {
       console.log("Skipping game initialization (guard check):", {
         isClient: isClient.current,
@@ -293,6 +293,7 @@ const FarmGameInner = ({ farmCoins, addFarmCoins }) => {
       game.registry.set('DefenseClass', DefenseClass);
       game.registry.set('UpgradeClass', UpgradeClass);
       game.registry.set('farmCoins', safeFarmCoins);
+      game.registry.set('gameMode', gameMode);
 
       // Store the addFarmCoins callback correctly
       if (typeof addFarmCoinsCallback === 'function') {
@@ -604,4 +605,4 @@ const FarmGame = (props) => {
 };
 
 // Export as default
-export default FarmGame; 
+export default FarmGame;

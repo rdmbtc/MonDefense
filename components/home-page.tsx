@@ -1,35 +1,34 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import dynamic from 'next/dynamic';
+
+// Dynamically import the defense game component
+const DefenseGame = dynamic(() => import('./defense-game'), {
+  ssr: false,
+  loading: () => <div className="text-white text-center">Loading Defense Game...</div>
+});
 
 export default function HomePage() {
+  const [gameMode, setGameMode] = useState<'home' | 'defense'>('home');
+
+  if (gameMode === 'defense') {
+    return <DefenseGame onBack={() => setGameMode('home')} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-900 to-purple-900 flex items-center justify-center p-4">
-      <div className="max-w-4xl mx-auto text-center">
+      <div className="max-w-2xl mx-auto text-center">
         <h1 className="text-6xl font-bold text-white mb-6">
           MonDefense
         </h1>
         <p className="text-xl text-blue-200 mb-8">
-          Defend your farm with strategic tower defense gameplay
+          Strategic tower defense gameplay with Monad characters
         </p>
         
-        <div className="grid md:grid-cols-2 gap-6 mb-8">
-          <Card className="bg-white/10 backdrop-blur border-white/20">
-            <CardHeader>
-              <CardTitle className="text-white">Farm Mode</CardTitle>
-              <CardDescription className="text-blue-200">
-                Build and manage your farm while defending against waves of enemies
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <Button className="w-full" size="lg">
-                Start Farming
-              </Button>
-            </CardContent>
-          </Card>
-          
+        <div className="mb-8">
           <Card className="bg-white/10 backdrop-blur border-white/20">
             <CardHeader>
               <CardTitle className="text-white">Defense Mode</CardTitle>
@@ -38,7 +37,11 @@ export default function HomePage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <Button className="w-full" size="lg" variant="outline">
+              <Button 
+                className="w-full" 
+                size="lg" 
+                onClick={() => setGameMode('defense')}
+              >
                 Start Defense
               </Button>
             </CardContent>

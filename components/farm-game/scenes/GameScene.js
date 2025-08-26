@@ -126,6 +126,13 @@ if (isBrowser) {
             this.EnemyClass = this.registry.get('EnemyClass');
             this.CropClass = this.registry.get('CropClass');
             this.UpgradeClass = this.registry.get('UpgradeClass');
+            this.gameMode = this.registry.get('gameMode') || 'farm';
+            
+            // If gameMode is defense, automatically start defense mode
+            if (this.gameMode === 'defense') {
+              this.gameState.isActive = true;
+              this.gameState.canPlant = false;
+            }
             
             console.log("GameScene initialized with state:", this.gameState);
           } catch (error) {
@@ -5106,4 +5113,4 @@ if (isBrowser) {
 } // End of if (isBrowser) block
 
 // Export using ES modules
-export { GameScene }; 
+export { GameScene };
