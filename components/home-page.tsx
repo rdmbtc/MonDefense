@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import dynamic from 'next/dynamic';
@@ -12,10 +12,115 @@ const DefenseGame = dynamic(() => import('./defense-game'), {
 });
 
 export default function HomePage() {
-  const [gameMode, setGameMode] = useState<'home' | 'defense'>('home');
+  const [gameMode, setGameMode] = useState<'trailer' | 'home' | 'defense'>('trailer');
+  const [trailerIndex, setTrailerIndex] = useState(0);
+  const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
+  const soundEffectRef = useRef<HTMLAudioElement | null>(null);
+
+  // Trailer images and sounds (0-4)
+  const trailerAssets = [
+    { image: '/Trailer/0.png', sound: '/Trailer/0.wav' },
+    { image: '/Trailer/1.png', sound: '/Trailer/1.wav' },
+    { image: '/Trailer/2.png', sound: '/Trailer/2.wav' },
+    { image: '/Trailer/3.png', sound: '/Trailer/3.wav' },
+    { image: '/Trailer/4.png', sound: '/Trailer/4.wav' }
+  ];
+
+  // Handle trailer progression
+  const nextTrailerSlide = useCallback(() => {
+    if (trailerIndex < trailerAssets.length - 1) {
+      setTrailerIndex(trailerIndex + 1);
+    } else {
+      // End of trailer, go to main menu
+      if (backgroundMusicRef.current) {
+        backgroundMusicRef.current.pause();
+        backgroundMusicRef.current.currentTime = 0;
+      }
+      setGameMode('home');
+    }
+  }, [trailerIndex, trailerAssets.length]);
+
+  // Handle keyboard events for trailer
+  useEffect(() => {
+    const handleKeyPress = (event: KeyboardEvent) => {
+      if (gameMode === 'trailer' && event.code === 'Space') {
+        event.preventDefault();
+        nextTrailerSlide();
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyPress);
+    return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [gameMode, trailerIndex, nextTrailerSlide]);
+
+  // Play background music and sound effects for trailer
+  useEffect(() => {
+    if (gameMode === 'trailer') {
+      // Start background music on first slide
+      if (trailerIndex === 0 && !backgroundMusicRef.current) {
+        backgroundMusicRef.current = new Audio('/Trailer/background_music_trailer.mp3');
+        backgroundMusicRef.current.loop = true;
+        backgroundMusicRef.current.volume = 0.5;
+        backgroundMusicRef.current.play().catch(console.error);
+      }
+
+      // Play sound effect for current slide
+      if (soundEffectRef.current) {
+        soundEffectRef.current.pause();
+      }
+      soundEffectRef.current = new Audio(trailerAssets[trailerIndex].sound);
+      soundEffectRef.current.volume = 0.7;
+      soundEffectRef.current.play().catch(console.error);
+    }
+  }, [gameMode, trailerIndex]);
+
+  // Cleanup audio on unmount
+  useEffect(() => {
+    return () => {
+      if (backgroundMusicRef.current) {
+        backgroundMusicRef.current.pause();
+      }
+      if (soundEffectRef.current) {
+        soundEffectRef.current.pause();
+      }
+    };
+  }, []);
 
   if (gameMode === 'defense') {
     return <DefenseGame onBack={() => setGameMode('home')} />;
+  }
+
+  if (gameMode === 'trailer') {
+    return (
+      <div 
+        className="min-h-screen flex items-center justify-center cursor-pointer"
+        onClick={nextTrailerSlide}
+        style={{
+          backgroundImage: `url(${trailerAssets[trailerIndex].image})`,
+          backgroundSize: 'cover',
+          backgroundPosition: 'center',
+          backgroundRepeat: 'no-repeat'
+        }}
+      >
+        {/* Click or spacebar instruction */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
+          <div className="bg-black/50 backdrop-blur px-6 py-3 rounded-lg">
+            <p className="text-white text-center text-lg font-medium">
+              Click or press Spacebar to continue
+            </p>
+          </div>
+        </div>
+
+        {/* Progress indicator */}
+        <div className="absolute top-8 right-8">
+          <div className="bg-black/50 backdrop-blur px-4 py-2 rounded-lg">
+            <p className="text-white text-sm">
+              {trailerIndex + 1} / {trailerAssets.length}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -29,10 +134,10 @@ export default function HomePage() {
       }}
     >
       <div className="max-w-2xl mx-auto text-center">
-        <h1 className="text-6xl font-bold text-white mb-6">
+        <h1 className="text-6xl font-bold text-white mb-6" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
           MonDefense
         </h1>
-        <p className="text-xl text-blue-200 mb-8">
+        <p className="text-xl text-blue-200 mb-8" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>
           Strategic tower defense gameplay with Monad characters
         </p>
         
@@ -75,10 +180,10 @@ export default function HomePage() {
             />
           </div>
           <div className="text-center text-white/80 text-sm">
-            <p className="font-semibold">Developer: Dr RDM</p>
-            <p className="text-blue-200">x.com/@rdmnad</p>
-            <p className="mt-1">Special for Monad Mission 7: Leaderboard</p>
-            <p className="font-bold text-yellow-300">Gmonad!</p>
+            <p className="font-semibold" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>Developer: Dr RDM</p>
+            <p className="text-blue-200" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>x.com/@rdmnad</p>
+            <p className="mt-1" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>Special for Monad Mission 7: Leaderboard</p>
+            <p className="font-bold text-yellow-300" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>Gmonad!</p>
           </div>
         </div>
       </div>

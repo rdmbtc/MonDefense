@@ -100,13 +100,13 @@ export default function DefenseGame({ onBack }: DefenseGameProps) {
       
       <div className="absolute top-4 right-4 z-50">
         <div className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2">
-          <span className="text-white font-bold">Coins: {farmCoins}</span>
+          <span className="text-white font-bold" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>Coins: {farmCoins}</span>
         </div>
       </div>
 
       {/* Game Title */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
-        <h1 className="text-2xl font-bold text-white text-center">
+        <h1 className="text-2xl font-bold text-white text-center" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
           MonDefense - Tower Defense
         </h1>
       </div>
@@ -151,10 +151,10 @@ export default function DefenseGame({ onBack }: DefenseGameProps) {
       {/* Game Instructions Overlay (initially hidden, can be toggled) */}
       <div className="absolute bottom-4 left-4 z-50">
         <div className="bg-black/50 backdrop-blur rounded-lg p-3 text-white text-sm max-w-xs">
-          <div className="font-bold mb-2">Controls:</div>
-          <div>• Click to attack enemies</div>
-          <div>• Place towers to defend</div>
-          <div>• Survive all waves to win!</div>
+          <div className="font-bold mb-2" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>Controls:</div>
+          <div style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>• Click to attack enemies</div>
+          <div style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>• Place towers to defend</div>
+          <div style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>• Survive all waves to win!</div>
         </div>
       </div>
     </div>
