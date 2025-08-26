@@ -64,6 +64,23 @@ export default function HomePage() {
             Leaderboard
           </Button>
         </div>
+        
+        {/* Developer Credits */}
+        <div className="mt-12 flex flex-col items-center space-y-4">
+          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/30">
+            <img 
+              src="/Credits/DR RDM.png" 
+              alt="Dr RDM" 
+              className="w-full h-full object-cover"
+            />
+          </div>
+          <div className="text-center text-white/80 text-sm">
+            <p className="font-semibold">Developer: Dr RDM</p>
+            <p className="text-blue-200">x.com/@rdmnad</p>
+            <p className="mt-1">Special for Monad Mission 7: Leaderboard</p>
+            <p className="font-bold text-yellow-300">Gmonad!</p>
+          </div>
+        </div>
       </div>
     </div>
   );
