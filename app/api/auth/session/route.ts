@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createHash, randomBytes } from 'crypto';
 import { verifyMessage } from 'viem';
 
+// Configure route as dynamic
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // In-memory session store (use Redis in production)
 const sessionStore = new Map<string, {
   playerAddress: string;

@@ -30,12 +30,8 @@ const nextConfig = {
     }
   }),
   reactStrictMode: false, // Disable strict mode to prevent double-mounting issues with Phaser
-  // DISABLE SSR COMPLETELY - Enable static export to make this a client-side only app
-  // This resolves all React Together SSR issues by preventing server-side rendering
-  output: 'export',
-  trailingSlash: true,
-  skipTrailingSlashRedirect: true,
-  distDir: 'out',
+  // Keep SSR enabled for API routes to work
+  // Removed static export to allow server-side functionality
   // Set standard page extensions
   pageExtensions: ['js', 'jsx', 'ts', 'tsx'],
   // Configure empty pages directory

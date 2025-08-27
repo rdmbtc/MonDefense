@@ -5,6 +5,10 @@ import { monadTestnet } from 'viem/chains';
 import { GAME_SCORE_CONTRACT_ADDRESS, GAME_SCORE_ABI } from '../../../lib/game-score-contract';
 import { validateSessionToken } from '../auth/session/route';
 
+// Configure route as dynamic
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+
 // Rate limiting store (in production, use Redis or similar)
 const rateLimitStore = new Map<string, { count: number; resetTime: number }>();
 const requestStore = new Map<string, number>();
