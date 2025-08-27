@@ -1,69 +1,60 @@
 import { ethers } from 'ethers';
 
-// GameScore contract address on Monad testnet
-export const GAME_SCORE_CONTRACT_ADDRESS = '0x7245450F0D040Ea3e0658e7ae02DCF3BF999E578';
+// Official Monad Games contract address on Monad testnet
+export const GAME_SCORE_CONTRACT_ADDRESS = '0xceCBFF203C8B6044F52CE23D914A1bfD997541A4';
 
 // Monad testnet RPC URL
 export const MONAD_TESTNET_RPC = 'https://testnet-rpc.monad.xyz';
 
-// GameScore contract ABI (only the functions we need)
+// Official Monad Games contract ABI
 const GAME_SCORE_ABI = [
   {
+    "type": "function",
+    "name": "updatePlayerData",
     "inputs": [
       {
-        "internalType": "uint256",
-        "name": "_score",
-        "type": "uint256"
+        "name": "playerAddress",
+        "type": "address",
+        "internalType": "address"
       },
       {
-        "internalType": "uint256",
-        "name": "_transactionCount",
-        "type": "uint256"
-      }
-    ],
-    "name": "submitScore",
-    "outputs": [],
-    "stateMutability": "nonReentrant",
-    "type": "function"
-  },
-  {
-    "inputs": [{ "internalType": "address", "name": "_player", "type": "address" }],
-    "name": "getPlayerScore",
-    "outputs": [
+        "name": "scoreAmount",
+        "type": "uint256",
+        "internalType": "uint256"
+      },
       {
-        "components": [
-          { "internalType": "uint256", "name": "highestScore", "type": "uint256" },
-          { "internalType": "uint256", "name": "totalGamesPlayed", "type": "uint256" },
-          { "internalType": "uint256", "name": "totalTransactions", "type": "uint256" },
-          { "internalType": "uint256", "name": "lastGameTimestamp", "type": "uint256" },
-          { "internalType": "bool", "name": "exists", "type": "bool" }
-        ],
-        "internalType": "struct GameScore.PlayerScore",
-        "name": "",
-        "type": "tuple"
+        "name": "transactionAmount",
+        "type": "uint256",
+        "internalType": "uint256"
       }
     ],
-    "stateMutability": "view",
-    "type": "function"
+    "outputs": [],
+    "stateMutability": "nonpayable"
   },
   {
-    "inputs": [],
-    "name": "getGlobalStats",
+    "inputs": [
+      { "internalType": "address", "name": "", "type": "address" },
+      { "internalType": "address", "name": "", "type": "address" }
+    ],
+    "name": "playerDataPerGame",
     "outputs": [
-      { "internalType": "uint256", "name": "totalGames", "type": "uint256" },
-      { "internalType": "uint256", "name": "totalTransactions", "type": "uint256" },
-      { "internalType": "uint256", "name": "totalPlayers", "type": "uint256" }
+      { "internalType": "uint256", "name": "score", "type": "uint256" },
+      { "internalType": "uint256", "name": "transactions", "type": "uint256" }
     ],
     "stateMutability": "view",
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "uint256", "name": "limit", "type": "uint256" }],
-    "name": "getTopPlayers",
-    "outputs": [
-      { "internalType": "address[]", "name": "players", "type": "address[]" },
-      { "internalType": "uint256[]", "name": "scores", "type": "uint256[]" }
-    ],
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "totalScoreOfPlayer",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "name": "totalTransactionsOfPlayer",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
     "stateMutability": "view",
     "type": "function"
   },
@@ -71,26 +62,36 @@ const GAME_SCORE_ABI = [
     "anonymous": false,
     "inputs": [
       { "indexed": true, "internalType": "address", "name": "player", "type": "address" },
-      { "indexed": false, "internalType": "uint256", "name": "score", "type": "uint256" },
-      { "indexed": false, "internalType": "uint256", "name": "transactionCount", "type": "uint256" },
-      { "indexed": false, "internalType": "uint256", "name": "timestamp", "type": "uint256" }
+      { "indexed": true, "internalType": "address", "name": "game", "type": "address" },
+      { "indexed": false, "internalType": "uint256", "name": "scoreAmount", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "transactionAmount", "type": "uint256" }
     ],
-    "name": "ScoreSubmitted",
+    "name": "PlayerDataUpdated",
     "type": "event"
   }
-];
+] as const;
+
+// Export the ABI for use in other files
+export { GAME_SCORE_ABI };
 
 export interface PlayerStats {
   totalScore: string;
-  gamesPlayed: string;
   totalTransactions: string;
+  scorePerGame: string;
+  transactionsPerGame: string;
   bestScore: string;
+  gamesPlayed: string;
 }
 
 export interface GlobalStats {
   totalGames: string;
   totalTransactions: string;
   totalPlayers: string;
+}
+
+export interface PlayerDataPerGame {
+  score: string;
+  transactions: string;
 }
 
 export interface LeaderboardEntry {
@@ -257,11 +258,16 @@ export async function getPlayerStats(playerAddress: string): Promise<PlayerStats
     const contract = getReadOnlyContract();
     const playerScore = await contract.getPlayerScore(playerAddress);
     
+    const gamesPlayed = parseInt(playerScore.totalGamesPlayed.toString());
+    const totalTransactions = parseInt(playerScore.totalTransactions.toString());
+    
     return {
       totalScore: playerScore.totalTransactions.toString(), // Using totalTransactions as totalScore
       gamesPlayed: playerScore.totalGamesPlayed.toString(),
       totalTransactions: playerScore.totalTransactions.toString(),
-      bestScore: playerScore.highestScore.toString()
+      bestScore: playerScore.highestScore.toString(),
+      scorePerGame: gamesPlayed > 0 ? (totalTransactions / gamesPlayed).toFixed(2) : '0',
+      transactionsPerGame: gamesPlayed > 0 ? (totalTransactions / gamesPlayed).toFixed(2) : '0'
     };
   } catch (error) {
     console.error('Error fetching player stats:', error);
