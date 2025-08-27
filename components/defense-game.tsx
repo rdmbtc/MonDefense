@@ -195,11 +195,11 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   };
 
   // Function to handle score submission to blockchain
-  const handleScoreSubmission = useCallback(async (finalScore: number, transactionCount: number = 1) => {
+  const handleScoreSubmission = useCallback(async (finalScore: number, transactionCount: number = 1): Promise<boolean> => {
     if (!authenticated || !accountAddress || hasSubmittedScore || finalScore <= 0) {
-      return;
+      return false;
     }
-
+  
     try {
       // Show gas cost estimation before submission
       await estimateTransactionCost(finalScore, transactionCount);
@@ -218,9 +218,13 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           await fetchPlayerStats(accountAddress);
         }
         await fetchGlobalStats();
+        return true;
       }
+      
+      return false;
     } catch (error) {
       console.error('Error submitting score to blockchain:', error);
+      return false;
     }
   }, [authenticated, accountAddress, hasSubmittedScore, submitScore, estimateTransactionCost, fetchPlayerStats, fetchGlobalStats]);
 
@@ -240,7 +244,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       window.submitGameScoreToBlockchain = async (score: number, transactionCount: number): Promise<boolean> => {
         try {
           const result = await handleScoreSubmission(score, transactionCount);
-          return result ?? false;
+          return result;
         } catch (error) {
           console.error('Error in global blockchain submission:', error);
           return false;

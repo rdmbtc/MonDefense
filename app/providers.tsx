@@ -61,38 +61,29 @@ export function Providers({ children }: { children: ReactNode }) {
     <ErrorBoundary>
       <NoSSRWrapper fallback={<div>Loading...</div>}>
         <PrivyProvider
-        appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID || ""}
-        config={{
-          defaultChain: monadTestnet,
-          supportedChains: [monadTestnet],
-          appearance: {
-            theme: 'dark',
-            accentColor: '#00ff88',
-            logo: '/images/nooter.png',
-          },
-          embeddedWallets: {
-            createOnLogin: 'users-without-wallets',
-          },
-          loginMethodsAndOrder: {
-            primary: ['email', 'google', 'privy:cmd8euall0037le0my79qpz42'],
-          },
-          walletConnectCloudProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
-          // Configure supported wallets - disable Coinbase Smart Wallet for Monad Testnet
-          externalWallets: {
-            coinbaseWallet: {
-              // Disable Coinbase Smart Wallet for unsupported chains
-              connectionOptions: 'eoaOnly'
-            }
-          },
-        }}
-      >
-        <GameProvider>
-          <GuideProvider>
-            {children}
-          </GuideProvider>
-        </GameProvider>
-        </PrivyProvider>
-      </NoSSRWrapper>
-    </ErrorBoundary>
-  )
+          appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
+          config={{
+            loginMethods: ['wallet', 'email'],
+            appearance: {
+              theme: 'light',
+              accentColor: '#676FFF',
+            },
+            defaultChain: monadTestnet,
+            supportedChains: [monadTestnet],
+            // Suppress token price fetch warnings for custom chains
+            embeddedWallets: {
+              createOnLogin: 'users-without-wallets',
+              requireUserPasswordOnCreate: false,
+            },
+          }}
+        >
+          <GameProvider>
+            <GuideProvider>
+              {children}
+            </GuideProvider>
+          </GameProvider>
+          </PrivyProvider>
+        </NoSSRWrapper>
+      </ErrorBoundary>
+    )
 }
