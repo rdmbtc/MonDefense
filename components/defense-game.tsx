@@ -230,6 +230,20 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       
       // Reset submission state for new game
       setHasSubmittedScore(false);
+      
+      // Add event listener for blockchain submission from Phaser game
+      const handleBlockchainSubmission = (event: CustomEvent) => {
+        const { score, waves } = event.detail;
+        console.log('Received blockchain submission request:', { score, waves });
+        handleScoreSubmission(score);
+      };
+      
+      window.addEventListener('submitToBlockchain', handleBlockchainSubmission as EventListener);
+      
+      return () => {
+        // Remove blockchain event listener
+        window.removeEventListener('submitToBlockchain', handleBlockchainSubmission as EventListener);
+      };
     }
 
     return () => {
@@ -256,7 +270,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         soundEffectRef.current.pause();
       }
     };
-  }, [gameMode]);
+  }, [gameMode, handleScoreSubmission]);
 
   // Fetch global stats on component mount
   useEffect(() => {

@@ -1,5 +1,5 @@
 "# MonFarm" 
 
-Special For Mission 6: Multysinq Monad DEV
+Special For Mission 7: Leaderboard Game
 
-My old code in Abstract Testnet: https://github.com/rdmbtc/nooter-s-farm (using database, old code, no multisynq)
+

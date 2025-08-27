@@ -4655,14 +4655,28 @@ if (isBrowser) {
             }).setOrigin(0.5);
             coinsText.setDepth(1001);
 
-            // Create restart button with proper styling
+            // Create blockchain button with proper styling
             const buttonWidth = 220;
             const buttonHeight = 60;
-            const restartButton = this.add.rectangle(400, 500, buttonWidth, buttonHeight, 0x4CAF50, 1);
+            const blockchainButton = this.add.rectangle(400, 450, buttonWidth, buttonHeight, 0x6B46C1, 1);
+            blockchainButton.setStrokeStyle(4, 0x553C9A);
+            blockchainButton.setDepth(1001);
+
+            const blockchainText = this.add.text(400, 450, 'Send to Blockchain', {
+              fontFamily: 'Arial',
+              fontSize: '24px',
+              color: '#FFFFFF',
+              stroke: '#000000',
+              strokeThickness: 1
+            }).setOrigin(0.5);
+            blockchainText.setDepth(1002);
+
+            // Create restart button with proper styling
+            const restartButton = this.add.rectangle(400, 530, buttonWidth, buttonHeight, 0x4CAF50, 1);
             restartButton.setStrokeStyle(4, 0x45A049);
             restartButton.setDepth(1001);
 
-            const restartText = this.add.text(400, 500, 'Play Again', {
+            const restartText = this.add.text(400, 530, 'Play Again', {
               fontFamily: 'Arial',
               fontSize: '28px',
               color: '#FFFFFF',
@@ -4671,7 +4685,38 @@ if (isBrowser) {
             }).setOrigin(0.5);
             restartText.setDepth(1002);
 
-            // Add hover effect
+            // Add blockchain button hover effect and interaction
+            blockchainButton.setInteractive({ useHandCursor: true })
+              .on('pointerover', () => {
+                blockchainButton.fillColor = 0x553C9A;
+                this.tweens.add({ targets: blockchainButton, scale: 1.05, duration: 100 });
+                this.input.setDefaultCursor('pointer');
+              })
+              .on('pointerout', () => {
+                blockchainButton.fillColor = 0x6B46C1;
+                this.tweens.add({ targets: blockchainButton, scale: 1.0, duration: 100 });
+                this.input.setDefaultCursor('default');
+              })
+              .on('pointerdown', () => {
+                // Play click sound if available
+                if (this.soundManager) {
+                  this.soundManager.play('ui_click_confirm', { volume: 0.8 }); 
+                }
+
+                // Add quick scale down animation on click
+                this.tweens.add({
+                  targets: blockchainButton,
+                  scale: 0.95,
+                  duration: 80,
+                  yoyo: true,
+                  onComplete: () => {
+                    // Submit score to blockchain
+                    this.submitScoreToBlockchain(finalScore, completedWaves);
+                  }
+                });
+              });
+
+            // Add hover effect for restart button
             restartButton.setInteractive({ useHandCursor: true })
               .on('pointerover', () => {
                 restartButton.fillColor = 0x45A049;
@@ -4705,6 +4750,8 @@ if (isBrowser) {
                       scoreText.destroy();
                       wavesText.destroy();
                       coinsText.destroy();
+                      blockchainButton.destroy();
+                      blockchainText.destroy();
                       restartButton.destroy();
                       restartText.destroy();
 
@@ -4739,6 +4786,68 @@ if (isBrowser) {
               fontFamily: 'Arial',
               color: '#FF0000'
             }).setOrigin(0.5);
+          }
+        }
+
+        // Add method to submit score to blockchain
+        submitScoreToBlockchain(score, waves) {
+          try {
+            console.log(`Submitting score to blockchain: Score=${score}, Waves=${waves}`);
+            
+            // Emit custom event to communicate with React component
+            const blockchainEvent = new CustomEvent('submitToBlockchain', {
+              detail: {
+                score: score,
+                waves: waves,
+                timestamp: Date.now()
+              }
+            });
+            
+            // Dispatch the event to the window so the React component can listen
+            window.dispatchEvent(blockchainEvent);
+            
+            // Show feedback to user
+            const feedbackText = this.add.text(400, 400, 'Submitting to Blockchain...', {
+              fontFamily: 'Arial',
+              fontSize: '24px',
+              color: '#FFD700',
+              stroke: '#000000',
+              strokeThickness: 2
+            }).setOrigin(0.5);
+            feedbackText.setDepth(1003);
+            
+            // Fade out the feedback text after 3 seconds
+            this.tweens.add({
+              targets: feedbackText,
+              alpha: 0,
+              duration: 3000,
+              onComplete: () => {
+                feedbackText.destroy();
+              }
+            });
+            
+          } catch (error) {
+            console.error('Error submitting score to blockchain:', error);
+            
+            // Show error feedback
+            const errorText = this.add.text(400, 400, 'Blockchain submission failed', {
+              fontFamily: 'Arial',
+              fontSize: '24px',
+              color: '#FF0000',
+              stroke: '#000000',
+              strokeThickness: 2
+            }).setOrigin(0.5);
+            errorText.setDepth(1003);
+            
+            // Fade out the error text after 3 seconds
+            this.tweens.add({
+              targets: errorText,
+              alpha: 0,
+              duration: 3000,
+              onComplete: () => {
+                errorText.destroy();
+              }
+            });
           }
         }
 

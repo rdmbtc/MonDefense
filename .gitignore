@@ -38,6 +38,7 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+nooter contract
 nooter contract/contracts/Lock.sol
 nooter contract/contracts/MultiFarmSwap.sol
 nooter contract/contracts/noot.sol
