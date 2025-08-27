@@ -9,27 +9,22 @@ export const MONAD_TESTNET_RPC = 'https://testnet-rpc.monad.xyz';
 // Official Monad Games contract ABI
 const GAME_SCORE_ABI = [
   {
-    "type": "function",
-    "name": "updatePlayerData",
     "inputs": [
       {
-        "name": "playerAddress",
-        "type": "address",
-        "internalType": "address"
+        "internalType": "uint256",
+        "name": "_score",
+        "type": "uint256"
       },
       {
-        "name": "scoreAmount",
-        "type": "uint256",
-        "internalType": "uint256"
-      },
-      {
-        "name": "transactionAmount",
-        "type": "uint256",
-        "internalType": "uint256"
+        "internalType": "uint256",
+        "name": "_transactionCount",
+        "type": "uint256"
       }
     ],
+    "name": "submitScore",
     "outputs": [],
-    "stateMutability": "nonpayable"
+    "stateMutability": "nonpayable",
+    "type": "function"
   },
   {
     "inputs": [

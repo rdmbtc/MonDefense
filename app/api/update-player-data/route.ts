@@ -183,9 +183,8 @@ export async function POST(request: NextRequest) {
       const txHash = await walletClient.writeContract({
          address: GAME_SCORE_CONTRACT_ADDRESS as `0x${string}`,
          abi: GAME_SCORE_ABI,
-         functionName: 'updatePlayerData',
+         functionName: 'submitScore',
          args: [
-           playerAddress as `0x${string}`,
            BigInt(scoreAmount),
            BigInt(transactionAmount)
          ]

@@ -53,7 +53,7 @@ async function checkGameRole(walletAddress) {
 
     if (hasRole) {
       console.log('✅ SUCCESS: Wallet has GAME_ROLE permission!');
-      console.log('The wallet can successfully call updatePlayerData function.');
+      console.log('The wallet can successfully call submitScore function.');
     } else {
       console.log('❌ MISSING: Wallet does NOT have GAME_ROLE permission.');
       console.log('');
