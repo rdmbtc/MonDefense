@@ -182,7 +182,7 @@ export default function DefenseGame({ onBack }: DefenseGameProps) {
           className="md:hidden w-full h-full absolute inset-0"
           style={{
             backgroundImage: `url(${chapterAssets[chapterIndex].image})`,
-            backgroundSize: 'contain',
+            backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
           }}
