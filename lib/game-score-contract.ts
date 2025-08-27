@@ -118,7 +118,10 @@ export async function submitGameScore(
 ): Promise<string> {
   try {
     const contract = getContractWithSigner(signer);
-    const tx = await contract.submitScore(score);
+    
+    // Add explicit gas settings to avoid estimation issues
+    const gasLimit = 100000; // Set a reasonable gas limit
+    const tx = await contract.submitScore(score, { gasLimit });
     
     console.log('Score submission transaction sent:', tx.hash);
     
