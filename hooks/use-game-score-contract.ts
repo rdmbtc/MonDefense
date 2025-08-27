@@ -22,7 +22,7 @@ export interface UseGameScoreContractReturn {
   leaderboard: LeaderboardEntry[];
   
   // Actions
-  submitScore: (score: number, transactionCount?: number) => Promise<boolean>;
+  submitScore: (score: number) => Promise<boolean>;
   fetchPlayerStats: (address: string) => Promise<void>;
   fetchGlobalStats: () => Promise<void>;
   fetchLeaderboard: (limit?: number) => Promise<void>;
@@ -56,7 +56,7 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
     await wallet.switchChain(10143); // Switch to Monad testnet (chain ID 10143)
     
     const provider = await wallet.getEthereumProvider();
-    const signer = await new ethers.BrowserProvider(provider).getSigner();
+    const signer = await (new ethers.BrowserProvider(provider)).getSigner();
     
     return { provider, signer };
   }, [authenticated, user, wallets]);
@@ -112,7 +112,7 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
       toast.info('Submitting score to blockchain...');
       
       // Submit score using Privy wallet
-      const txHash = await submitGameScore(signer, score, transactionCount);
+      const txHash = await submitGameScore(signer, score);
       
       toast.success(`Score submitted successfully! Transaction: ${txHash.slice(0, 10)}...`);
       

@@ -10,8 +10,7 @@ const MONAD_TESTNET_RPC = 'https://testnet-rpc.monad.xyz';
 const GAME_SCORE_ABI = [
   {
     "inputs": [
-      { "internalType": "uint256", "name": "score", "type": "uint256" },
-      { "internalType": "uint256", "name": "transactionCount", "type": "uint256" }
+      { "internalType": "uint256", "name": "_score", "type": "uint256" }
     ],
     "name": "submitScore",
     "outputs": [],
@@ -19,13 +18,21 @@ const GAME_SCORE_ABI = [
     "type": "function"
   },
   {
-    "inputs": [{ "internalType": "address", "name": "player", "type": "address" }],
-    "name": "getPlayerStats",
+    "inputs": [{ "internalType": "address", "name": "_player", "type": "address" }],
+    "name": "getPlayerScore",
     "outputs": [
-      { "internalType": "uint256", "name": "totalScore", "type": "uint256" },
-      { "internalType": "uint256", "name": "gamesPlayed", "type": "uint256" },
-      { "internalType": "uint256", "name": "totalTransactions", "type": "uint256" },
-      { "internalType": "uint256", "name": "bestScore", "type": "uint256" }
+      {
+        "components": [
+          { "internalType": "uint256", "name": "highestScore", "type": "uint256" },
+          { "internalType": "uint256", "name": "totalGamesPlayed", "type": "uint256" },
+          { "internalType": "uint256", "name": "totalTransactions", "type": "uint256" },
+          { "internalType": "uint256", "name": "lastGameTimestamp", "type": "uint256" },
+          { "internalType": "bool", "name": "exists", "type": "bool" }
+        ],
+        "internalType": "struct GameScore.PlayerScore",
+        "name": "",
+        "type": "tuple"
+      }
     ],
     "stateMutability": "view",
     "type": "function"
@@ -101,17 +108,15 @@ function getContractWithSigner(signer: ethers.Signer) {
  * Submit a game score to the blockchain
  * @param signer - Ethereum signer (wallet)
  * @param score - Game score to submit
- * @param transactionCount - Number of transactions made during the game
  * @returns Transaction hash
  */
 export async function submitGameScore(
   signer: ethers.Signer,
-  score: number,
-  transactionCount: number = 1
+  score: number
 ): Promise<string> {
   try {
     const contract = getContractWithSigner(signer);
-    const tx = await contract.submitScore(score, transactionCount);
+    const tx = await contract.submitScore(score);
     
     console.log('Score submission transaction sent:', tx.hash);
     
@@ -134,13 +139,13 @@ export async function submitGameScore(
 export async function getPlayerStats(playerAddress: string): Promise<PlayerStats> {
   try {
     const contract = getReadOnlyContract();
-    const stats = await contract.getPlayerStats(playerAddress);
+    const playerScore = await contract.getPlayerScore(playerAddress);
     
     return {
-      totalScore: stats[0].toString(),
-      gamesPlayed: stats[1].toString(),
-      totalTransactions: stats[2].toString(),
-      bestScore: stats[3].toString()
+      totalScore: playerScore.totalTransactions.toString(), // Using totalTransactions as totalScore
+      gamesPlayed: playerScore.totalGamesPlayed.toString(),
+      totalTransactions: playerScore.totalTransactions.toString(),
+      bestScore: playerScore.highestScore.toString()
     };
   } catch (error) {
     console.error('Error fetching player stats:', error);
