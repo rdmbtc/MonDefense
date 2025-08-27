@@ -231,18 +231,22 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       // Reset submission state for new game
       setHasSubmittedScore(false);
       
-      // Add event listener for blockchain submission from Phaser game
-      const handleBlockchainSubmission = (event: CustomEvent) => {
-        const { score, waves } = event.detail;
-        console.log('Received blockchain submission request:', { score, waves });
-        handleScoreSubmission(score);
+      // Expose global function for Phaser game to call directly
+      window.submitGameScoreToBlockchain = async (score: number, transactionCount: number): Promise<boolean> => {
+        try {
+          const result = await handleScoreSubmission(score);
+          return result ?? false;
+        } catch (error) {
+          console.error('Error in global blockchain submission:', error);
+          return false;
+        }
       };
       
-      window.addEventListener('submitToBlockchain', handleBlockchainSubmission as EventListener);
-      
       return () => {
-        // Remove blockchain event listener
-        window.removeEventListener('submitToBlockchain', handleBlockchainSubmission as EventListener);
+        // Remove global function
+        if (window.submitGameScoreToBlockchain) {
+          delete window.submitGameScoreToBlockchain;
+        }
       };
     }
 

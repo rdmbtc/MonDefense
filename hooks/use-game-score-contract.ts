@@ -1,16 +1,16 @@
 import { useState, useCallback } from 'react';
 import { ethers } from 'ethers';
 import { toast } from 'sonner';
+import { usePrivy, useWallets } from '@privy-io/react-auth';
 import {
   submitGameScore,
   getPlayerStats,
   getGlobalStats,
   getTopPlayers,
-  isConnectedToMonadTestnet,
-  switchToMonadTestnet,
   PlayerStats,
   GlobalStats,
-  LeaderboardEntry
+  LeaderboardEntry,
+  GAME_SCORE_CONTRACT_ADDRESS
 } from '@/lib/game-score-contract';
 
 export interface UseGameScoreContractReturn {
@@ -39,35 +39,46 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
   const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
   const [globalStats, setGlobalStats] = useState<GlobalStats | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  
+  // Privy hooks
+  const { authenticated, user } = usePrivy();
+  const { wallets } = useWallets();
 
   /**
-   * Ensure the user is connected to the correct network (Monad testnet)
+   * Get Privy wallet provider and signer
+   */
+  const getPrivyWallet = useCallback(async () => {
+    if (!authenticated || !user || wallets.length === 0) {
+      throw new Error('User not authenticated or no wallet available');
+    }
+
+    const wallet = wallets[0]; // Use the first available wallet
+    await wallet.switchChain(10143); // Switch to Monad testnet (chain ID 10143)
+    
+    const provider = await wallet.getEthereumProvider();
+    const signer = await new ethers.BrowserProvider(provider).getSigner();
+    
+    return { provider, signer };
+  }, [authenticated, user, wallets]);
+
+  /**
+   * Ensure the user is connected and authenticated with Privy
    */
   const ensureCorrectNetwork = useCallback(async (): Promise<boolean> => {
     try {
-      if (typeof window === 'undefined' || !window.ethereum) {
-        toast.error('Please install MetaMask or another Web3 wallet');
+      if (!authenticated || !user) {
+        toast.error('Please connect your wallet first');
         return false;
       }
 
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const isCorrectNetwork = await isConnectedToMonadTestnet(provider);
-      
-      if (!isCorrectNetwork) {
-        toast.info('Switching to Monad testnet...');
-        await switchToMonadTestnet();
-        
-        // Verify the switch was successful
-        const newProvider = new ethers.BrowserProvider(window.ethereum);
-        const isNowCorrect = await isConnectedToMonadTestnet(newProvider);
-        
-        if (!isNowCorrect) {
-          toast.error('Failed to switch to Monad testnet');
-          return false;
-        }
-        
-        toast.success('Successfully switched to Monad testnet');
+      if (wallets.length === 0) {
+        toast.error('No wallet available');
+        return false;
       }
+
+      // Switch to Monad testnet
+      const wallet = wallets[0];
+      await wallet.switchChain(10143);
       
       return true;
     } catch (error) {
@@ -75,10 +86,10 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
       toast.error('Failed to connect to Monad testnet');
       return false;
     }
-  }, []);
+  }, [authenticated, user, wallets]);
 
   /**
-   * Submit a game score to the blockchain
+   * Submit a game score to the blockchain using Privy
    */
   const submitScore = useCallback(async (
     score: number, 
@@ -95,18 +106,12 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
         return false;
       }
 
-      // Get signer
-      if (typeof window === 'undefined' || !window.ethereum) {
-        toast.error('Web3 wallet not available');
-        return false;
-      }
-
-      const provider = new ethers.BrowserProvider(window.ethereum);
-      const signer = await provider.getSigner();
+      // Get Privy wallet signer
+      const { signer } = await getPrivyWallet();
       
       toast.info('Submitting score to blockchain...');
       
-      // Submit score
+      // Submit score using Privy wallet
       const txHash = await submitGameScore(signer, score, transactionCount);
       
       toast.success(`Score submitted successfully! Transaction: ${txHash.slice(0, 10)}...`);
@@ -125,6 +130,8 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
         toast.error('Transaction was rejected by user');
       } else if (error.message?.includes('insufficient funds')) {
         toast.error('Insufficient funds for transaction');
+      } else if (error.message?.includes('User not authenticated')) {
+        toast.error('Please connect your wallet first');
       } else {
         toast.error('Failed to submit score to blockchain');
       }
@@ -133,7 +140,7 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
     } finally {
       setIsSubmitting(false);
     }
-  }, [isSubmitting, ensureCorrectNetwork]);
+  }, [isSubmitting, ensureCorrectNetwork, getPrivyWallet]);
 
   /**
    * Fetch player statistics

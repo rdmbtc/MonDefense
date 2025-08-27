@@ -4789,42 +4789,56 @@ if (isBrowser) {
           }
         }
 
-        // Add method to submit score to blockchain
-        submitScoreToBlockchain(score, waves) {
+        // Add method to submit score to blockchain using Privy
+        async submitScoreToBlockchain(score, waves) {
           try {
             console.log(`Submitting score to blockchain: Score=${score}, Waves=${waves}`);
             
-            // Emit custom event to communicate with React component
-            const blockchainEvent = new CustomEvent('submitToBlockchain', {
-              detail: {
-                score: score,
-                waves: waves,
-                timestamp: Date.now()
+            // Check if global blockchain submission function is available
+            if (typeof window !== 'undefined' && window.submitGameScoreToBlockchain) {
+              // Show loading feedback to user
+              const feedbackText = this.add.text(400, 400, 'Submitting to Blockchain...', {
+                fontFamily: 'Arial',
+                fontSize: '24px',
+                color: '#FFD700',
+                stroke: '#000000',
+                strokeThickness: 2
+              }).setOrigin(0.5);
+              feedbackText.setDepth(1003);
+              
+              // Call the global submission function with Privy
+              const transactionCount = Math.max(1, Math.floor(score / 1000));
+              const success = await window.submitGameScoreToBlockchain(score, transactionCount);
+              
+              // Remove loading text
+              feedbackText.destroy();
+              
+              if (success) {
+                // Show success feedback
+                const successText = this.add.text(400, 400, 'Score submitted to blockchain!', {
+                  fontFamily: 'Arial',
+                  fontSize: '24px',
+                  color: '#00FF00',
+                  stroke: '#000000',
+                  strokeThickness: 2
+                }).setOrigin(0.5);
+                successText.setDepth(1003);
+                
+                // Fade out the success text after 3 seconds
+                this.tweens.add({
+                  targets: successText,
+                  alpha: 0,
+                  duration: 3000,
+                  onComplete: () => {
+                    successText.destroy();
+                  }
+                });
+              } else {
+                throw new Error('Submission failed');
               }
-            });
-            
-            // Dispatch the event to the window so the React component can listen
-            window.dispatchEvent(blockchainEvent);
-            
-            // Show feedback to user
-            const feedbackText = this.add.text(400, 400, 'Submitting to Blockchain...', {
-              fontFamily: 'Arial',
-              fontSize: '24px',
-              color: '#FFD700',
-              stroke: '#000000',
-              strokeThickness: 2
-            }).setOrigin(0.5);
-            feedbackText.setDepth(1003);
-            
-            // Fade out the feedback text after 3 seconds
-            this.tweens.add({
-              targets: feedbackText,
-              alpha: 0,
-              duration: 3000,
-              onComplete: () => {
-                feedbackText.destroy();
-              }
-            });
+            } else {
+              throw new Error('Blockchain submission not available');
+            }
             
           } catch (error) {
             console.error('Error submitting score to blockchain:', error);
