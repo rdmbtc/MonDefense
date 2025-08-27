@@ -4,7 +4,7 @@ import { ethers } from 'ethers';
 export const GAME_SCORE_CONTRACT_ADDRESS = '0x7245450F0D040Ea3e0658e7ae02DCF3BF999E578';
 
 // Monad testnet RPC URL
-const MONAD_TESTNET_RPC = 'https://testnet-rpc.monad.xyz';
+export const MONAD_TESTNET_RPC = 'https://testnet-rpc.monad.xyz';
 
 // GameScore contract ABI (only the functions we need)
 const GAME_SCORE_ABI = [
@@ -256,5 +256,3 @@ export async function switchToMonadTestnet() {
     }
   }
 }
-
-export { GAME_SCORE_CONTRACT_ADDRESS, MONAD_TESTNET_RPC };
