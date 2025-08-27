@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 
 // GameScore contract address on Monad testnet
-const GAME_SCORE_CONTRACT_ADDRESS = '0x1f9CD2Faa1564cA2324D5Aa942698f9E2269eE49';
+export const GAME_SCORE_CONTRACT_ADDRESS = '0x7245450F0D040Ea3e0658e7ae02DCF3BF999E578';
 
 // Monad testnet RPC URL
 const MONAD_TESTNET_RPC = 'https://testnet-rpc.monad.xyz';
@@ -10,7 +10,8 @@ const MONAD_TESTNET_RPC = 'https://testnet-rpc.monad.xyz';
 const GAME_SCORE_ABI = [
   {
     "inputs": [
-      { "internalType": "uint256", "name": "_score", "type": "uint256" }
+      { "internalType": "uint256", "name": "_score", "type": "uint256" },
+      { "internalType": "uint256", "name": "_transactionCount", "type": "uint256" }
     ],
     "name": "submitScore",
     "outputs": [],
@@ -108,15 +109,17 @@ function getContractWithSigner(signer: ethers.Signer) {
  * Submit a game score to the blockchain
  * @param signer - Ethereum signer (wallet)
  * @param score - Game score to submit
+ * @param transactionCount - Number of transactions made during the game
  * @returns Transaction hash
  */
 export async function submitGameScore(
   signer: ethers.Signer,
-  score: number
+  score: number,
+  transactionCount: number = 1
 ): Promise<string> {
   try {
     const contract = getContractWithSigner(signer);
-    const tx = await contract.submitScore(score);
+    const tx = await contract.submitScore(score, transactionCount);
     
     console.log('Score submission transaction sent:', tx.hash);
     

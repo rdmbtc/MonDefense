@@ -112,7 +112,7 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
       toast.info('Submitting score to blockchain...');
       
       // Submit score using Privy wallet
-      const txHash = await submitGameScore(signer, score);
+      const txHash = await submitGameScore(signer, score, transactionCount);
       
       toast.success(`Score submitted successfully! Transaction: ${txHash.slice(0, 10)}...`);
       
