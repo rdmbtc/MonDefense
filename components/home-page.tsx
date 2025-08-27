@@ -93,28 +93,44 @@ export default function HomePage() {
   if (gameMode === 'trailer') {
     return (
       <div 
-        className="min-h-screen flex items-center justify-center cursor-pointer"
+        className="min-h-screen flex items-center justify-center cursor-pointer relative overflow-hidden bg-black"
         onClick={nextTrailerSlide}
-        style={{
-          backgroundImage: `url(${trailerAssets[trailerIndex].image})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
-          backgroundRepeat: 'no-repeat'
-        }}
       >
+        {/* Mobile-responsive image container */}
+        <div 
+          className="w-full h-full absolute inset-0"
+          style={{
+            backgroundImage: `url(${trailerAssets[trailerIndex].image})`,
+            backgroundSize: 'contain',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        />
+        
+        {/* Desktop overlay for better coverage */}
+        <div 
+          className="hidden md:block w-full h-full absolute inset-0"
+          style={{
+            backgroundImage: `url(${trailerAssets[trailerIndex].image})`,
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        />
+
         {/* Click or spacebar instruction */}
-        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2">
-          <div className="bg-black/50 backdrop-blur px-6 py-3 rounded-lg">
-            <p className="text-white text-center text-lg font-medium">
+        <div className="absolute bottom-4 md:bottom-8 left-1/2 transform -translate-x-1/2 px-4 z-10">
+          <div className="bg-black/70 backdrop-blur px-4 md:px-6 py-2 md:py-3 rounded-lg border border-white/20">
+            <p className="text-white text-center text-sm md:text-lg font-medium">
               Click or press Spacebar to continue
             </p>
           </div>
         </div>
 
         {/* Progress indicator */}
-        <div className="absolute top-8 right-8">
-          <div className="bg-black/50 backdrop-blur px-4 py-2 rounded-lg">
-            <p className="text-white text-sm">
+        <div className="absolute top-4 md:top-8 right-4 md:right-8 z-10">
+          <div className="bg-black/70 backdrop-blur px-3 md:px-4 py-1 md:py-2 rounded-lg border border-white/20">
+            <p className="text-white text-xs md:text-sm">
               {trailerIndex + 1} / {trailerAssets.length}
             </p>
           </div>
