@@ -195,19 +195,19 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   };
 
   // Function to handle score submission to blockchain
-  const handleScoreSubmission = useCallback(async (finalScore: number) => {
+  const handleScoreSubmission = useCallback(async (finalScore: number, transactionCount: number = 1) => {
     if (!authenticated || !accountAddress || hasSubmittedScore || finalScore <= 0) {
       return;
     }
 
     try {
       // Show gas cost estimation before submission
-      await estimateTransactionCost(finalScore);
+      await estimateTransactionCost(finalScore, transactionCount);
       if (estimatedGasCost) {
         toast.info(`Estimated transaction cost: ${parseFloat(estimatedGasCost).toFixed(6)} MON`);
       }
       
-      const success = await submitScore(finalScore);
+      const success = await submitScore(finalScore, transactionCount);
       
       if (success) {
         setHasSubmittedScore(true);
@@ -239,7 +239,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       // Expose global function for Phaser game to call directly
       window.submitGameScoreToBlockchain = async (score: number, transactionCount: number): Promise<boolean> => {
         try {
-          const result = await handleScoreSubmission(score);
+          const result = await handleScoreSubmission(score, transactionCount);
           return result ?? false;
         } catch (error) {
           console.error('Error in global blockchain submission:', error);
