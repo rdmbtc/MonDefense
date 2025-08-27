@@ -28,14 +28,8 @@ export default function HomePage() {
 
   // Handle trailer progression
   const nextTrailerSlide = useCallback(async () => {
-    // Ensure audio context is activated on user interaction
-    if (trailerIndex === 0 && backgroundMusicRef.current && backgroundMusicRef.current.paused) {
-      try {
-        await backgroundMusicRef.current.play();
-      } catch (error) {
-        console.warn('Background music failed to start:', error);
-      }
-    }
+    // Play audio on user interaction
+    await playAudio(true);
 
     if (trailerIndex < trailerAssets.length - 1) {
       setTrailerIndex(trailerIndex + 1);
@@ -47,7 +41,7 @@ export default function HomePage() {
       }
       setGameMode('home');
     }
-  }, [trailerIndex, trailerAssets.length]);
+  }, [trailerIndex, trailerAssets.length, playAudio]);
 
   // Handle keyboard events for trailer
   useEffect(() => {
@@ -63,33 +57,36 @@ export default function HomePage() {
   }, [gameMode, trailerIndex, nextTrailerSlide]);
 
   // Initialize and play audio
-  const playAudio = useCallback(async () => {
+  const playAudio = useCallback(async (userInteracted = false) => {
     try {
-      // Initialize background music on first slide
-      if (trailerIndex === 0 && !backgroundMusicRef.current) {
+      // Initialize background music on first slide only after user interaction
+      if (trailerIndex === 0 && !backgroundMusicRef.current && userInteracted) {
         backgroundMusicRef.current = new Audio('/Trailer/background_music_trailer.mp3');
         backgroundMusicRef.current.loop = true;
         backgroundMusicRef.current.volume = 0.3;
         await backgroundMusicRef.current.play();
       }
 
-      // Play sound effect for current slide
-      if (soundEffectRef.current) {
-        soundEffectRef.current.pause();
-        soundEffectRef.current.currentTime = 0;
+      // Play sound effect for current slide only after user interaction
+      if (userInteracted) {
+        if (soundEffectRef.current) {
+          soundEffectRef.current.pause();
+          soundEffectRef.current.currentTime = 0;
+        }
+        soundEffectRef.current = new Audio(trailerAssets[trailerIndex].sound);
+        soundEffectRef.current.volume = 0.7;
+        await soundEffectRef.current.play();
       }
-      soundEffectRef.current = new Audio(trailerAssets[trailerIndex].sound);
-      soundEffectRef.current.volume = 0.7;
-      await soundEffectRef.current.play();
     } catch (error) {
       console.warn('Audio playback failed:', error);
     }
-  }, [trailerIndex]);
+  }, [trailerIndex, trailerAssets]);
 
-  // Play background music and sound effects for trailer
+  // Initialize audio elements but don't play automatically
   useEffect(() => {
     if (gameMode === 'trailer') {
-      playAudio();
+      // Just initialize without playing - audio will play on user interaction
+      playAudio(false);
     }
   }, [gameMode, trailerIndex, playAudio]);
 
