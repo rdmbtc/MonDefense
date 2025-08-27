@@ -3,8 +3,13 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useGameContext } from "@/context/game-context";
+import { useGameScoreContract } from '@/hooks/use-game-score-contract';
 import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
+import { 
+  usePrivy, 
+  CrossAppAccountWithMetadata, 
+} from "@privy-io/react-auth";
 
 // Extend Window interface to include custom properties
 declare global {
@@ -40,6 +45,24 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const { farmCoins, addFarmCoins } = useGameContext();
   const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
   const soundEffectRef = useRef<HTMLAudioElement | null>(null);
+  
+  // Privy authentication
+  const { authenticated, user, ready, logout, login } = usePrivy();
+  const [accountAddress, setAccountAddress] = useState<string | null>(null);
+  const [username, setUsername] = useState<string | null>(null);
+  const [message, setMessage] = useState<string>("");
+  
+  // GameScore contract integration
+  const {
+    isSubmitting,
+    playerStats,
+    globalStats,
+    submitScore,
+    fetchPlayerStats,
+    fetchGlobalStats,
+    ensureCorrectNetwork
+  } = useGameScoreContract();
+  const [hasSubmittedScore, setHasSubmittedScore] = useState(false);
 
   // Chapter One assets (images 0-7, sounds for 1,3,5,6,7)
   const chapterAssets = [
@@ -123,6 +146,79 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     }
   }, [gameMode, chapterIndex, playChapterAudio]);
 
+  // Handle Privy authentication and wallet address extraction
+  useEffect(() => {
+    // Check if privy is ready and user is authenticated
+    if (authenticated && user && ready) {
+      // Check if user has linkedAccounts
+      if (user.linkedAccounts.length > 0) {
+        // Get the cross app account created using Monad Games ID
+        const crossAppAccount: CrossAppAccountWithMetadata = user.linkedAccounts.filter(
+          account => account.type === "cross_app" && account.providerApp.id === "cmd8euall0037le0my79qpz42"
+        )[0] as CrossAppAccountWithMetadata;
+
+        // The first embedded wallet created using Monad Games ID, is the wallet address
+        if (crossAppAccount && crossAppAccount.embeddedWallets.length > 0) {
+          const walletAddress = crossAppAccount.embeddedWallets[0].address;
+          setAccountAddress(walletAddress);
+          
+          // Fetch username from Monad Games ID API
+          fetchUsername(walletAddress);
+        }
+      } else {
+        setMessage("You need to link your Monad Games ID account to continue.");
+      }
+    }
+  }, [authenticated, user, ready]);
+
+  // Function to fetch username from Monad Games ID API
+  const fetchUsername = async (walletAddress: string) => {
+    try {
+      const response = await fetch(`https://monad-games-id-site.vercel.app/api/check-wallet?wallet=${walletAddress}`);
+      const data = await response.json();
+      
+      if (data.hasUsername && data.user) {
+        setUsername(data.user.username);
+        setMessage("");
+        
+        // Fetch player stats when username is loaded
+        await fetchPlayerStats(walletAddress);
+      } else {
+        setMessage("No username found. Please register at Monad Games ID.");
+      }
+    } catch (error) {
+      console.error('Error fetching username:', error);
+      setMessage("Error fetching username. Please try again.");
+    }
+  };
+
+  // Function to handle score submission to blockchain
+  const handleScoreSubmission = useCallback(async (finalScore: number) => {
+    if (!authenticated || !accountAddress || hasSubmittedScore || finalScore <= 0) {
+      return;
+    }
+
+    try {
+      // Calculate transaction count (simple heuristic based on score)
+      const transactionCount = Math.max(1, Math.floor(finalScore / 1000));
+      
+      const success = await submitScore(finalScore, transactionCount);
+      
+      if (success) {
+        setHasSubmittedScore(true);
+        toast.success(`Score ${finalScore.toLocaleString()} submitted to blockchain!`);
+        
+        // Refresh stats after submission
+        if (accountAddress) {
+          await fetchPlayerStats(accountAddress);
+        }
+        await fetchGlobalStats();
+      }
+    } catch (error) {
+      console.error('Error submitting score to blockchain:', error);
+    }
+  }, [authenticated, accountAddress, hasSubmittedScore, submitScore, fetchPlayerStats, fetchGlobalStats]);
+
   useEffect(() => {
     // Initialize game state for defense mode when game starts
     if (gameMode === 'game') {
@@ -131,6 +227,9 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         window._defenseMode = true;
         window._farmMode = false;
       }
+      
+      // Reset submission state for new game
+      setHasSubmittedScore(false);
     }
 
     return () => {
@@ -158,6 +257,11 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       }
     };
   }, [gameMode]);
+
+  // Fetch global stats on component mount
+  useEffect(() => {
+    fetchGlobalStats();
+  }, [fetchGlobalStats]);
 
   const handleBackToMenu = () => {
     // Clean up game before going back
@@ -262,10 +366,79 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         </Button>
       </div>
       
-      <div className="absolute top-4 right-4 z-50">
+      <div className="absolute top-4 right-4 z-50 flex gap-4 items-center">
+        {/* Authentication Status */}
+        <div className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2">
+          {!ready ? (
+            <span className="text-white text-sm">Loading...</span>
+          ) : !authenticated ? (
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={login}
+                variant="outline"
+                size="sm"
+                className="bg-blue-600/80 hover:bg-blue-700/80 text-white border-blue-500/50"
+              >
+                Sign in with Monad Games ID
+              </Button>
+            </div>
+          ) : (
+            <div className="flex items-center gap-2">
+              {username ? (
+                <span className="text-white text-sm font-medium">Welcome, {username}!</span>
+              ) : accountAddress ? (
+                <span className="text-white text-sm">{accountAddress.slice(0, 6)}...{accountAddress.slice(-4)}</span>
+              ) : (
+                <span className="text-white text-sm">Authenticated</span>
+              )}
+              <Button 
+                onClick={logout}
+                variant="outline"
+                size="sm"
+                className="bg-red-600/80 hover:bg-red-700/80 text-white border-red-500/50 ml-2"
+              >
+                Logout
+              </Button>
+            </div>
+          )}
+        </div>
+        
+        {/* Score Display */}
         <div className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2">
           <span className="text-white font-bold" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>Score: {gameScore.toLocaleString()}</span>
+          {playerStats && (
+            <div className="text-xs text-white/80 mt-1">
+              Best: {parseInt(playerStats.bestScore).toLocaleString()} | Games: {playerStats.gamesPlayed}
+            </div>
+          )}
         </div>
+        
+        {/* Blockchain Status */}
+        {authenticated && accountAddress && (
+          <div className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2">
+            <div className="text-white text-sm font-medium">
+              {isSubmitting ? (
+                <span className="flex items-center gap-2">
+                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
+                  Submitting to blockchain...
+                </span>
+              ) : hasSubmittedScore ? (
+                <span className="text-green-400">✓ Score on blockchain</span>
+              ) : gameScore > 0 ? (
+                <Button
+                  onClick={() => handleScoreSubmission(gameScore)}
+                  size="sm"
+                  className="bg-blue-600/80 hover:bg-blue-700/80 text-white border-blue-500/50 text-xs px-2 py-1"
+                  disabled={isSubmitting}
+                >
+                  Submit to Blockchain
+                </Button>
+              ) : (
+                <span className="text-white/60">Ready for blockchain</span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Game Title */}
@@ -274,6 +447,25 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           MonDefense - Tower Defense
         </h1>
       </div>
+
+      {/* Message Display */}
+      {message && (
+        <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-md">
+          <div className="bg-yellow-600/90 backdrop-blur border-yellow-500/50 rounded-lg px-4 py-3 text-center">
+            <p className="text-white text-sm font-medium mb-2">{message}</p>
+            {message.includes("No username found") && (
+              <Button 
+                onClick={() => window.open('https://monad-games-id-site.vercel.app/', '_blank')}
+                variant="outline"
+                size="sm"
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+              >
+                Register Username
+              </Button>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Game Container */}
       <div className="w-full h-screen flex items-center justify-center">
@@ -310,6 +502,8 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                   if (onGameEnd && gameScore > 0) {
                     onGameEnd(gameScore);
                   }
+                  // Submit score to blockchain
+                  handleScoreSubmission(gameScore);
                   break;
                 case 'gameWon':
                   const victoryBonus = 5000;
@@ -319,6 +513,8 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                   if (onGameEnd) {
                     onGameEnd(finalScore);
                   }
+                  // Submit final score to blockchain
+                  handleScoreSubmission(finalScore);
                   break;
                 default:
                   break;

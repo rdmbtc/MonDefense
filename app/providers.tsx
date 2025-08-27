@@ -73,7 +73,9 @@ export function Providers({ children }: { children: ReactNode }) {
           embeddedWallets: {
             createOnLogin: 'users-without-wallets',
           },
-          loginMethods: ['email', 'wallet'],
+          loginMethodsAndOrder: {
+            primary: ['email', 'google', 'privy:cmd8euall0037le0my79qpz42'],
+          },
           walletConnectCloudProjectId: process.env.NEXT_PUBLIC_WALLETCONNECT_PROJECT_ID,
           // Configure supported wallets - disable Coinbase Smart Wallet for Monad Testnet
           externalWallets: {
