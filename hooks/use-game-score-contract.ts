@@ -53,7 +53,7 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
     }
 
     const wallet = wallets[0]; // Use the first available wallet
-    await wallet.switchChain(41454); // Switch to Monad testnet (chain ID 41454)
+    await wallet.switchChain(10143); // Switch to Monad testnet (chain ID 10143)
     
     const provider = await wallet.getEthereumProvider();
     const signer = await (new ethers.BrowserProvider(provider)).getSigner();
@@ -78,7 +78,7 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
 
       // Switch to Monad testnet
       const wallet = wallets[0];
-      await wallet.switchChain(41454);
+      await wallet.switchChain(10143);
       
       return true;
     } catch (error) {

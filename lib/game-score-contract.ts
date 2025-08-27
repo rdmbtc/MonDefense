@@ -204,8 +204,8 @@ export async function getTopPlayers(limit: number = 10): Promise<LeaderboardEntr
 export async function isConnectedToMonadTestnet(provider: ethers.Provider): Promise<boolean> {
   try {
     const network = await provider.getNetwork();
-    // Monad testnet chain ID is 41454 (0xa1de)
-    return network.chainId === 41454n;
+    // Monad testnet chain ID is 10143 (0x279f)
+    return network.chainId === 10143n;
   } catch (error) {
     console.error('Error checking network:', error);
     return false;
