@@ -43,59 +43,8 @@ export function useAuth(): UseAuthReturn {
         return cachedToken;
       }
       
-      // Get nonce from server
-      const nonceResponse = await fetch(`/api/auth/session?address=${playerAddress}`);
-      const nonceData = await nonceResponse.json();
-      
-      if (!nonceData.success) {
-        throw new Error(nonceData.error || 'Failed to get nonce');
-      }
-      
-      if (!signMessage) {
-        throw new Error('Wallet not connected or signing not available');
-      }
-      
-      // Ask user to sign the message
-      console.log('Message to sign:', nonceData.message);
-      console.log('Message length:', nonceData.message?.length);
-      
-      if (!nonceData.message || nonceData.message.trim() === '') {
-        throw new Error('Empty message received from server');
-      }
-      
-      const signature = await signMessage(nonceData.message);
-      console.log('Signature received:', signature);
-      
-      // Send signature to server to get session token
-      const sessionResponse = await fetch('/api/auth/session', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          playerAddress,
-          signature,
-          nonce: nonceData.nonce
-        })
-      });
-      
-      const sessionData = await sessionResponse.json();
-      
-      if (!sessionData.success) {
-        throw new Error(sessionData.error || 'Failed to create session');
-      }
-      
-      // Cache the session token
-      localStorage.setItem(`session_${playerAddress}`, sessionData.sessionToken);
-      localStorage.setItem(`session_${playerAddress}_expiry`, sessionData.expiresAt.toString());
-      
-      setState(prev => ({
-        ...prev,
-        sessionToken: sessionData.sessionToken,
-        isAuthenticating: false
-      }));
-      
-      return sessionData.sessionToken;
+      // Authentication API has been removed
+      throw new Error('Authentication API has been removed');
       
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to authenticate';

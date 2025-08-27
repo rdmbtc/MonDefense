@@ -48,7 +48,7 @@ export function getCachedSessionToken(playerAddress: string): string | null {
 }
 
 /**
- * Submit player score to the server-side API
+ * Submit player score - API removed as requested
  */
 export async function submitPlayerScore(
   playerAddress: string,
@@ -56,32 +56,11 @@ export async function submitPlayerScore(
   transactionCount: number,
   sessionToken: string
 ): Promise<ScoreSubmissionResponse> {
-  try {
-    const response = await fetch('/api/update-player-data', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${sessionToken}`
-      },
-      body: JSON.stringify({
-        playerAddress,
-        scoreAmount: score,
-        transactionAmount: transactionCount,
-        sessionToken
-      })
-    });
-    
-    const data = await response.json();
-    
-    if (!response.ok) {
-      throw new Error(data.error || `HTTP error! status: ${response.status}`);
-    }
-    
-    return data;
-  } catch (error) {
-    console.error('Error submitting score:', error);
-    throw error;
-  }
+  // API has been removed
+  return {
+    success: false,
+    error: 'API has been removed'
+  };
 }
 
 /**

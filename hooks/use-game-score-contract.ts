@@ -1,11 +1,15 @@
 import { useState, useCallback, useEffect } from 'react';
 import { toast } from 'sonner';
 import { usePrivy, useWallets } from '@privy-io/react-auth';
+import { useAuth } from '@/hooks/use-auth';
+import { ethers } from 'ethers';
 import {
   PlayerStats,
   PlayerDataPerGame,
   LeaderboardEntry,
-  GlobalStats
+  GlobalStats,
+  submitGameScore,
+  estimateSubmitScoreGas
 } from '@/lib/game-score-contract';
 import {
   submitPlayerScore,
@@ -13,7 +17,6 @@ import {
   getCachedSessionToken,
   ScoreSubmissionManager
 } from '@/lib/score-api';
-import { useAuth } from './use-auth';
 
 export interface UseGameScoreContractReturn {
   // State
@@ -97,83 +100,6 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
     }
   }, [authenticated, user, wallets]);
 
-
-
-  /**
-   * Submit a game score via server-side API
-   */
-  const submitScore = useCallback(async (
-    score: number, 
-    transactionCount: number = 1
-  ): Promise<boolean> => {
-    if (isSubmitting) return false;
-    
-    setIsSubmitting(true);
-    
-    try {
-      // Ensure user is authenticated
-      const networkOk = await ensureCorrectNetwork();
-      if (!networkOk) {
-        return false;
-      }
-
-      // Get wallet address
-      const playerAddress = await getWalletAddress();
-      
-      // Check for cached session token first
-      let currentSessionToken = getCachedSessionToken(playerAddress);
-      
-      // If no valid cached token, authenticate
-       if (!currentSessionToken) {
-         toast.info('Authenticating wallet...');
-         currentSessionToken = await authenticate(playerAddress);
-       }
-      
-      toast.info('Submitting score...');
-      
-      // Submit score using server-side API with session manager
-      const result = await submissionManager.submitScore(
-        playerAddress,
-        score,
-        transactionCount,
-        currentSessionToken
-      );
-      
-      if (result.success) {
-        toast.success(`Score submitted successfully! Transaction: ${result.transactionHash?.slice(0, 10)}...`);
-        
-        // Refresh player stats after successful submission
-        await fetchPlayerStats(playerAddress);
-        
-        return true;
-      } else {
-        toast.error(result.error || 'Failed to submit score');
-        return false;
-      }
-    } catch (error: any) {
-      console.error('Error submitting score:', error);
-      
-      // Handle specific error cases
-      if (error.message?.includes('User not authenticated')) {
-        toast.error('Please connect your wallet first');
-      } else if (error.message?.includes('Rate limit')) {
-        toast.error('Too many requests. Please wait and try again.');
-      } else if (error.message?.includes('Invalid session token') || error.message?.includes('authenticate')) {
-        // If authentication failed, clear cached tokens
-        const playerAddress = await getWalletAddress();
-        localStorage.removeItem(`session_${playerAddress}`);
-        localStorage.removeItem(`session_${playerAddress}_expiry`);
-        toast.error('Authentication failed. Please try again.');
-      } else {
-        toast.error('Failed to submit score');
-      }
-      
-      return false;
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [isSubmitting, ensureCorrectNetwork, getWalletAddress, authenticate, submissionManager]);
-
   /**
    * Fetch player statistics
    */
@@ -198,7 +124,114 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
     }
   }, []);
 
+  /**
+   * Submit a game score directly to the blockchain contract
+   */
+  const submitScore = useCallback(async (
+    score: number, 
+    transactionCount: number = 1
+  ): Promise<boolean> => {
+    if (isSubmitting) return false;
+    
+    setIsSubmitting(true);
+    
+    try {
+      // Ensure user is authenticated and on correct network
+      const networkOk = await ensureCorrectNetwork();
+      if (!networkOk) {
+        return false;
+      }
 
+      // Get wallet address
+      const playerAddress = await getWalletAddress();
+      
+      // Get the wallet signer
+      const wallet = wallets[0];
+      if (!wallet) {
+        throw new Error('No wallet available');
+      }
+      
+      // Get ethers signer from Privy wallet - FIXED
+      const provider = await wallet.getEthereumProvider();
+      const ethersProvider = new ethers.BrowserProvider(provider);
+      const signer = await ethersProvider.getSigner();
+      
+      toast.info('Submitting score to blockchain...');
+      
+      // Submit score directly to contract
+      const transactionHash = await submitGameScore(signer, score, transactionCount);
+      
+      toast.success(`Score submitted successfully! Transaction: ${transactionHash.slice(0, 10)}...`);
+      
+      // Refresh player stats after successful submission
+      await fetchPlayerStats(playerAddress);
+      
+      return true;
+    } catch (error: any) {
+      console.error('Error submitting score:', error);
+      
+      // Handle specific error cases
+      if (error.message?.includes('User not authenticated')) {
+        toast.error('Please connect your wallet first');
+      } else if (error.message?.includes('insufficient funds')) {
+        toast.error('Insufficient funds for transaction');
+      } else if (error.message?.includes('user rejected')) {
+        toast.error('Transaction was rejected');
+      } else {
+        toast.error(`Failed to submit score: ${error.message || 'Unknown error'}`);
+      }
+      
+      return false;
+    } finally {
+      setIsSubmitting(false);
+    }
+  }, [isSubmitting, ensureCorrectNetwork, getWalletAddress, wallets, fetchPlayerStats]);
+
+  /**
+   * Estimate transaction cost for score submission
+   */
+  const estimateTransactionCost = useCallback(async (
+    score: number, 
+    transactionCount: number = 1
+  ): Promise<void> => {
+    try {
+      // Ensure user is authenticated and on correct network
+      const networkOk = await ensureCorrectNetwork();
+      if (!networkOk) {
+        return;
+      }
+
+      // Get the wallet signer
+      const wallet = wallets[0];
+      if (!wallet) {
+        throw new Error('No wallet available');
+      }
+      
+      // Get ethers signer from Privy wallet - FIXED
+      const provider = await wallet.getEthereumProvider();
+      const ethersProvider = new ethers.BrowserProvider(provider);
+      const signer = await ethersProvider.getSigner();
+      
+      // Get fee data - FIXED
+      const feeData = await ethersProvider.getFeeData();
+      
+      // Estimate gas for the transaction
+      const estimatedGas = await estimateSubmitScoreGas(signer, score, transactionCount);
+      
+      // Calculate estimated cost
+      const gasPrice = feeData.gasPrice || ethers.parseUnits('1', 'gwei');
+      const estimatedCost = estimatedGas * gasPrice;
+      
+      // Convert to readable format (MON)
+      const costInMON = ethers.formatEther(estimatedCost);
+      setEstimatedGasCost(costInMON);
+      
+      console.log('Estimated transaction cost:', costInMON, 'MON');
+    } catch (error) {
+      console.error('Error estimating transaction cost:', error);
+      setEstimatedGasCost(null);
+    }
+  }, [ensureCorrectNetwork, wallets]);
 
   /**
    * Fetch leaderboard data
@@ -206,8 +239,8 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
   const fetchLeaderboard = useCallback(async (limit: number = 10): Promise<void> => {
     try {
       setIsLoading(true);
-      // TODO: Implement leaderboard fetching for the new contract
-      // For now, set empty array
+      // TODO: Implement contract reading functions for the new contract
+      // For now, set empty leaderboard
       setLeaderboard([]);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
@@ -223,8 +256,8 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
   const fetchGlobalStats = useCallback(async (): Promise<void> => {
     try {
       setIsLoading(true);
-      // TODO: Implement global stats fetching for the new contract
-      // For now, set placeholder data
+      // TODO: Implement contract reading functions for the new contract
+      // For now, set placeholder data matching the GlobalStats interface
       setGlobalStats({
         totalGames: '0',
         totalTransactions: '0',
@@ -235,20 +268,6 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
       toast.error('Failed to fetch global statistics');
     } finally {
       setIsLoading(false);
-    }
-  }, []);
-
-  /**
-   * Estimate transaction cost
-   */
-  const estimateTransactionCost = useCallback(async (score: number, transactionCount: number = 1): Promise<void> => {
-    try {
-      // TODO: Implement gas estimation for the new contract
-      // For now, set placeholder data
-      setEstimatedGasCost('0.001');
-    } catch (error) {
-      console.error('Error estimating transaction cost:', error);
-      setEstimatedGasCost(null);
     }
   }, []);
 
