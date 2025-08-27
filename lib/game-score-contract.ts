@@ -10,8 +10,7 @@ export const MONAD_TESTNET_RPC = 'https://testnet-rpc.monad.xyz';
 const GAME_SCORE_ABI = [
   {
     "inputs": [
-      { "internalType": "uint256", "name": "_score", "type": "uint256" },
-      { "internalType": "uint256", "name": "_transactionCount", "type": "uint256" }
+      { "internalType": "uint256", "name": "_score", "type": "uint256" }
     ],
     "name": "submitScore",
     "outputs": [],
@@ -119,7 +118,7 @@ export async function submitGameScore(
 ): Promise<string> {
   try {
     const contract = getContractWithSigner(signer);
-    const tx = await contract.submitScore(score, transactionCount);
+    const tx = await contract.submitScore(score);
     
     console.log('Score submission transaction sent:', tx.hash);
     
