@@ -10,7 +10,7 @@ import { ErrorBoundary } from '@/components/error-boundary'
 
 // Define Monad Testnet chain configuration for Privy
 const monadTestnet = defineChain({
-  id: 10143,
+  id: 41454,
   name: 'Monad Testnet',
   network: 'monad-testnet',
   nativeCurrency: {

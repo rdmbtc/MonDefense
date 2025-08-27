@@ -24,7 +24,7 @@ const config: HardhatUserConfig = {
     monadTestnet: {
       url: MONAD_TESTNET_RPC_URL,
       accounts: [PRIVATE_KEY],
-      chainId: 10143, // Monad Testnet Chain ID
+      chainId: 41454, // Monad Testnet Chain ID
     },
     // Add other networks like mainnet if needed
   },
@@ -34,4 +34,4 @@ const config: HardhatUserConfig = {
   // },
 };
 
-export default config; 
+export default config;
