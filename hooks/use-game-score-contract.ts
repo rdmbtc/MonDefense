@@ -9,7 +9,10 @@ import {
   LeaderboardEntry,
   GlobalStats,
   submitGameScore,
-  estimateSubmitScoreGas
+  estimateSubmitScoreGas,
+  getTopPlayers,
+  getPlayerStats,
+  getReadOnlyContract
 } from '@/lib/game-score-contract';
 import {
   submitPlayerScore,
@@ -239,12 +242,12 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
   const fetchLeaderboard = useCallback(async (limit: number = 10): Promise<void> => {
     try {
       setIsLoading(true);
-      // TODO: Implement contract reading functions for the new contract
-      // For now, set empty leaderboard
-      setLeaderboard([]);
+      const leaderboardData = await getTopPlayers(limit);
+      setLeaderboard(leaderboardData);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
       toast.error('Failed to fetch leaderboard');
+      setLeaderboard([]);
     } finally {
       setIsLoading(false);
     }
@@ -256,16 +259,24 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
   const fetchGlobalStats = useCallback(async (): Promise<void> => {
     try {
       setIsLoading(true);
-      // TODO: Implement contract reading functions for the new contract
-      // For now, set placeholder data matching the GlobalStats interface
+      const contract = getReadOnlyContract();
+      const totalPlayers = await contract.getTotalPlayers();
+      
+      // Calculate total games and transactions by summing from all players
+      // For now, we'll use basic stats until we add more contract functions
+      setGlobalStats({
+        totalGames: '0', // Would need additional contract function
+        totalTransactions: '0', // Would need additional contract function  
+        totalPlayers: totalPlayers.toString()
+      });
+    } catch (error) {
+      console.error('Error fetching global stats:', error);
+      toast.error('Failed to fetch global statistics');
       setGlobalStats({
         totalGames: '0',
         totalTransactions: '0',
         totalPlayers: '0'
       });
-    } catch (error) {
-      console.error('Error fetching global stats:', error);
-      toast.error('Failed to fetch global statistics');
     } finally {
       setIsLoading(false);
     }

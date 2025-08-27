@@ -74,6 +74,7 @@ export function Providers({ children }: { children: ReactNode }) {
             embeddedWallets: {
               createOnLogin: 'users-without-wallets',
               requireUserPasswordOnCreate: false,
+              // Remove the invalid noPromptOnSignature property
             },
           }}
         >

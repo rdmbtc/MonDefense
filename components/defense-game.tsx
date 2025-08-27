@@ -195,38 +195,29 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   };
 
   // Function to handle score submission to blockchain
-  const handleScoreSubmission = useCallback(async (finalScore: number, transactionCount: number = 1): Promise<boolean> => {
-    if (!authenticated || !accountAddress || hasSubmittedScore || finalScore <= 0) {
-      return false;
-    }
-  
+  const handleScoreSubmission = async (score: number, transactionCount: number = 1): Promise<boolean> => {
     try {
-      // Show gas cost estimation before submission
-      await estimateTransactionCost(finalScore, transactionCount);
-      if (estimatedGasCost) {
-        toast.info(`Estimated transaction cost: ${parseFloat(estimatedGasCost).toFixed(6)} MON`);
-      }
+      console.log('Submitting score to blockchain:', score);
       
-      const success = await submitScore(finalScore, transactionCount);
+      // Estimate transaction cost first
+      await estimateTransactionCost(score, transactionCount);
       
-      if (success) {
+      // Submit the score
+      const result = await submitScore(score, transactionCount);
+      
+      if (result) {
         setHasSubmittedScore(true);
-        toast.success(`Score ${finalScore.toLocaleString()} submitted to blockchain!`);
-        
-        // Refresh stats after submission
-        if (accountAddress) {
-          await fetchPlayerStats(accountAddress);
-        }
-        await fetchGlobalStats();
+        toast.success('Score submitted to blockchain successfully!');
         return true;
+      } else {
+        console.error('Score submission failed');
+        return false;
       }
-      
-      return false;
     } catch (error) {
-      console.error('Error submitting score to blockchain:', error);
+      console.error('Error submitting score:', error);
       return false;
     }
-  }, [authenticated, accountAddress, hasSubmittedScore, submitScore, estimateTransactionCost, fetchPlayerStats, fetchGlobalStats]);
+  };
 
   useEffect(() => {
     // Initialize game state for defense mode when game starts
