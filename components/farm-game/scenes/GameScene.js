@@ -4597,6 +4597,16 @@ if (isBrowser) {
             // Set game to inactive
             this.gameState.isActive = false;
 
+            // Emit game end event
+            const onGameEvent = this.registry.get('onGameEvent');
+            if (typeof onGameEvent === 'function') {
+              if (victory) {
+                onGameEvent('gameWon', finalScore);
+              } else {
+                onGameEvent('gameOver', finalScore);
+              }
+            }
+
             // IMPORTANT: Immediately clean up all game objects
             this.cleanupCurrentGame();
 

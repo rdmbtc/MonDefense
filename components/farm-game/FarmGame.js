@@ -309,6 +309,20 @@ const FarmGameInner = ({ farmCoins, addFarmCoins, gameMode = 'farm', onGameEvent
         console.error("addFarmCoins callback was not provided to initializeGame");
       }
 
+      // Store the onGameEvent callback
+      if (typeof onGameEvent === 'function') {
+        game.registry.set('onGameEvent', (event, data) => {
+          try {
+            console.log(`[Phaser Registry] Calling onGameEvent with: ${event}, data:`, data);
+            onGameEvent(event, data); 
+          } catch (error) {
+            console.error("Error in registry onGameEvent callback:", error);
+          }
+        });
+      } else {
+        console.log("onGameEvent callback was not provided to initializeGame");
+      }
+
       // Wait for the game to be ready
       game.events.once('ready', () => {
         console.log("Game is ready!");

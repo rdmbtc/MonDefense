@@ -985,6 +985,12 @@ export default class Enemy {
           this.scene.updateScoreText();
         }
       }
+
+      // Emit enemyDefeated event
+      const onGameEvent = this.scene.registry.get('onGameEvent');
+      if (typeof onGameEvent === 'function') {
+        onGameEvent('enemyDefeated', this.value * 10);
+      }
       
       // Show floating text for COINS earned
       if (typeof this.scene.showFloatingText === 'function') {
@@ -1092,4 +1098,4 @@ export default class Enemy {
       }
     }
   }
-} 
+}
