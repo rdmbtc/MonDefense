@@ -336,7 +336,7 @@ export async function switchToMonadTestnet() {
     try {
       await window.ethereum.request({
         method: 'wallet_switchEthereumChain',
-        params: [{ chainId: '0xa1de' }], // 41454 in hex
+        params: [{ chainId: '0x279f' }], // 10143 in hex (correct Monad testnet chain ID)
       });
     } catch (switchError: any) {
       // This error code indicates that the chain has not been added to MetaMask
@@ -346,7 +346,7 @@ export async function switchToMonadTestnet() {
             method: 'wallet_addEthereumChain',
             params: [
               {
-                chainId: '0xa1de',
+                chainId: '0x279f', // 10143 in hex (correct Monad testnet chain ID)
                 chainName: 'Monad Testnet',
                 nativeCurrency: {
                   name: 'MON',
@@ -354,7 +354,7 @@ export async function switchToMonadTestnet() {
                   decimals: 18,
                 },
                 rpcUrls: [MONAD_TESTNET_RPC],
-                blockExplorerUrls: ['https://testnet-explorer.monad.xyz'],
+                blockExplorerUrls: ['https://testnet.monadexplorer.com'],
               },
             ],
           });
