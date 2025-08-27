@@ -26,6 +26,32 @@ export default function HomePage() {
     { image: '/Trailer/4.png', sound: '/Trailer/4.wav' }
   ];
 
+  // Initialize and play audio
+  const playAudio = useCallback(async (userInteracted = false) => {
+    try {
+      // Initialize background music on first slide only after user interaction
+      if (trailerIndex === 0 && !backgroundMusicRef.current && userInteracted) {
+        backgroundMusicRef.current = new Audio('/Trailer/background_music_trailer.mp3');
+        backgroundMusicRef.current.loop = true;
+        backgroundMusicRef.current.volume = 0.3;
+        await backgroundMusicRef.current.play();
+      }
+
+      // Play sound effect for current slide only after user interaction
+      if (userInteracted) {
+        if (soundEffectRef.current) {
+          soundEffectRef.current.pause();
+          soundEffectRef.current.currentTime = 0;
+        }
+        soundEffectRef.current = new Audio(trailerAssets[trailerIndex].sound);
+        soundEffectRef.current.volume = 0.7;
+        await soundEffectRef.current.play();
+      }
+    } catch (error) {
+      console.warn('Audio playback failed:', error);
+    }
+  }, [trailerIndex, trailerAssets]);
+
   // Handle trailer progression
   const nextTrailerSlide = useCallback(async () => {
     // Play audio on user interaction
@@ -55,32 +81,6 @@ export default function HomePage() {
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [gameMode, trailerIndex, nextTrailerSlide]);
-
-  // Initialize and play audio
-  const playAudio = useCallback(async (userInteracted = false) => {
-    try {
-      // Initialize background music on first slide only after user interaction
-      if (trailerIndex === 0 && !backgroundMusicRef.current && userInteracted) {
-        backgroundMusicRef.current = new Audio('/Trailer/background_music_trailer.mp3');
-        backgroundMusicRef.current.loop = true;
-        backgroundMusicRef.current.volume = 0.3;
-        await backgroundMusicRef.current.play();
-      }
-
-      // Play sound effect for current slide only after user interaction
-      if (userInteracted) {
-        if (soundEffectRef.current) {
-          soundEffectRef.current.pause();
-          soundEffectRef.current.currentTime = 0;
-        }
-        soundEffectRef.current = new Audio(trailerAssets[trailerIndex].sound);
-        soundEffectRef.current.volume = 0.7;
-        await soundEffectRef.current.play();
-      }
-    } catch (error) {
-      console.warn('Audio playback failed:', error);
-    }
-  }, [trailerIndex, trailerAssets]);
 
   // Initialize audio elements but don't play automatically
   useEffect(() => {
