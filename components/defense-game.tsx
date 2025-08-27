@@ -41,18 +41,27 @@ export default function DefenseGame({ onBack }: DefenseGameProps) {
 
   // Chapter One assets (images 0-7, sounds for 1,3,5,6,7)
   const chapterAssets = [
-    { image: '/Chapter One/0.png', sound: null },
-    { image: '/Chapter One/1.png', sound: '/Chapter One/1.wav' },
-    { image: '/Chapter One/2.png', sound: null },
-    { image: '/Chapter One/3.png', sound: '/Chapter One/3.wav' },
-    { image: '/Chapter One/4.png', sound: null },
-    { image: '/Chapter One/5.png', sound: '/Chapter One/5.wav' },
-    { image: '/Chapter One/6.png', sound: '/Chapter One/6.wav' },
-    { image: '/Chapter One/7.png', sound: '/Chapter One/7.wav' }
+    { image: '/Chapter%20One/0.png', sound: null },
+    { image: '/Chapter%20One/1.png', sound: '/Chapter%20One/1.wav' },
+    { image: '/Chapter%20One/2.png', sound: null },
+    { image: '/Chapter%20One/3.png', sound: '/Chapter%20One/3.wav' },
+    { image: '/Chapter%20One/4.png', sound: null },
+    { image: '/Chapter%20One/5.png', sound: '/Chapter%20One/5.wav' },
+    { image: '/Chapter%20One/6.png', sound: '/Chapter%20One/6.wav' },
+    { image: '/Chapter%20One/7.png', sound: '/Chapter%20One/7.wav' }
   ];
 
   // Handle chapter progression
-  const nextChapterSlide = useCallback(() => {
+  const nextChapterSlide = useCallback(async () => {
+    // Ensure audio context is activated on user interaction
+    if (chapterIndex === 0 && backgroundMusicRef.current && backgroundMusicRef.current.paused) {
+      try {
+        await backgroundMusicRef.current.play();
+      } catch (error) {
+        console.warn('Background music failed to start:', error);
+      }
+    }
+
     if (chapterIndex < chapterAssets.length - 1) {
       setChapterIndex(chapterIndex + 1);
     } else {
@@ -79,28 +88,38 @@ export default function DefenseGame({ onBack }: DefenseGameProps) {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [gameMode, chapterIndex, nextChapterSlide]);
 
-  // Play background music and sound effects for chapter
-  useEffect(() => {
-    if (gameMode === 'chapter') {
-      // Start background music on first slide
+  // Initialize and play audio
+  const playChapterAudio = useCallback(async () => {
+    try {
+      // Initialize background music on first slide
       if (chapterIndex === 0 && !backgroundMusicRef.current) {
-        backgroundMusicRef.current = new Audio('/Chapter One/background_music_chapter_one.mp3');
+        backgroundMusicRef.current = new Audio('/Chapter%20One/background_music_chapter_one.mp3');
         backgroundMusicRef.current.loop = true;
-        backgroundMusicRef.current.volume = 0.5;
-        backgroundMusicRef.current.play().catch(console.error);
+        backgroundMusicRef.current.volume = 0.3;
+        await backgroundMusicRef.current.play();
       }
 
       // Play sound effect for current slide if it exists
       if (chapterAssets[chapterIndex].sound) {
         if (soundEffectRef.current) {
           soundEffectRef.current.pause();
+          soundEffectRef.current.currentTime = 0;
         }
         soundEffectRef.current = new Audio(chapterAssets[chapterIndex].sound!);
         soundEffectRef.current.volume = 0.7;
-        soundEffectRef.current.play().catch(console.error);
+        await soundEffectRef.current.play();
       }
+    } catch (error) {
+      console.warn('Audio playback failed:', error);
     }
-  }, [gameMode, chapterIndex]);
+  }, [chapterIndex]);
+
+  // Play background music and sound effects for chapter
+  useEffect(() => {
+    if (gameMode === 'chapter') {
+      playChapterAudio();
+    }
+  }, [gameMode, chapterIndex, playChapterAudio]);
 
   useEffect(() => {
     // Initialize game state for defense mode when game starts
@@ -160,7 +179,7 @@ export default function DefenseGame({ onBack }: DefenseGameProps) {
       >
         {/* Mobile-responsive image container */}
         <div 
-          className="w-full h-full absolute inset-0"
+          className="md:hidden w-full h-full absolute inset-0"
           style={{
             backgroundImage: `url(${chapterAssets[chapterIndex].image})`,
             backgroundSize: 'contain',

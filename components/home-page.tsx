@@ -27,7 +27,16 @@ export default function HomePage() {
   ];
 
   // Handle trailer progression
-  const nextTrailerSlide = useCallback(() => {
+  const nextTrailerSlide = useCallback(async () => {
+    // Ensure audio context is activated on user interaction
+    if (trailerIndex === 0 && backgroundMusicRef.current && backgroundMusicRef.current.paused) {
+      try {
+        await backgroundMusicRef.current.play();
+      } catch (error) {
+        console.warn('Background music failed to start:', error);
+      }
+    }
+
     if (trailerIndex < trailerAssets.length - 1) {
       setTrailerIndex(trailerIndex + 1);
     } else {
@@ -53,26 +62,36 @@ export default function HomePage() {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [gameMode, trailerIndex, nextTrailerSlide]);
 
-  // Play background music and sound effects for trailer
-  useEffect(() => {
-    if (gameMode === 'trailer') {
-      // Start background music on first slide
+  // Initialize and play audio
+  const playAudio = useCallback(async () => {
+    try {
+      // Initialize background music on first slide
       if (trailerIndex === 0 && !backgroundMusicRef.current) {
         backgroundMusicRef.current = new Audio('/Trailer/background_music_trailer.mp3');
         backgroundMusicRef.current.loop = true;
-        backgroundMusicRef.current.volume = 0.5;
-        backgroundMusicRef.current.play().catch(console.error);
+        backgroundMusicRef.current.volume = 0.3;
+        await backgroundMusicRef.current.play();
       }
 
       // Play sound effect for current slide
       if (soundEffectRef.current) {
         soundEffectRef.current.pause();
+        soundEffectRef.current.currentTime = 0;
       }
       soundEffectRef.current = new Audio(trailerAssets[trailerIndex].sound);
       soundEffectRef.current.volume = 0.7;
-      soundEffectRef.current.play().catch(console.error);
+      await soundEffectRef.current.play();
+    } catch (error) {
+      console.warn('Audio playback failed:', error);
     }
-  }, [gameMode, trailerIndex]);
+  }, [trailerIndex]);
+
+  // Play background music and sound effects for trailer
+  useEffect(() => {
+    if (gameMode === 'trailer') {
+      playAudio();
+    }
+  }, [gameMode, trailerIndex, playAudio]);
 
   // Cleanup audio on unmount
   useEffect(() => {
@@ -98,7 +117,7 @@ export default function HomePage() {
       >
         {/* Mobile-responsive image container */}
         <div 
-          className="w-full h-full absolute inset-0"
+          className="md:hidden w-full h-full absolute inset-0"
           style={{
             backgroundImage: `url(${trailerAssets[trailerIndex].image})`,
             backgroundSize: 'contain',
