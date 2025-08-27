@@ -10,12 +10,20 @@ export const MONAD_TESTNET_RPC = 'https://testnet-rpc.monad.xyz';
 const GAME_SCORE_ABI = [
   {
     "inputs": [
-      { "internalType": "uint256", "name": "_score", "type": "uint256" },
-      { "internalType": "uint256", "name": "_transactionCount", "type": "uint256" }
+      {
+        "internalType": "uint256",
+        "name": "_score",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_transactionCount",
+        "type": "uint256"
+      }
     ],
     "name": "submitScore",
     "outputs": [],
-    "stateMutability": "nonpayable",
+    "stateMutability": "nonReentrant",
     "type": "function"
   },
   {
@@ -106,6 +114,78 @@ function getContractWithSigner(signer: ethers.Signer) {
 }
 
 /**
+ * Estimate gas for score submission transaction
+ * @param signer - Ethereum signer
+ * @param score - Game score
+ * @param transactionCount - Transaction count
+ * @returns Estimated gas limit
+ */
+export async function estimateSubmitScoreGas(
+  signer: ethers.Signer,
+  score: number,
+  transactionCount: number = 1
+): Promise<bigint> {
+  try {
+    const contract = getContractWithSigner(signer);
+    const estimatedGas = await contract.submitScore.estimateGas(score, transactionCount);
+    
+    // Add 20% buffer to estimated gas for safety
+    const gasWithBuffer = (estimatedGas * 120n) / 100n;
+    
+    console.log('Estimated gas:', estimatedGas.toString());
+    console.log('Gas with buffer:', gasWithBuffer.toString());
+    
+    return gasWithBuffer;
+  } catch (error) {
+    console.warn('Gas estimation failed, using default:', error);
+    // Return conservative default if estimation fails
+    return 200000n;
+  }
+}
+
+/**
+ * Prepare transaction data for score submission
+ * @param signer - Ethereum signer
+ * @param score - Game score
+ * @param transactionCount - Transaction count
+ * @returns Transaction preparation data
+ */
+export async function prepareScoreTransaction(
+  signer: ethers.Signer,
+  score: number,
+  transactionCount: number = 1
+) {
+  const provider = signer.provider;
+  
+  // Get network fee data
+  let feeData;
+  try {
+    feeData = await provider?.getFeeData();
+  } catch (e) {
+    console.warn('Could not fetch fee data, using defaults');
+  }
+  
+  // Estimate gas for this specific transaction
+  const estimatedGas = await estimateSubmitScoreGas(signer, score, transactionCount);
+  
+  // Use estimated gas or conservative default
+  const gasLimit = estimatedGas > 0n ? estimatedGas : 200000n;
+  
+  // Set gas price (Monad testnet typically has very low gas prices)
+  const gasPrice = feeData?.gasPrice || ethers.parseUnits('1', 'gwei');
+  
+  // Get current nonce
+  const nonce = await signer.getNonce('pending');
+  
+  return {
+    gasLimit,
+    gasPrice,
+    nonce,
+    estimatedCost: gasLimit * gasPrice
+  };
+}
+
+/**
  * Submit a game score to the blockchain
  * @param signer - Ethereum signer (wallet)
  * @param score - Game score to submit
@@ -120,19 +200,49 @@ export async function submitGameScore(
   try {
     const contract = getContractWithSigner(signer);
     
-    // Add explicit gas settings to avoid estimation issues
-    const gasLimit = 100000; // Set a reasonable gas limit
-    const tx = await contract.submitScore(score, transactionCount, { gasLimit });
+    // Prepare transaction with optimized gas settings
+    console.log('Preparing transaction for score submission...');
+    const txData = await prepareScoreTransaction(signer, score, transactionCount);
+    
+    console.log('Transaction preparation complete:');
+    console.log('- Gas limit:', txData.gasLimit.toString());
+    console.log('- Gas price:', txData.gasPrice.toString());
+    console.log('- Estimated cost:', ethers.formatEther(txData.estimatedCost), 'MON');
+    console.log('- Nonce:', txData.nonce);
+    
+    // Submit transaction with prepared settings
+    const tx = await contract.submitScore(score, transactionCount, {
+      gasLimit: txData.gasLimit,
+      gasPrice: txData.gasPrice,
+      nonce: txData.nonce
+    });
     
     console.log('Score submission transaction sent:', tx.hash);
     
     // Wait for transaction confirmation
-    const receipt = await tx.wait();
-    console.log('Score submitted successfully:', receipt.hash);
+    const receipt = await tx.wait(1); // Wait for 1 confirmation
+    console.log('Score submitted successfully!');
+    console.log('- Transaction hash:', receipt.hash);
+    console.log('- Gas used:', receipt.gasUsed.toString());
+    console.log('- Gas efficiency:', ((Number(receipt.gasUsed) / Number(txData.gasLimit)) * 100).toFixed(1) + '%');
     
     return receipt.hash;
-  } catch (error) {
+  } catch (error: any) {
     console.error('Error submitting score:', error);
+    
+    // Enhanced error handling for common Monad issues
+    if (error.code === 'INSUFFICIENT_FUNDS') {
+      throw new Error('Insufficient MON tokens for transaction. Please check your wallet balance.');
+    } else if (error.code === 'NONCE_EXPIRED' || error.code === 'REPLACEMENT_UNDERPRICED') {
+      throw new Error('Transaction nonce issue. Please try again.');
+    } else if (error.message?.includes('gas')) {
+      throw new Error('Gas estimation failed. The transaction may require more gas or the contract call may revert.');
+    } else if (error.code === 'NETWORK_ERROR') {
+      throw new Error('Network connection issue. Please check your connection to Monad testnet.');
+    } else if (error.code === 'CALL_EXCEPTION') {
+      throw new Error('Contract call failed. Please check if the contract is deployed and accessible.');
+    }
+    
     throw error;
   }
 }

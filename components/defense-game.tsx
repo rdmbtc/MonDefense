@@ -60,7 +60,9 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     submitScore,
     fetchPlayerStats,
     fetchGlobalStats,
-    ensureCorrectNetwork
+    ensureCorrectNetwork,
+    estimateTransactionCost,
+    estimatedGasCost
   } = useGameScoreContract();
   const [hasSubmittedScore, setHasSubmittedScore] = useState(false);
 
@@ -199,6 +201,12 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     }
 
     try {
+      // Show gas cost estimation before submission
+      await estimateTransactionCost(finalScore);
+      if (estimatedGasCost) {
+        toast.info(`Estimated transaction cost: ${parseFloat(estimatedGasCost).toFixed(6)} MON`);
+      }
+      
       const success = await submitScore(finalScore);
       
       if (success) {
@@ -214,7 +222,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     } catch (error) {
       console.error('Error submitting score to blockchain:', error);
     }
-  }, [authenticated, accountAddress, hasSubmittedScore, submitScore, fetchPlayerStats, fetchGlobalStats]);
+  }, [authenticated, accountAddress, hasSubmittedScore, submitScore, estimateTransactionCost, fetchPlayerStats, fetchGlobalStats]);
 
   useEffect(() => {
     // Initialize game state for defense mode when game starts
@@ -440,14 +448,21 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               ) : hasSubmittedScore ? (
                 <span className="text-green-400">✓ Score on blockchain</span>
               ) : gameScore > 0 ? (
-                <Button
-                  onClick={() => handleScoreSubmission(gameScore)}
-                  size="sm"
-                  className="bg-blue-600/80 hover:bg-blue-700/80 text-white border-blue-500/50 text-xs px-2 py-1"
-                  disabled={isSubmitting}
-                >
-                  Submit to Blockchain
-                </Button>
+                <div className="space-y-1">
+                  <Button
+                    onClick={() => handleScoreSubmission(gameScore)}
+                    size="sm"
+                    className="bg-blue-600/80 hover:bg-blue-700/80 text-white border-blue-500/50 text-xs px-2 py-1 w-full"
+                    disabled={isSubmitting}
+                  >
+                    Submit to Blockchain
+                  </Button>
+                  {estimatedGasCost && (
+                    <div className="text-xs text-white/70 text-center">
+                      Est. cost: {parseFloat(estimatedGasCost).toFixed(6)} MON
+                    </div>
+                  )}
+                </div>
               ) : (
                 <span className="text-white/60">Ready for blockchain</span>
               )}

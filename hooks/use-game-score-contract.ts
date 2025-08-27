@@ -10,7 +10,9 @@ import {
   PlayerStats,
   GlobalStats,
   LeaderboardEntry,
-  GAME_SCORE_CONTRACT_ADDRESS
+  GAME_SCORE_CONTRACT_ADDRESS,
+  prepareScoreTransaction,
+  estimateSubmitScoreGas
 } from '@/lib/game-score-contract';
 
 export interface UseGameScoreContractReturn {
@@ -20,6 +22,7 @@ export interface UseGameScoreContractReturn {
   playerStats: PlayerStats | null;
   globalStats: GlobalStats | null;
   leaderboard: LeaderboardEntry[];
+  estimatedGasCost: string | null;
   
   // Actions
   submitScore: (score: number, transactionCount?: number) => Promise<boolean>;
@@ -27,6 +30,7 @@ export interface UseGameScoreContractReturn {
   fetchGlobalStats: () => Promise<void>;
   fetchLeaderboard: (limit?: number) => Promise<void>;
   ensureCorrectNetwork: () => Promise<boolean>;
+  estimateTransactionCost: (score: number, transactionCount?: number) => Promise<void>;
 }
 
 /**
@@ -39,6 +43,7 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
   const [playerStats, setPlayerStats] = useState<PlayerStats | null>(null);
   const [globalStats, setGlobalStats] = useState<GlobalStats | null>(null);
   const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([]);
+  const [estimatedGasCost, setEstimatedGasCost] = useState<string | null>(null);
   
   // Privy hooks
   const { authenticated, user } = usePrivy();
@@ -89,6 +94,35 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
   }, [authenticated, user, wallets]);
 
   /**
+    * Estimate transaction cost for submitting a score
+    */
+   const estimateTransactionCost = useCallback(async (
+     score: number, 
+     transactionCount: number = 1
+   ): Promise<void> => {
+     try {
+       // Ensure correct network
+       const networkOk = await ensureCorrectNetwork();
+       if (!networkOk) {
+         setEstimatedGasCost(null);
+         return;
+       }
+ 
+       // Get Privy wallet signer
+       const { signer } = await getPrivyWallet();
+       
+       // Prepare transaction to get cost estimate
+       const txData = await prepareScoreTransaction(signer, score, transactionCount);
+       const costInMON = ethers.formatEther(txData.estimatedCost);
+       
+       setEstimatedGasCost(costInMON);
+     } catch (error) {
+       console.error('Gas estimation error:', error);
+       setEstimatedGasCost(null);
+     }
+   }, [ensureCorrectNetwork, getPrivyWallet]);
+
+  /**
    * Submit a game score to the blockchain using Privy
    */
   const submitScore = useCallback(async (
@@ -108,6 +142,9 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
 
       // Get Privy wallet signer
       const { signer } = await getPrivyWallet();
+      
+      // Estimate gas cost before submission
+      await estimateTransactionCost(score, transactionCount);
       
       toast.info('Submitting score to blockchain...');
       
@@ -140,7 +177,7 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
     } finally {
       setIsSubmitting(false);
     }
-  }, [isSubmitting, ensureCorrectNetwork, getPrivyWallet]);
+  }, [isSubmitting, ensureCorrectNetwork, getPrivyWallet, estimateTransactionCost]);
 
   /**
    * Fetch player statistics
@@ -197,9 +234,11 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
     playerStats,
     globalStats,
     leaderboard,
+    estimatedGasCost,
     
     // Actions
     submitScore,
+    estimateTransactionCost,
     fetchPlayerStats,
     fetchGlobalStats,
     fetchLeaderboard,
