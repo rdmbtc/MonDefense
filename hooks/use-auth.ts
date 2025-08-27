@@ -56,7 +56,15 @@ export function useAuth(): UseAuthReturn {
       }
       
       // Ask user to sign the message
+      console.log('Message to sign:', nonceData.message);
+      console.log('Message length:', nonceData.message?.length);
+      
+      if (!nonceData.message || nonceData.message.trim() === '') {
+        throw new Error('Empty message received from server');
+      }
+      
       const signature = await signMessage(nonceData.message);
+      console.log('Signature received:', signature);
       
       // Send signature to server to get session token
       const sessionResponse = await fetch('/api/auth/session', {

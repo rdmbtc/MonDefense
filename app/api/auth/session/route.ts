@@ -82,6 +82,9 @@ export async function POST(request: NextRequest) {
     
     // Create the message that should have been signed
     const message = createSignatureMessage(playerAddress, nonce);
+    console.log('Server: Created message for verification:', message);
+    console.log('Server: Message length:', message?.length);
+    console.log('Server: Received signature:', signature);
     
     // Verify the signature
     try {

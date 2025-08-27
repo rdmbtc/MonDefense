@@ -4,7 +4,7 @@ This guide explains how to set up the required GAME_ROLE permission for your Mon
 
 ## Overview
 
-The MonDefense game now uses the official Monad Games contract at `0xceCBFF203C8B6044F52CE23D914A1bfD997541A4`. To submit scores, your server-side wallet must have `GAME_ROLE` permission on this contract.
+The MonDefense game now uses the official Monad Games contract at `0x33D8711368801358714Dc11d03c1c130ba5CA342`. To submit scores, your server-side wallet must have `GAME_ROLE` permission on this contract.
 
 ## Step 1: Generate a Game Wallet
 
@@ -80,7 +80,7 @@ If you have admin access to the contract:
 const GAME_ROLE = '0x0000000000000000000000000000000000000000000000000000000000000001';
 
 await walletClient.writeContract({
-  address: '0xceCBFF203C8B6044F52CE23D914A1bfD997541A4',
+  address: '0x33D8711368801358714Dc11d03c1c130ba5CA342',
   abi: contractABI,
   functionName: 'grantRole',
   args: [GAME_ROLE, 'YOUR_GAME_WALLET_ADDRESS']
@@ -129,7 +129,7 @@ await walletClient.writeContract({
 
 ## Contract Information
 
-- **Contract Address**: `0xceCBFF203C8B6044F52CE23D914A1bfD997541A4`
+- **Contract Address**: `0x33D8711368801358714Dc11d03c1c130ba5CA342`
 - **Network**: Monad Testnet (Chain ID: 10143)
 - **RPC URL**: `https://testnet-rpc.monad.xyz`
 - **GAME_ROLE**: `0x0000000000000000000000000000000000000000000000000000000000000001`

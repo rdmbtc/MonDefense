@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 
 // Official Monad Games contract address on Monad testnet
-export const GAME_SCORE_CONTRACT_ADDRESS = '0xceCBFF203C8B6044F52CE23D914A1bfD997541A4';
+export const GAME_SCORE_CONTRACT_ADDRESS = '0x33D8711368801358714Dc11d03c1c130ba5CA342';
 
 // Monad testnet RPC URL
 export const MONAD_TESTNET_RPC = 'https://testnet-rpc.monad.xyz';

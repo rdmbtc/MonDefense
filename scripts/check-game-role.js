@@ -7,7 +7,7 @@ const { createPublicClient, http } = require('viem');
 const { monadTestnet } = require('viem/chains');
 
 // Contract configuration
-const GAME_SCORE_CONTRACT_ADDRESS = '0xceCBFF203C8B6044F52CE23D914A1bfD997541A4';
+const GAME_SCORE_CONTRACT_ADDRESS = '0x33D8711368801358714Dc11d03c1c130ba5CA342';
 const GAME_ROLE = '0x0000000000000000000000000000000000000000000000000000000000000001';
 
 // Minimal ABI for checking roles
