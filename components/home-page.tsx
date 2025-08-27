@@ -30,20 +30,8 @@ export default function HomePage() {
   const startTrailer = useCallback(async () => {
     setGameMode('trailer');
     setTrailerIndex(0);
-    // Start audio immediately since user interacted
-    try {
-      backgroundMusicRef.current = new Audio('/Trailer/background_music_trailer.mp3');
-      backgroundMusicRef.current.loop = true;
-      backgroundMusicRef.current.volume = 0.3;
-      await backgroundMusicRef.current.play();
-      
-      soundEffectRef.current = new Audio(trailerAssets[0].sound);
-      soundEffectRef.current.volume = 0.7;
-      await soundEffectRef.current.play();
-    } catch (error) {
-      console.warn('Audio playback failed:', error);
-    }
-  }, [trailerAssets]);
+    // Audio will be handled by playAudio when user clicks/presses space
+  }, []);
 
   // Handle skip trailer button
   const skipTrailer = useCallback(() => {
