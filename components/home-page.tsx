@@ -120,7 +120,7 @@ export default function HomePage() {
           className="md:hidden w-full h-full absolute inset-0"
           style={{
             backgroundImage: `url(${trailerAssets[trailerIndex].image})`,
-            backgroundSize: 'cover',
+            backgroundSize: 'contain',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
           }}
