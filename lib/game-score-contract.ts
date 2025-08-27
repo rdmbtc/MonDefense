@@ -10,7 +10,8 @@ export const MONAD_TESTNET_RPC = 'https://testnet-rpc.monad.xyz';
 const GAME_SCORE_ABI = [
   {
     "inputs": [
-      { "internalType": "uint256", "name": "_score", "type": "uint256" }
+      { "internalType": "uint256", "name": "_score", "type": "uint256" },
+      { "internalType": "uint256", "name": "_transactionCount", "type": "uint256" }
     ],
     "name": "submitScore",
     "outputs": [],
@@ -121,7 +122,7 @@ export async function submitGameScore(
     
     // Add explicit gas settings to avoid estimation issues
     const gasLimit = 100000; // Set a reasonable gas limit
-    const tx = await contract.submitScore(score, { gasLimit });
+    const tx = await contract.submitScore(score, transactionCount, { gasLimit });
     
     console.log('Score submission transaction sent:', tx.hash);
     
