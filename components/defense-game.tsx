@@ -199,10 +199,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     }
 
     try {
-      // Calculate transaction count (simple heuristic based on score)
-      const transactionCount = Math.max(1, Math.floor(finalScore / 1000));
-      
-      const success = await submitScore(finalScore, transactionCount);
+      const success = await submitScore(finalScore);
       
       if (success) {
         setHasSubmittedScore(true);
