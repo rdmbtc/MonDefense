@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import dynamic from 'next/dynamic';
 
 // Dynamically import the defense game component
@@ -14,8 +15,38 @@ const DefenseGame = dynamic(() => import('./defense-game'), {
 export default function HomePage() {
   const [gameMode, setGameMode] = useState<'intro' | 'trailer' | 'home' | 'defense'>('intro');
   const [trailerIndex, setTrailerIndex] = useState(0);
+  const [showHowToPlay, setShowHowToPlay] = useState(false);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
   const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
   const soundEffectRef = useRef<HTMLAudioElement | null>(null);
+
+  // Leaderboard data (stored in localStorage)
+  const [leaderboard, setLeaderboard] = useState<{name: string, score: number, date: string}[]>([]);
+
+  // Load leaderboard from localStorage on component mount
+  useEffect(() => {
+    const savedLeaderboard = localStorage.getItem('mondefense-leaderboard');
+    if (savedLeaderboard) {
+      setLeaderboard(JSON.parse(savedLeaderboard));
+    }
+  }, []);
+
+  // Save score to leaderboard
+  const saveScore = useCallback((score: number) => {
+    const playerName = prompt('Enter your name for the leaderboard:') || 'Anonymous';
+    const newEntry = {
+      name: playerName,
+      score: score,
+      date: new Date().toLocaleDateString()
+    };
+    
+    const updatedLeaderboard = [...leaderboard, newEntry]
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 10); // Keep top 10 scores
+    
+    setLeaderboard(updatedLeaderboard);
+    localStorage.setItem('mondefense-leaderboard', JSON.stringify(updatedLeaderboard));
+  }, [leaderboard]);
 
   // Trailer images and sounds (0-4)
   const trailerAssets = [
@@ -115,7 +146,7 @@ export default function HomePage() {
   }, []);
 
   if (gameMode === 'defense') {
-    return <DefenseGame onBack={() => setGameMode('home')} />;
+    return <DefenseGame onBack={() => setGameMode('home')} onGameEnd={saveScore} />;
   }
 
   if (gameMode === 'intro') {
@@ -253,12 +284,79 @@ export default function HomePage() {
         </div>
         
         <div className="flex justify-center space-x-4">
-          <Button variant="ghost" className="text-white hover:text-blue-200">
-            How to Play
-          </Button>
-          <Button variant="ghost" className="text-white hover:text-blue-200">
-            Leaderboard
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" className="text-white hover:text-blue-200">
+                How to Play
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-gray-900/95 border-white/20 text-white max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold text-center mb-4">How to Play MonDefense</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 text-sm">
+                <div>
+                  <h3 className="font-semibold text-blue-300 mb-2">🎯 Objective</h3>
+                  <p>Defend your base by strategically placing towers and defeating waves of enemies!</p>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-blue-300 mb-2">🎮 Controls</h3>
+                  <ul className="space-y-1 ml-4">
+                    <li>• Click to attack enemies directly</li>
+                    <li>• Place towers on available spots</li>
+                    <li>• Upgrade towers for better damage</li>
+                    <li>• Use special abilities wisely</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-blue-300 mb-2">💡 Strategy Tips</h3>
+                  <ul className="space-y-1 ml-4">
+                    <li>• Focus on chokepoints</li>
+                    <li>• Balance offense and defense</li>
+                    <li>• Save resources for tough waves</li>
+                    <li>• Watch enemy patterns</li>
+                  </ul>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-blue-300 mb-2">🏆 Scoring</h3>
+                  <p>Earn points by defeating enemies and surviving waves. Higher waves give more points!</p>
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
+          
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="ghost" className="text-white hover:text-blue-200">
+                Leaderboard
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="bg-gray-900/95 border-white/20 text-white max-w-md">
+              <DialogHeader>
+                <DialogTitle className="text-xl font-bold text-center mb-4">🏆 Leaderboard</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-2">
+                {leaderboard.length > 0 ? (
+                  leaderboard.map((entry, index) => (
+                    <div key={index} className="flex justify-between items-center p-2 bg-white/10 rounded">
+                      <div className="flex items-center space-x-2">
+                        <span className="font-bold text-yellow-400">#{index + 1}</span>
+                        <span>{entry.name}</span>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-bold">{entry.score.toLocaleString()}</div>
+                        <div className="text-xs text-gray-400">{entry.date}</div>
+                      </div>
+                    </div>
+                  ))
+                ) : (
+                  <div className="text-center text-gray-400 py-8">
+                    No scores yet. Be the first to play!
+                  </div>
+                )}
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
         
         {/* Developer Credits */}

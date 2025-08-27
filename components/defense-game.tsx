@@ -29,12 +29,14 @@ const ClientWrapper = dynamic(() => import('./farm-game/ClientWrapper'), {
 
 interface DefenseGameProps {
   onBack: () => void;
+  onGameEnd?: (score: number) => void;
 }
 
-export default function DefenseGame({ onBack }: DefenseGameProps) {
+export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const [gameMode, setGameMode] = useState<'chapter' | 'game'>('chapter');
   const [chapterIndex, setChapterIndex] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
+  const [gameScore, setGameScore] = useState(0);
   const { farmCoins, addFarmCoins } = useGameContext();
   const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
   const soundEffectRef = useRef<HTMLAudioElement | null>(null);
@@ -262,7 +264,7 @@ export default function DefenseGame({ onBack }: DefenseGameProps) {
       
       <div className="absolute top-4 right-4 z-50">
         <div className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2">
-          <span className="text-white font-bold" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>Coins: {farmCoins}</span>
+          <span className="text-white font-bold" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>Score: {gameScore.toLocaleString()}</span>
         </div>
       </div>
 
@@ -286,14 +288,37 @@ export default function DefenseGame({ onBack }: DefenseGameProps) {
               switch (event) {
                 case 'coinsEarned':
                   if (data && typeof data === 'number') {
+                    // Add to both coins (for game mechanics) and score (for leaderboard)
                     addFarmCoins(data);
+                    setGameScore(prev => prev + data * 10); // Score is 10x coins earned
+                  }
+                  break;
+                case 'enemyDefeated':
+                  if (data && typeof data === 'number') {
+                    setGameScore(prev => prev + data); // Direct score from enemy defeat
+                  }
+                  break;
+                case 'waveComplete':
+                  if (data && typeof data === 'number') {
+                    const waveBonus = data * 100; // Bonus points per wave
+                    setGameScore(prev => prev + waveBonus);
+                    toast.success(`Wave ${data} completed! +${waveBonus} bonus points!`);
                   }
                   break;
                 case 'gameOver':
                   toast.success('Game Over! Thanks for playing!');
+                  if (onGameEnd && gameScore > 0) {
+                    onGameEnd(gameScore);
+                  }
                   break;
-                case 'waveComplete':
-                  toast.success(`Wave ${data} completed!`);
+                case 'gameWon':
+                  const victoryBonus = 5000;
+                  const finalScore = gameScore + victoryBonus;
+                  setGameScore(finalScore);
+                  toast.success(`Victory! +${victoryBonus} victory bonus!`);
+                  if (onGameEnd) {
+                    onGameEnd(finalScore);
+                  }
                   break;
                 default:
                   break;
