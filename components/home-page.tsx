@@ -12,7 +12,7 @@ const DefenseGame = dynamic(() => import('./defense-game'), {
 });
 
 export default function HomePage() {
-  const [gameMode, setGameMode] = useState<'trailer' | 'home' | 'defense'>('trailer');
+  const [gameMode, setGameMode] = useState<'intro' | 'trailer' | 'home' | 'defense'>('intro');
   const [trailerIndex, setTrailerIndex] = useState(0);
   const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
   const soundEffectRef = useRef<HTMLAudioElement | null>(null);
@@ -25,6 +25,30 @@ export default function HomePage() {
     { image: '/Trailer/3.png', sound: '/Trailer/3.wav' },
     { image: '/Trailer/4.png', sound: '/Trailer/4.wav' }
   ];
+
+  // Handle watch trailer button
+  const startTrailer = useCallback(async () => {
+    setGameMode('trailer');
+    setTrailerIndex(0);
+    // Start audio immediately since user interacted
+    try {
+      backgroundMusicRef.current = new Audio('/Trailer/background_music_trailer.mp3');
+      backgroundMusicRef.current.loop = true;
+      backgroundMusicRef.current.volume = 0.3;
+      await backgroundMusicRef.current.play();
+      
+      soundEffectRef.current = new Audio(trailerAssets[0].sound);
+      soundEffectRef.current.volume = 0.7;
+      await soundEffectRef.current.play();
+    } catch (error) {
+      console.warn('Audio playback failed:', error);
+    }
+  }, [trailerAssets]);
+
+  // Handle skip trailer button
+  const skipTrailer = useCallback(() => {
+    setGameMode('home');
+  }, []);
 
   // Initialize and play audio
   const playAudio = useCallback(async (userInteracted = false) => {
@@ -104,6 +128,53 @@ export default function HomePage() {
 
   if (gameMode === 'defense') {
     return <DefenseGame onBack={() => setGameMode('home')} />;
+  }
+
+  if (gameMode === 'intro') {
+    return (
+      <div 
+        className="min-h-screen flex items-center justify-center relative overflow-hidden bg-black"
+      >
+        {/* Mobile-responsive intro image container */}
+        <div 
+          className="md:hidden w-full h-full absolute inset-0"
+          style={{
+             backgroundImage: 'url(/Trailer/-0.svg)',
+            backgroundSize: 'contain',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        />
+        
+        {/* Desktop intro image container */}
+        <div 
+          className="hidden md:block w-full h-full absolute inset-0"
+          style={{
+             backgroundImage: 'url(/Trailer/-0.svg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            backgroundRepeat: 'no-repeat'
+          }}
+        />
+
+        {/* Buttons container */}
+        <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex flex-col sm:flex-row gap-4 z-10">
+          <Button 
+            onClick={startTrailer}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg font-semibold rounded-lg shadow-lg"
+          >
+            Watch Trailer
+          </Button>
+          <Button 
+            onClick={skipTrailer}
+            variant="outline"
+            className="bg-gray-800/80 hover:bg-gray-700/80 text-white border-white/30 px-8 py-3 text-lg font-semibold rounded-lg shadow-lg"
+          >
+            Skip Trailer
+          </Button>
+        </div>
+      </div>
+    );
   }
 
   if (gameMode === 'trailer') {
