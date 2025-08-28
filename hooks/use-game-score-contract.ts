@@ -8,12 +8,16 @@ import {
   PlayerDataPerGame,
   LeaderboardEntry,
   GlobalStats,
-  submitGameScore,
-  estimateSubmitScoreGas,
-  getTopPlayers,
-  getPlayerStats,
   getReadOnlyContract
 } from '@/lib/game-score-contract';
+import {
+  submitUserGameScore,
+  estimateUserGameSubmitScoreGas,
+  getUserGameTopPlayers,
+  getUserGamePlayerScore,
+  getUserGameTotalPlayers,
+  prepareUserGameScoreTransaction
+} from '@/lib/user-game-contract';
 import {
   submitPlayerScore,
   ScoreSubmissionResponse,
@@ -109,8 +113,20 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
   const fetchPlayerStats = useCallback(async (address: string): Promise<void> => {
     try {
       setIsLoading(true);
-      // TODO: Implement contract reading functions for the new ABI
-      // For now, set placeholder data
+      const playerScore = await getUserGamePlayerScore(address);
+      
+      // Set player stats with the score from user game contract
+      setPlayerStats({
+        totalScore: playerScore,
+        totalTransactions: '1', // Placeholder - would need additional contract functions
+        scorePerGame: playerScore, // Assuming single game for now
+        transactionsPerGame: '1', // Placeholder
+        bestScore: playerScore,
+        gamesPlayed: playerScore === '0' ? '0' : '1' // Simple logic for now
+      });
+    } catch (error) {
+      console.error('Error fetching player stats:', error);
+      toast.error('Failed to fetch player statistics');
       setPlayerStats({
         totalScore: '0',
         totalTransactions: '0',
@@ -119,9 +135,6 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
         bestScore: '0',
         gamesPlayed: '0'
       });
-    } catch (error) {
-      console.error('Error fetching player stats:', error);
-      toast.error('Failed to fetch player statistics');
     } finally {
       setIsLoading(false);
     }
@@ -161,10 +174,14 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
       
       toast.info('Submitting score to blockchain...');
       
-      // Submit score directly to contract
-      const transactionHash = await submitGameScore(signer, score, transactionCount);
+      // Submit score through user's game contract
+      const success = await submitUserGameScore(playerAddress, score, transactionCount);
       
-      toast.success(`Score submitted successfully! Transaction: ${transactionHash.slice(0, 10)}...`);
+      if (success) {
+        toast.success('Score submitted successfully!');
+      } else {
+        throw new Error('Score submission failed');
+      }
       
       // Refresh player stats after successful submission
       await fetchPlayerStats(playerAddress);
@@ -218,8 +235,11 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
       // Get fee data - FIXED
       const feeData = await ethersProvider.getFeeData();
       
-      // Estimate gas for the transaction
-      const estimatedGas = await estimateSubmitScoreGas(signer, score, transactionCount);
+      // Get wallet address
+      const playerAddress = await getWalletAddress();
+      
+      // Estimate gas for the transaction through user game contract
+      const estimatedGas = await estimateUserGameSubmitScoreGas(playerAddress, score, transactionCount);
       
       // Calculate estimated cost
       const gasPrice = feeData.gasPrice || ethers.parseUnits('1', 'gwei');
@@ -242,7 +262,13 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
   const fetchLeaderboard = useCallback(async (limit: number = 10): Promise<void> => {
     try {
       setIsLoading(true);
-      const leaderboardData = await getTopPlayers(limit);
+      const topPlayers = await getUserGameTopPlayers(limit);
+      const leaderboardData = topPlayers.map((player, index) => ({
+        rank: index + 1,
+        address: player.player,
+        score: player.score,
+        username: null // Username would need to be fetched separately if needed
+      }));
       setLeaderboard(leaderboardData);
     } catch (error) {
       console.error('Error fetching leaderboard:', error);
@@ -259,8 +285,7 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
   const fetchGlobalStats = useCallback(async (): Promise<void> => {
     try {
       setIsLoading(true);
-      const contract = getReadOnlyContract();
-      const totalPlayers = await contract.getTotalPlayers();
+      const totalPlayers = await getUserGameTotalPlayers();
       
       // Calculate total games and transactions by summing from all players
       // For now, we'll use basic stats until we add more contract functions
