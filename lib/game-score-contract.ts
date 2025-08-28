@@ -1,7 +1,7 @@
 import { ethers } from 'ethers';
 
 // Official Monad Games contract address on Monad testnet
-export const GAME_SCORE_CONTRACT_ADDRESS = '0x33D8711368801358714Dc11d03c1c130ba5CA342';
+export const GAME_SCORE_CONTRACT_ADDRESS = '0xceCBFF203C8B6044F52CE23D914A1bfD997541A4';
 
 // Monad testnet RPC URL
 export const MONAD_TESTNET_RPC = 'https://testnet-rpc.monad.xyz';
@@ -11,17 +11,22 @@ const GAME_SCORE_ABI = [
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "player",
+        "type": "address"
+      },
+      {
         "internalType": "uint256",
-        "name": "_score",
+        "name": "scoreAmount",
         "type": "uint256"
       },
       {
         "internalType": "uint256",
-        "name": "_transactionCount",
+        "name": "transactionAmount",
         "type": "uint256"
       }
     ],
-    "name": "submitScore",
+    "name": "updatePlayerData",
     "outputs": [],
     "stateMutability": "nonpayable",
     "type": "function"
@@ -177,6 +182,13 @@ export interface LeaderboardEntry {
   score: string;
 }
 
+export interface TransactionData {
+  gasLimit: bigint;
+  gasPrice: bigint;
+  estimatedCost: string;
+  nonce: number;
+}
+
 /**
  * Get a read-only contract instance for querying data
  */
@@ -206,7 +218,8 @@ export async function estimateSubmitScoreGas(
 ): Promise<bigint> {
   try {
     const contract = getContractWithSigner(signer);
-    const estimatedGas = await contract.submitScore.estimateGas(score, transactionCount);
+    const playerAddress = await signer.getAddress();
+    const estimatedGas = await contract.updatePlayerData.estimateGas(playerAddress, score, transactionCount);
     
     // Add 20% buffer to estimated gas for safety
     const gasWithBuffer = (estimatedGas * 120n) / 100n;
@@ -233,35 +246,43 @@ export async function prepareScoreTransaction(
   signer: ethers.Signer,
   score: number,
   transactionCount: number = 1
-) {
-  const provider = signer.provider;
-  
-  // Get network fee data
-  let feeData;
+): Promise<TransactionData> {
   try {
-    feeData = await provider?.getFeeData();
-  } catch (e) {
-    console.warn('Could not fetch fee data, using defaults');
-  }
-  
-  // Estimate gas for this specific transaction
-  const estimatedGas = await estimateSubmitScoreGas(signer, score, transactionCount);
-  
-  // Use estimated gas or conservative default
-  const gasLimit = estimatedGas > 0n ? estimatedGas : 200000n;
-  
-  // Set gas price (Monad testnet typically has very low gas prices)
-  const gasPrice = feeData?.gasPrice || ethers.parseUnits('1', 'gwei');
-  
-  // Get current nonce
-  const nonce = await signer.getNonce('pending');
+    const contract = getContractWithSigner(signer);
+    const playerAddress = await signer.getAddress();
+    
+    console.log('Preparing score transaction:', {
+      playerAddress,
+      score,
+      transactionCount
+    });
+    
+    // Estimate gas
+    const gasEstimate = await contract.updatePlayerData.estimateGas(playerAddress, score, transactionCount);
+    const gasLimit = gasEstimate + (gasEstimate * BigInt(20)) / BigInt(100); // Add 20% buffer
+    
+    // Get current gas price
+    const provider = contract.runner?.provider;
+    if (!provider) {
+      throw new Error('Provider not available');
+    }
+    
+    const feeData = await provider.getFeeData();
+    const gasPrice = feeData.gasPrice || ethers.parseUnits('20', 'gwei');
+    
+    // Get nonce for transaction
+  const nonce = await signer.getNonce();
   
   return {
     gasLimit,
     gasPrice,
-    nonce,
-    estimatedCost: gasLimit * gasPrice
+    estimatedCost: (gasLimit * gasPrice).toString(),
+    nonce
   };
+  } catch (error) {
+    console.error('Error preparing transaction:', error);
+    throw error;
+  }
 }
 
 /**
@@ -290,7 +311,8 @@ export async function submitGameScore(
     console.log('- Nonce:', txData.nonce);
     
     // Submit transaction with prepared settings
-    const tx = await contract.submitScore(score, transactionCount, {
+    const playerAddress = await signer.getAddress();
+    const tx = await contract.updatePlayerData(playerAddress, score, transactionCount, {
       gasLimit: txData.gasLimit,
       gasPrice: txData.gasPrice,
       nonce: txData.nonce
