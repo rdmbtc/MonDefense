@@ -22,9 +22,12 @@ export function useCrossAppAccount() {
 
   const walletAddress = useMemo((): string | null => {
     if (!crossAppAccount?.embeddedWallets?.length) {
+      console.log('No embedded wallets found:', { crossAppAccount, authenticated, user });
       return null;
     }
-    return crossAppAccount.embeddedWallets[0]?.address || null;
+    const address = crossAppAccount.embeddedWallets[0]?.address || null;
+    console.log('Wallet address retrieved:', { address, crossAppAccount });
+    return address;
   }, [crossAppAccount]);
 
   return {

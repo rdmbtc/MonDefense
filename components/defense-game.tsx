@@ -56,10 +56,20 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   // Use custom hooks for API integration
   const { authenticated, user, ready, logout, login } = usePrivy();
   const { walletAddress } = useCrossAppAccount();
-  const { data: usernameData } = useUsername(walletAddress);
+  const { data: usernameData, error: usernameError, isLoading: usernameLoading } = useUsername(walletAddress);
   const { data: playerStats } = usePlayerTotalScore(walletAddress, gameStarted, false);
   const { data: leaderboardData } = useLeaderboard(1);
   const gameSession = useGameSession(sessionToken);
+  
+  // Debug username retrieval
+  console.log('Username debug info:', {
+    walletAddress,
+    usernameData,
+    usernameError,
+    usernameLoading,
+    authenticated,
+    ready
+  });
   
   const username = usernameData?.user?.username || 'Anonymous';
 

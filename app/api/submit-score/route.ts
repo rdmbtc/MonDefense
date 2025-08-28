@@ -56,6 +56,14 @@ export async function POST(request: Request) {
     }
 
     // 3. PROCESS SCORE SUBMISSION
+    console.log("Processing score submission with data:", {
+      player,
+      scoreAmount,
+      transactionAmount,
+      sessionId,
+      sessionData
+    });
+
     // Generate a mock transaction hash for consistency
     const mockTransactionHash = `0x${Math.random().toString(16).substring(2, 66).padStart(64, '0')}`;
 

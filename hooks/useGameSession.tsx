@@ -53,17 +53,32 @@ export function useGameSession(gameSessionToken: string | null) {
       if (!gameSessionToken) {
         throw new Error("No session token available");
       }
-      const response = await api.post<SubmitScoreResponse>(
-        apiEndpoints.submitScore,
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${gameSessionToken}`,
-          },
-        }
-      );
-
-      return response.data;
+      
+      console.log("Submitting score with data:", data);
+      console.log("Using session token:", gameSessionToken);
+      
+      try {
+        const response = await api.post<SubmitScoreResponse>(
+          apiEndpoints.submitScore,
+          data,
+          {
+            headers: {
+              Authorization: `Bearer ${gameSessionToken}`,
+            },
+          }
+        );
+        
+        console.log("Score submission response:", response.data);
+        return response.data;
+      } catch (error: any) {
+        console.error("Score submission error details:", {
+          message: error.message,
+          response: error.response?.data,
+          status: error.response?.status,
+          headers: error.response?.headers
+        });
+        throw new Error(`Submission failed: ${error.response?.data?.error || error.message}`);
+      }
     },
     onSuccess: () => {
       // Invalidate player score queries when score is submitted
