@@ -14,6 +14,7 @@ import { usePlayerTotalScore } from '@/hooks/usePlayerTotalScore';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { useCrossAppAccount } from '@/hooks/useCrossAppAccount';
 import { useUsername } from '@/hooks/useUsername';
+import { GAME_CONFIG } from '@/lib/game-config';
 
 // Extend Window interface to include custom properties
 declare global {
@@ -429,7 +430,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               ) : gameScore > 0 ? (
                 <div className="space-y-1">
                   <Button
-                    onClick={() => handleScoreSubmission(gameScore)}
+                    onClick={() => handleScoreSubmission(gameScore, GAME_CONFIG.SCORE_SUBMISSION.TRANSACTION_THRESHOLD)}
                     size="sm"
                     className="bg-blue-600/80 hover:bg-blue-700/80 text-white border-blue-500/50 text-xs px-2 py-1 w-full"
                     disabled={isSubmitting}
@@ -448,12 +449,12 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       {/* Game Title */}
       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-50">
         <h1 className="text-2xl font-bold text-white text-center" style={{textShadow: '2px 2px 4px rgba(0,0,0,0.8)'}}>
-          MonDefense - Tower Defense
+          {GAME_CONFIG.METADATA.name}
         </h1>
       </div>
 
       {/* Username Registration Message */}
-      {authenticated && walletAddress && usernameData?.error && (
+      {authenticated && walletAddress && usernameData && !usernameData.hasUsername && (
         <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-md">
           <div className="bg-yellow-600/90 backdrop-blur border-yellow-500/50 rounded-lg px-4 py-3 text-center">
             <p className="text-white text-sm font-medium mb-2">No username found for your account</p>
@@ -484,19 +485,40 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                   if (data && typeof data === 'number') {
                     // Add to both coins (for game mechanics) and score (for leaderboard)
                     addFarmCoins(data);
-                    setGameScore(prev => prev + data * 10); // Score is 10x coins earned
+                    setGameScore(prev => {
+                      const newScore = prev + data * 10; // Score is 10x coins earned
+                      // Check if we should auto-submit score based on threshold
+                      if (newScore > 0 && newScore % GAME_CONFIG.SCORE_SUBMISSION.SCORE_THRESHOLD === 0) {
+                        handleScoreSubmission(newScore, GAME_CONFIG.SCORE_SUBMISSION.TRANSACTION_THRESHOLD);
+                      }
+                      return newScore;
+                    });
                   }
                   break;
                 case 'enemyDefeated':
                   if (data && typeof data === 'number') {
-                    setGameScore(prev => prev + data); // Direct score from enemy defeat
+                    setGameScore(prev => {
+                      const newScore = prev + data; // Direct score from enemy defeat
+                      // Check if we should auto-submit score based on threshold
+                      if (newScore > 0 && newScore % GAME_CONFIG.SCORE_SUBMISSION.SCORE_THRESHOLD === 0) {
+                        handleScoreSubmission(newScore, GAME_CONFIG.SCORE_SUBMISSION.TRANSACTION_THRESHOLD);
+                      }
+                      return newScore;
+                    });
                   }
                   break;
                 case 'waveComplete':
                   if (data && typeof data === 'number') {
                     const waveBonus = data * 100; // Bonus points per wave
-                    setGameScore(prev => prev + waveBonus);
-                    toast.success(`Wave ${data} completed! +${waveBonus} bonus points!`);
+                    setGameScore(prev => {
+                      const newScore = prev + waveBonus;
+                      toast.success(`Wave ${data} completed! +${waveBonus} bonus points!`);
+                      // Check if we should auto-submit score based on threshold
+                      if (newScore > 0 && newScore % GAME_CONFIG.SCORE_SUBMISSION.SCORE_THRESHOLD === 0) {
+                        handleScoreSubmission(newScore, GAME_CONFIG.SCORE_SUBMISSION.TRANSACTION_THRESHOLD);
+                      }
+                      return newScore;
+                    });
                   }
                   break;
                 case 'gameOver':

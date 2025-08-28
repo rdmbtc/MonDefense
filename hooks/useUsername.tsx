@@ -3,17 +3,17 @@
 import { useQuery } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { api, apiEndpoints } from "../lib/api";
-import { UsernameResponse } from "../types";
+import { UserData } from "../types";
 
 export function useUsername(walletAddress: string | null) {
   const query = useQuery({
     queryKey: ["username", walletAddress],
-    queryFn: async (): Promise<UsernameResponse> => {
+    queryFn: async (): Promise<UserData> => {
       if (!walletAddress) {
         throw new Error("No wallet address provided");
       }
 
-      const { data } = await api.post<UsernameResponse>(
+      const { data } = await api.post<UserData>(
         apiEndpoints.checkWallet,
         {
           walletAddress,
