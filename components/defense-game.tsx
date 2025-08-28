@@ -3,7 +3,7 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useGameContext } from "@/context/game-context";
-import { useGameScoreContract } from '@/hooks/use-game-score-contract';
+// Removed blockchain contract hook - using API instead
 import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
 import { 
@@ -52,19 +52,12 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const [username, setUsername] = useState<string | null>(null);
   const [message, setMessage] = useState<string>("");
   
-  // GameScore contract integration
-  const {
-    isSubmitting,
-    playerStats,
-    globalStats,
-    submitScore,
-    fetchPlayerStats,
-    fetchGlobalStats,
-    ensureCorrectNetwork,
-    estimateTransactionCost,
-    estimatedGasCost
-  } = useGameScoreContract();
+  // API integration state
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [playerStats, setPlayerStats] = useState<any>(null);
+  const [globalStats, setGlobalStats] = useState<any>(null);
   const [hasSubmittedScore, setHasSubmittedScore] = useState(false);
+  const [sessionToken, setSessionToken] = useState<string | null>(null);
 
   // Chapter One assets (images 0-7, sounds for 1,3,5,6,7)
   const chapterAssets = [
@@ -184,7 +177,9 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         setMessage("");
         
         // Fetch player stats when username is loaded
-        await fetchPlayerStats(walletAddress);
+        await fetchPlayerStatsAPI(walletAddress);
+        // Get session token for API authentication
+        await getSessionToken(walletAddress);
       } else {
         setMessage("No username found. Please register at Monad Games ID.");
       }
@@ -194,28 +189,91 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     }
   };
 
-  // Function to handle score submission to blockchain
-  const handleScoreSubmission = async (score: number, transactionCount: number = 1): Promise<boolean> => {
+  // API Functions
+  const getSessionToken = async (walletAddress: string) => {
     try {
-      console.log('Submitting score to blockchain:', score);
+      const response = await fetch('/api/api/get-session-token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ playerAddress: walletAddress })
+      });
+      const data = await response.json();
+      if (data.success) {
+        setSessionToken(data.sessionToken);
+      }
+    } catch (error) {
+      console.error('Error getting session token:', error);
+    }
+  };
+
+  const fetchPlayerStatsAPI = async (walletAddress: string) => {
+    try {
+      const response = await fetch(`/api/api/get-player-data?address=${walletAddress}`);
+      const data = await response.json();
+      if (data.success) {
+        setPlayerStats({
+          bestScore: data.totalScore,
+          gamesPlayed: data.totalTransactions
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching player stats:', error);
+    }
+  };
+
+  const fetchGlobalStatsAPI = async () => {
+    try {
+      const response = await fetch('/api/api/get-player-data-per-game');
+      const data = await response.json();
+      if (data.success) {
+        setGlobalStats(data);
+      }
+    } catch (error) {
+      console.error('Error fetching global stats:', error);
+    }
+  };
+
+  // Function to handle score submission via API
+  const handleScoreSubmission = async (score: number, transactionCount: number = 1): Promise<boolean> => {
+    if (!accountAddress || !sessionToken) {
+      toast.error('Authentication required for score submission');
+      return false;
+    }
+
+    try {
+      setIsSubmitting(true);
+      console.log('Submitting score via API:', score);
       
-      // Estimate transaction cost first
-      await estimateTransactionCost(score, transactionCount);
+      const response = await fetch('/api/api/update-player-data', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          playerAddress: accountAddress,
+          scoreAmount: score,
+          transactionAmount: transactionCount,
+          sessionToken: sessionToken
+        })
+      });
+
+      const data = await response.json();
       
-      // Submit the score
-      const result = await submitScore(score, transactionCount);
-      
-      if (result) {
+      if (data.success) {
         setHasSubmittedScore(true);
-        toast.success('Score submitted to blockchain successfully!');
+        toast.success('Score submitted successfully!');
+        // Refresh player stats
+        await fetchPlayerStatsAPI(accountAddress);
         return true;
       } else {
-        console.error('Score submission failed');
+        console.error('Score submission failed:', data.error);
+        toast.error(`Score submission failed: ${data.error}`);
         return false;
       }
     } catch (error) {
       console.error('Error submitting score:', error);
+      toast.error('Network error during score submission');
       return false;
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -234,10 +292,14 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       // Expose global function for Phaser game to call directly
       window.submitGameScoreToBlockchain = async (score: number, transactionCount: number): Promise<boolean> => {
         try {
-          const result = await handleScoreSubmission(score, transactionCount);
-          return result;
+          // Only submit if user is authenticated and has session token
+          if (accountAddress && sessionToken) {
+            const result = await handleScoreSubmission(score, transactionCount);
+            return result;
+          }
+          return false;
         } catch (error) {
-          console.error('Error in global blockchain submission:', error);
+          console.error('Error in global API submission:', error);
           return false;
         }
       };
@@ -278,8 +340,8 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
 
   // Fetch global stats on component mount
   useEffect(() => {
-    fetchGlobalStats();
-  }, [fetchGlobalStats]);
+    fetchGlobalStatsAPI();
+  }, [fetchGlobalStatsAPI]);
 
   const handleBackToMenu = () => {
     // Clean up game before going back
@@ -450,13 +512,8 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                     className="bg-blue-600/80 hover:bg-blue-700/80 text-white border-blue-500/50 text-xs px-2 py-1 w-full"
                     disabled={isSubmitting}
                   >
-                    Submit to Blockchain
+                    Submit Score
                   </Button>
-                  {estimatedGasCost && (
-                    <div className="text-xs text-white/70 text-center">
-                      Est. cost: {parseFloat(estimatedGasCost).toFixed(6)} MON
-                    </div>
-                  )}
                 </div>
               ) : (
                 <span className="text-white/60">Ready for blockchain</span>
