@@ -51,6 +51,7 @@ export default function HomePage() {
 
   // Trailer images and sounds (0-4)
   const trailerAssets = [
+    { image: '/Chapter%20One/0.png', sound: '/Trailer/0.e' },
     { image: '/Trailer/0.png', sound: '/Trailer/0.wav' },
     { image: '/Trailer/1.png', sound: '/Trailer/1.wav' },
     { image: '/Trailer/2.png', sound: '/Trailer/2.wav' },

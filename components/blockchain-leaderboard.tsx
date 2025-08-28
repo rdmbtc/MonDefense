@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useGameScoreContract } from '@/hooks/use-game-score-contract';
+import { getPlayerTotalData } from '../app/lib/score-api';
 import { Trophy, Medal, Award, Users, GamepadIcon, Activity } from 'lucide-react';
 
 interface BlockchainLeaderboardProps {
@@ -11,35 +11,54 @@ interface BlockchainLeaderboardProps {
 }
 
 export default function BlockchainLeaderboard({ className }: BlockchainLeaderboardProps) {
-  const {
-    isLoading,
-    leaderboard,
-    globalStats,
-    fetchLeaderboard,
-    fetchGlobalStats
-  } = useGameScoreContract();
-  
+  const [isLoading, setIsLoading] = useState(true);
+  const [leaderboard, setLeaderboard] = useState<any[]>([]);
+  const [globalStats, setGlobalStats] = useState<any>(null);
   const [refreshing, setRefreshing] = useState(false);
+
+  // Mock leaderboard data since we're using API now
+  const mockLeaderboard = [
+    { address: "0x1234...5678", name: "DefenseKing", totalScore: 5432, totalTransactions: 120 },
+    { address: "0x8765...4321", name: "TowerMaster", totalScore: 4321, totalTransactions: 98 },
+    { address: "0x9876...5432", name: "DefensePro", totalScore: 3210, totalTransactions: 87 },
+    { address: "0x5432...9876", name: "GuardianWiz", totalScore: 2109, totalTransactions: 76 },
+    { address: "0x2109...8765", name: "ShieldLord", totalScore: 1098, totalTransactions: 65 },
+  ];
+
+  const mockGlobalStats = {
+    totalPlayers: 1250,
+    totalGames: 8934,
+    totalScore: 125000,
+    averageScore: 100
+  };
 
   // Fetch data on component mount
   useEffect(() => {
     const loadData = async () => {
-      await Promise.all([
-        fetchLeaderboard(10),
-        fetchGlobalStats()
-      ]);
+      setIsLoading(true);
+      try {
+        // Using mock data for now, can be replaced with actual API calls
+        setLeaderboard(mockLeaderboard);
+        setGlobalStats(mockGlobalStats);
+      } catch (error) {
+        console.error('Error loading leaderboard data:', error);
+      } finally {
+        setIsLoading(false);
+      }
     };
     
     loadData();
-  }, [fetchLeaderboard, fetchGlobalStats]);
+  }, []);
 
   const handleRefresh = async () => {
     setRefreshing(true);
     try {
-      await Promise.all([
-        fetchLeaderboard(10),
-        fetchGlobalStats()
-      ]);
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      setLeaderboard(mockLeaderboard);
+      setGlobalStats(mockGlobalStats);
+    } catch (error) {
+      console.error('Error refreshing leaderboard data:', error);
     } finally {
       setRefreshing(false);
     }
