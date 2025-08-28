@@ -175,7 +175,7 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
       toast.info('Submitting score to blockchain...');
       
       // Submit score through user's game contract
-      const success = await submitUserGameScore(playerAddress, score, transactionCount);
+      const success = await submitUserGameScore(signer, playerAddress, score, transactionCount);
       
       if (success) {
         toast.success('Score submitted successfully!');
@@ -239,7 +239,7 @@ export function useGameScoreContract(): UseGameScoreContractReturn {
       const playerAddress = await getWalletAddress();
       
       // Estimate gas for the transaction through user game contract
-      const estimatedGas = await estimateUserGameSubmitScoreGas(playerAddress, score, transactionCount);
+      const estimatedGas = await estimateUserGameSubmitScoreGas(signer, playerAddress, score, transactionCount);
       
       // Calculate estimated cost
       const gasPrice = feeData.gasPrice || ethers.parseUnits('1', 'gwei');

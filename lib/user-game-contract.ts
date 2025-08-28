@@ -1,8 +1,11 @@
 import { ethers } from 'ethers';
 import { toast } from 'sonner';
 
-// User's registered game contract address
-export const USER_GAME_CONTRACT_ADDRESS = '0x33d8711368801358714dc11d03c1c130ba5ca342';
+// User's registered game contract address on Monad testnet
+export const USER_GAME_CONTRACT_ADDRESS = '0x33D8711368801358714Dc11d03c1c130ba5CA342';
+
+// Monad testnet RPC URL
+const MONAD_TESTNET_RPC = 'https://testnet-rpc.monad.xyz';
 
 // ABI for the user's game contract that calls updatePlayerData on Monad Games contract
 export const USER_GAME_CONTRACT_ABI = [
@@ -105,24 +108,14 @@ export interface UserGameTransactionData {
  * Get a read-only contract instance for view functions
  */
 export function getUserGameReadOnlyContract() {
-  if (typeof window === 'undefined') {
-    throw new Error('Window is not available');
-  }
-
-  const provider = new ethers.BrowserProvider(window.ethereum);
+  const provider = new ethers.JsonRpcProvider(MONAD_TESTNET_RPC);
   return new ethers.Contract(USER_GAME_CONTRACT_ADDRESS, USER_GAME_CONTRACT_ABI, provider);
 }
 
 /**
  * Get a contract instance with signer for transactions
  */
-export async function getUserGameContractWithSigner() {
-  if (typeof window === 'undefined' || !window.ethereum) {
-    throw new Error('Ethereum provider not found');
-  }
-
-  const provider = new ethers.BrowserProvider(window.ethereum);
-  const signer = await provider.getSigner();
+export function getUserGameContractWithSigner(signer: ethers.Signer) {
   return new ethers.Contract(USER_GAME_CONTRACT_ADDRESS, USER_GAME_CONTRACT_ABI, signer);
 }
 
@@ -130,12 +123,13 @@ export async function getUserGameContractWithSigner() {
  * Estimate gas for score submission through user's game contract
  */
 export async function estimateUserGameSubmitScoreGas(
+  signer: ethers.Signer,
   playerAddress: string,
   score: number,
   transactionCount: number = 1
 ): Promise<bigint> {
   try {
-    const contract = await getUserGameContractWithSigner();
+    const contract = getUserGameContractWithSigner(signer);
     const gasEstimate = await contract.submitScore.estimateGas(
       playerAddress,
       score,
@@ -152,14 +146,17 @@ export async function estimateUserGameSubmitScoreGas(
  * Prepare transaction data for score submission through user's game contract
  */
 export async function prepareUserGameScoreTransaction(
+  signer: ethers.Signer,
   playerAddress: string,
   score: number,
   transactionCount: number = 1
 ): Promise<UserGameTransactionData> {
   try {
-    const contract = await getUserGameContractWithSigner();
-    const provider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await provider.getSigner();
+    const contract = getUserGameContractWithSigner(signer);
+    const provider = signer.provider;
+    if (!provider) {
+      throw new Error('Signer provider not available');
+    }
 
     // Get gas estimate
     const gasLimit = await contract.submitScore.estimateGas(
@@ -194,6 +191,7 @@ export async function prepareUserGameScoreTransaction(
  * Submit score through user's game contract
  */
 export async function submitUserGameScore(
+  signer: ethers.Signer,
   playerAddress: string,
   score: number,
   transactionCount: number = 1
@@ -207,7 +205,7 @@ export async function submitUserGameScore(
     });
 
     // Prepare transaction data
-    const txData = await prepareUserGameScoreTransaction(playerAddress, score, transactionCount);
+    const txData = await prepareUserGameScoreTransaction(signer, playerAddress, score, transactionCount);
     
     console.log('Transaction data:', {
       gasLimit: txData.gasLimit.toString(),
@@ -217,7 +215,7 @@ export async function submitUserGameScore(
     });
 
     // Get contract with signer
-    const contract = await getUserGameContractWithSigner();
+    const contract = getUserGameContractWithSigner(signer);
 
     // Submit the transaction
     const tx = await contract.submitScore(
