@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import dynamic from 'next/dynamic';
-import BlockchainLeaderboard from './blockchain-leaderboard';
+import Leaderboard from './leaderboard';
 
 // Dynamically import the defense game component
 const DefenseGame = dynamic(() => import('./defense-game'), {
@@ -330,17 +330,17 @@ export default function HomePage() {
           <Dialog>
             <DialogTrigger asChild>
               <Button variant="ghost" className="text-white hover:text-blue-200">
-                Blockchain Leaderboard
+                Leaderboard
               </Button>
             </DialogTrigger>
             <DialogContent className="bg-gray-900/95 border-white/20 text-white max-w-4xl max-h-[80vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle className="text-xl font-bold text-center mb-4">🏆 Blockchain Leaderboard</DialogTitle>
+                <DialogTitle className="text-xl font-bold text-center mb-4">🏆 Leaderboard</DialogTitle>
                 <DialogDescription className="text-center text-blue-200">
-                  Scores permanently recorded on the Monad blockchain
+                  Top player scores and achievements
                 </DialogDescription>
               </DialogHeader>
-              <BlockchainLeaderboard />
+              <Leaderboard />
             </DialogContent>
           </Dialog>
         </div>

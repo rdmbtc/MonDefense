@@ -7,8 +7,8 @@ interface Window {
     removeListener: (eventName: string, callback: (...args: any[]) => void) => void;
     selectedAddress?: string;
   };
-  // Global function for Phaser game to submit scores to blockchain
-  submitGameScoreToBlockchain?: (score: number, transactionCount: number) => Promise<boolean>;
+  // Global function for Phaser game to submit scores via API
+  submitGameScore?: (score: number, transactionCount: number) => Promise<boolean>;
 }
 
 // Ethereum provider error codes

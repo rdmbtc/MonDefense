@@ -4665,21 +4665,21 @@ if (isBrowser) {
             }).setOrigin(0.5);
             coinsText.setDepth(1001);
 
-            // Create blockchain button with proper styling
+            // Create score submission button with proper styling
             const buttonWidth = 220;
             const buttonHeight = 60;
-            const blockchainButton = this.add.rectangle(400, 450, buttonWidth, buttonHeight, 0x6B46C1, 1);
-            blockchainButton.setStrokeStyle(4, 0x553C9A);
-            blockchainButton.setDepth(1001);
+            const submitButton = this.add.rectangle(400, 450, buttonWidth, buttonHeight, 0x6B46C1, 1);
+            submitButton.setStrokeStyle(4, 0x553C9A);
+            submitButton.setDepth(1001);
 
-            const blockchainText = this.add.text(400, 450, 'Send to Blockchain', {
+            const submitText = this.add.text(400, 450, 'Submit Score', {
               fontFamily: 'Arial',
               fontSize: '24px',
               color: '#FFFFFF',
               stroke: '#000000',
               strokeThickness: 1
             }).setOrigin(0.5);
-            blockchainText.setDepth(1002);
+            submitText.setDepth(1002);
 
             // Create restart button with proper styling
             const restartButton = this.add.rectangle(400, 530, buttonWidth, buttonHeight, 0x4CAF50, 1);
@@ -4695,16 +4695,16 @@ if (isBrowser) {
             }).setOrigin(0.5);
             restartText.setDepth(1002);
 
-            // Add blockchain button hover effect and interaction
-            blockchainButton.setInteractive({ useHandCursor: true })
+            // Add submit button hover effect and interaction
+            submitButton.setInteractive({ useHandCursor: true })
               .on('pointerover', () => {
-                blockchainButton.fillColor = 0x553C9A;
-                this.tweens.add({ targets: blockchainButton, scale: 1.05, duration: 100 });
+                submitButton.fillColor = 0x553C9A;
+                this.tweens.add({ targets: submitButton, scale: 1.05, duration: 100 });
                 this.input.setDefaultCursor('pointer');
               })
               .on('pointerout', () => {
-                blockchainButton.fillColor = 0x6B46C1;
-                this.tweens.add({ targets: blockchainButton, scale: 1.0, duration: 100 });
+                submitButton.fillColor = 0x6B46C1;
+                this.tweens.add({ targets: submitButton, scale: 1.0, duration: 100 });
                 this.input.setDefaultCursor('default');
               })
               .on('pointerdown', () => {
@@ -4715,13 +4715,13 @@ if (isBrowser) {
 
                 // Add quick scale down animation on click
                 this.tweens.add({
-                  targets: blockchainButton,
+                  targets: submitButton,
                   scale: 0.95,
                   duration: 80,
                   yoyo: true,
                   onComplete: () => {
-                    // Submit score to blockchain
-                    this.submitScoreToBlockchain(finalScore, completedWaves);
+                    // Submit score via API
+                    this.submitScore(finalScore, completedWaves);
                   }
                 });
               });
@@ -4760,8 +4760,8 @@ if (isBrowser) {
                       scoreText.destroy();
                       wavesText.destroy();
                       coinsText.destroy();
-                      blockchainButton.destroy();
-                      blockchainText.destroy();
+                      submitButton.destroy();
+                      submitText.destroy();
                       restartButton.destroy();
                       restartText.destroy();
 
@@ -4799,15 +4799,15 @@ if (isBrowser) {
           }
         }
 
-        // Add method to submit score to blockchain using Privy
-        async submitScoreToBlockchain(score, waves) {
+        // Add method to submit score via API
+        async submitScore(score, waves) {
           try {
-            console.log(`Submitting score to blockchain: Score=${score}, Waves=${waves}`);
+            console.log(`Submitting score: Score=${score}, Waves=${waves}`);
             
-            // Check if global blockchain submission function is available
-            if (typeof window !== 'undefined' && window.submitGameScoreToBlockchain) {
+            // Check if global score submission function is available
+            if (typeof window !== 'undefined' && window.submitGameScore) {
               // Show loading feedback to user
-              const feedbackText = this.add.text(400, 400, 'Submitting to Blockchain...', {
+              const feedbackText = this.add.text(400, 400, 'Submitting Score...', {
                 fontFamily: 'Arial',
                 fontSize: '24px',
                 color: '#FFD700',
@@ -4816,16 +4816,16 @@ if (isBrowser) {
               }).setOrigin(0.5);
               feedbackText.setDepth(1003);
               
-              // Call the global submission function with Privy
+              // Call the global submission function
               const transactionCount = Math.max(1, Math.floor(score / 1000));
-              const success = await window.submitGameScoreToBlockchain(score, transactionCount);
+              const success = await window.submitGameScore(score, transactionCount);
               
               // Remove loading text
               feedbackText.destroy();
               
               if (success) {
                 // Show success feedback
-                const successText = this.add.text(400, 400, 'Score submitted to blockchain!', {
+                const successText = this.add.text(400, 400, 'Score submitted successfully!', {
                   fontFamily: 'Arial',
                   fontSize: '24px',
                   color: '#00FF00',
@@ -4847,14 +4847,14 @@ if (isBrowser) {
                 throw new Error('Submission failed');
               }
             } else {
-              throw new Error('Blockchain submission not available');
+              throw new Error('Score submission not available');
             }
             
           } catch (error) {
-            console.error('Error submitting score to blockchain:', error);
+            console.error('Error submitting score:', error);
             
             // Show error feedback
-            const errorText = this.add.text(400, 400, 'Blockchain submission failed', {
+            const errorText = this.add.text(400, 400, 'Score submission failed', {
               fontFamily: 'Arial',
               fontSize: '24px',
               color: '#FF0000',

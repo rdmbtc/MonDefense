@@ -3,13 +3,17 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { useGameContext } from "@/context/game-context";
-// Removed blockchain contract hook - using API instead
 import dynamic from 'next/dynamic';
 import { toast } from 'sonner';
 import { 
   usePrivy, 
   CrossAppAccountWithMetadata, 
 } from "@privy-io/react-auth";
+import { useGameSession } from '@/hooks/useGameSession';
+import { usePlayerTotalScore } from '@/hooks/usePlayerTotalScore';
+import { useLeaderboard } from '@/hooks/useLeaderboard';
+import { useCrossAppAccount } from '@/hooks/useCrossAppAccount';
+import { useUsername } from '@/hooks/useUsername';
 
 // Extend Window interface to include custom properties
 declare global {
@@ -32,10 +36,7 @@ const ClientWrapper = dynamic(() => import('./farm-game/ClientWrapper'), {
   )
 });
 
-interface DefenseGameProps {
-  onBack: () => void;
-  onGameEnd?: (score: number) => void;
-}
+import { DefenseGameProps, GameEventType } from '@/types';
 
 export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const [gameMode, setGameMode] = useState<'chapter' | 'game'>('chapter');
@@ -46,18 +47,21 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
   const soundEffectRef = useRef<HTMLAudioElement | null>(null);
   
-  // Privy authentication
-  const { authenticated, user, ready, logout, login } = usePrivy();
-  const [accountAddress, setAccountAddress] = useState<string | null>(null);
-  const [username, setUsername] = useState<string | null>(null);
-  const [message, setMessage] = useState<string>("");
-  
   // API integration state
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [playerStats, setPlayerStats] = useState<any>(null);
-  const [globalStats, setGlobalStats] = useState<any>(null);
   const [hasSubmittedScore, setHasSubmittedScore] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  
+  // Use custom hooks for API integration
+  const { authenticated, user, ready, logout, login } = usePrivy();
+  const { walletAddress } = useCrossAppAccount();
+  const { data: usernameData } = useUsername(walletAddress);
+  const { data: playerStats } = usePlayerTotalScore(walletAddress, gameStarted, false);
+  const { data: leaderboardData } = useLeaderboard(1);
+  const gameSession = useGameSession(sessionToken);
+  
+  const username = usernameData?.user?.username || 'Anonymous';
 
   // Chapter One assets (images 0-7, sounds for 1,3,5,6,7)
   const chapterAssets = [
@@ -141,101 +145,24 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     }
   }, [gameMode, chapterIndex, playChapterAudio]);
 
-  // Handle Privy authentication and wallet address extraction
+  // Start game session when user is authenticated
   useEffect(() => {
-    // Check if privy is ready and user is authenticated
-    if (authenticated && user && ready) {
-      // Check if user has linkedAccounts
-      if (user.linkedAccounts.length > 0) {
-        // Get the cross app account created using Monad Games ID
-        const crossAppAccount: CrossAppAccountWithMetadata = user.linkedAccounts.filter(
-          account => account.type === "cross_app" && account.providerApp.id === "cmd8euall0037le0my79qpz42"
-        )[0] as CrossAppAccountWithMetadata;
-
-        // The first embedded wallet created using Monad Games ID, is the wallet address
-        if (crossAppAccount && crossAppAccount.embeddedWallets.length > 0) {
-          const walletAddress = crossAppAccount.embeddedWallets[0].address;
-          setAccountAddress(walletAddress);
-          
-          // Fetch username from Monad Games ID API
-          fetchUsername(walletAddress);
-        }
-      } else {
-        setMessage("You need to link your Monad Games ID account to continue.");
-      }
+    if (authenticated && walletAddress && !sessionId) {
+      gameSession.startGameSession.mutate({ walletAddress });
     }
-  }, [authenticated, user, ready]);
+  }, [authenticated, walletAddress, sessionId, gameSession.startGameSession]);
 
-  // Function to fetch username from Monad Games ID API
-  const fetchUsername = async (walletAddress: string) => {
-    try {
-      const response = await fetch(`https://monad-games-id-site.vercel.app/api/check-wallet?wallet=${walletAddress}`);
-      const data = await response.json();
-      
-      if (data.hasUsername && data.user) {
-        setUsername(data.user.username);
-        setMessage("");
-        
-        // Fetch player stats when username is loaded
-        await fetchPlayerStatsAPI(walletAddress);
-        // Get session token for API authentication
-        await getSessionToken(walletAddress);
-      } else {
-        setMessage("No username found. Please register at Monad Games ID.");
-      }
-    } catch (error) {
-      console.error('Error fetching username:', error);
-      setMessage("Error fetching username. Please try again.");
+  // Handle session token from game session hook
+  useEffect(() => {
+    if (gameSession.startGameSession.data?.sessionToken) {
+      setSessionToken(gameSession.startGameSession.data.sessionToken);
+      setSessionId(gameSession.startGameSession.data.sessionId);
     }
-  };
+  }, [gameSession.startGameSession.data]);
 
-  // API Functions
-  const getSessionToken = async (walletAddress: string) => {
-    try {
-      const response = await fetch('/api/api/get-session-token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ playerAddress: walletAddress })
-      });
-      const data = await response.json();
-      if (data.success) {
-        setSessionToken(data.sessionToken);
-      }
-    } catch (error) {
-      console.error('Error getting session token:', error);
-    }
-  };
-
-  const fetchPlayerStatsAPI = async (walletAddress: string) => {
-    try {
-      const response = await fetch(`/api/api/get-player-data?address=${walletAddress}`);
-      const data = await response.json();
-      if (data.success) {
-        setPlayerStats({
-          bestScore: data.totalScore,
-          gamesPlayed: data.totalTransactions
-        });
-      }
-    } catch (error) {
-      console.error('Error fetching player stats:', error);
-    }
-  };
-
-  const fetchGlobalStatsAPI = async () => {
-    try {
-      const response = await fetch('/api/api/get-player-data-per-game');
-      const data = await response.json();
-      if (data.success) {
-        setGlobalStats(data);
-      }
-    } catch (error) {
-      console.error('Error fetching global stats:', error);
-    }
-  };
-
-  // Function to handle score submission via API
-  const handleScoreSubmission = async (score: number, transactionCount: number = 1): Promise<boolean> => {
-    if (!accountAddress || !sessionToken) {
+  // Handle score submission using the game session hook
+  const handleScoreSubmission = useCallback(async (score: number, transactionCount: number = 1): Promise<boolean> => {
+    if (!walletAddress || !sessionToken || !sessionId) {
       toast.error('Authentication required for score submission');
       return false;
     }
@@ -244,38 +171,26 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       setIsSubmitting(true);
       console.log('Submitting score via API:', score);
       
-      const response = await fetch('/api/api/update-player-data', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          playerAddress: accountAddress,
-          scoreAmount: score,
-          transactionAmount: transactionCount,
-          sessionToken: sessionToken
-        })
+      await gameSession.submitScore.mutateAsync({
+        player: walletAddress,
+        scoreAmount: score,
+        transactionAmount: transactionCount,
+        sessionId: sessionId
       });
 
-      const data = await response.json();
-      
-      if (data.success) {
-        setHasSubmittedScore(true);
-        toast.success('Score submitted successfully!');
-        // Refresh player stats
-        await fetchPlayerStatsAPI(accountAddress);
-        return true;
-      } else {
-        console.error('Score submission failed:', data.error);
-        toast.error(`Score submission failed: ${data.error}`);
-        return false;
-      }
+      setHasSubmittedScore(true);
+      toast.success('Score submitted successfully!');
+      return true;
     } catch (error) {
       console.error('Error submitting score:', error);
-      toast.error('Network error during score submission');
+      toast.error('Score submission failed');
       return false;
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [walletAddress, sessionToken, sessionId, gameSession.submitScore]);
+
+
 
   useEffect(() => {
     // Initialize game state for defense mode when game starts
@@ -290,24 +205,24 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       setHasSubmittedScore(false);
       
       // Expose global function for Phaser game to call directly
-      window.submitGameScoreToBlockchain = async (score: number, transactionCount: number): Promise<boolean> => {
+      window.submitGameScore = async (score: number, transactionCount: number): Promise<boolean> => {
         try {
           // Only submit if user is authenticated and has session token
-          if (accountAddress && sessionToken) {
+          if (walletAddress && sessionToken && sessionId) {
             const result = await handleScoreSubmission(score, transactionCount);
             return result;
           }
           return false;
         } catch (error) {
-          console.error('Error in global API submission:', error);
+          console.error('Error in global score submission:', error);
           return false;
         }
       };
       
       return () => {
         // Remove global function
-        if (window.submitGameScoreToBlockchain) {
-          delete window.submitGameScoreToBlockchain;
+        if (window.submitGameScore) {
+          delete window.submitGameScore;
         }
       };
     }
@@ -338,10 +253,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     };
   }, [gameMode, handleScoreSubmission]);
 
-  // Fetch global stats on component mount
-  useEffect(() => {
-    fetchGlobalStatsAPI();
-  }, [fetchGlobalStatsAPI]);
+
 
   const handleBackToMenu = () => {
     // Clean up game before going back
@@ -466,8 +378,8 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
             <div className="flex items-center gap-2">
               {username ? (
                 <span className="text-white text-sm font-medium">Welcome, {username}!</span>
-              ) : accountAddress ? (
-                <span className="text-white text-sm">{accountAddress.slice(0, 6)}...{accountAddress.slice(-4)}</span>
+              ) : walletAddress ? (
+                <span className="text-white text-sm">{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
               ) : (
                 <span className="text-white text-sm">Authenticated</span>
               )}
@@ -493,17 +405,17 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           )}
         </div>
         
-        {/* Blockchain Status */}
-        {authenticated && accountAddress && (
+        {/* Score Submission Status */}
+        {authenticated && walletAddress && (
           <div className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2">
             <div className="text-white text-sm font-medium">
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
                   <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                  Submitting to blockchain...
+                  Submitting score...
                 </span>
               ) : hasSubmittedScore ? (
-                <span className="text-green-400">✓ Score on blockchain</span>
+                <span className="text-green-400">✓ Score submitted</span>
               ) : gameScore > 0 ? (
                 <div className="space-y-1">
                   <Button
@@ -516,7 +428,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                   </Button>
                 </div>
               ) : (
-                <span className="text-white/60">Ready for blockchain</span>
+                <span className="text-white/60">Ready to play</span>
               )}
             </div>
           </div>
@@ -530,21 +442,19 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         </h1>
       </div>
 
-      {/* Message Display */}
-      {message && (
+      {/* Username Registration Message */}
+      {authenticated && walletAddress && usernameData?.error && (
         <div className="absolute top-20 left-1/2 transform -translate-x-1/2 z-50 max-w-md">
           <div className="bg-yellow-600/90 backdrop-blur border-yellow-500/50 rounded-lg px-4 py-3 text-center">
-            <p className="text-white text-sm font-medium mb-2">{message}</p>
-            {message.includes("No username found") && (
-              <Button 
-                onClick={() => window.open('https://monad-games-id-site.vercel.app/', '_blank')}
-                variant="outline"
-                size="sm"
-                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-              >
-                Register Username
-              </Button>
-            )}
+            <p className="text-white text-sm font-medium mb-2">No username found for your account</p>
+            <Button 
+              onClick={() => window.open('https://monad-games-id-site.vercel.app/', '_blank')}
+              variant="outline"
+              size="sm"
+              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+            >
+              Register Username
+            </Button>
           </div>
         </div>
       )}
@@ -584,7 +494,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                   if (onGameEnd && gameScore > 0) {
                     onGameEnd(gameScore);
                   }
-                  // Submit score to blockchain
+                  // Submit score via API
                   handleScoreSubmission(gameScore);
                   break;
                 case 'gameWon':
@@ -595,7 +505,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                   if (onGameEnd) {
                     onGameEnd(finalScore);
                   }
-                  // Submit final score to blockchain
+                  // Submit final score via API
                   handleScoreSubmission(finalScore);
                   break;
                 default:

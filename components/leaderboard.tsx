@@ -1,74 +1,122 @@
-"use client"
+'use client';
 
-import { useEffect, useState } from "react"
-import { useGameContext } from "@/context/game-context"
-import { Trophy } from "lucide-react"
+import React from 'react';
+import { useLeaderboard } from '@/hooks/useLeaderboard';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Trophy, Medal, Award } from 'lucide-react';
 
-interface LeaderboardEntry {
-  address: string
-  name: string
-  coins: number
-}
+const Leaderboard: React.FC = () => {
+  const { data: leaderboardData, isLoading, error } = useLeaderboard(1);
 
-export const Leaderboard = () => {
-  const { farmCoins, playerName } = useGameContext()
-  const [leaderboard, setLeaderboard] = useState<LeaderboardEntry[]>([])
-
-  // Simulate leaderboard data
-  useEffect(() => {
-    const mockLeaderboard: LeaderboardEntry[] = [
-      { address: "0x1234...5678", name: "FarmKing", coins: 5432 },
-      { address: "0x8765...4321", name: "CropMaster", coins: 4321 },
-      { address: "0x9876...5432", name: "HarvestPro", coins: 3210 },
-      { address: "0x5432...9876", name: "SeedWizard", coins: 2109 },
-      { address: "0x2109...8765", name: "PlantLord", coins: 1098 },
-    ]
-
-    // Add the current player to the leaderboard
-    const playerEntry = {
-      address: "You",
-      name: playerName,
-      coins: farmCoins,
-    }
-
-    const combinedLeaderboard = [...mockLeaderboard, playerEntry].sort((a, b) => b.coins - a.coins).slice(0, 10)
-
-    setLeaderboard(combinedLeaderboard)
-  }, [farmCoins, playerName])
-
-  return (
-    <div className="p-4">
-      <h2 className="text-xl font-bold mb-4 flex items-center">
-        <Trophy className="mr-2 h-5 w-5 text-yellow-400" />
-        Leaderboard
-      </h2>
-
-      <div className="bg-green-800 rounded-lg overflow-hidden">
-        <div className="grid grid-cols-3 bg-green-950 p-2 font-bold">
-          <div>Rank</div>
-          <div>Farmer</div>
-          <div className="text-right">Coins</div>
-        </div>
-
-        {leaderboard.map((entry, index) => (
-          <div
-            key={index}
-            className={`grid grid-cols-3 p-2 ${
-              entry.address === "You" ? "bg-green-700" : index % 2 === 0 ? "bg-green-800" : "bg-green-850"
-            }`}
-          >
-            <div className="flex items-center">
-              {index === 0 && <span className="text-yellow-400 mr-1">🏆</span>}
-              {index === 1 && <span className="text-gray-300 mr-1">🥈</span>}
-              {index === 2 && <span className="text-amber-700 mr-1">🥉</span>}
-              {index > 2 && <span>{index + 1}</span>}
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {[...Array(10)].map((_, i) => (
+          <div key={i} className="flex items-center space-x-4 p-4">
+            <Skeleton className="h-8 w-8 rounded-full" />
+            <div className="space-y-2 flex-1">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-3 w-20" />
             </div>
-            <div className="truncate">{entry.name}</div>
-            <div className="text-right">{entry.coins} 🪙</div>
+            <Skeleton className="h-6 w-16" />
           </div>
         ))}
       </div>
-    </div>
-  )
-}
+    );
+  }
 
+  if (error) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-400">Failed to load leaderboard</p>
+        <p className="text-sm text-gray-400 mt-2">Please try again later</p>
+      </div>
+    );
+  }
+
+  if (!leaderboardData?.data?.data || leaderboardData.data.data.length === 0) {
+    return (
+      <div className="text-center py-8">
+        <Trophy className="mx-auto h-12 w-12 text-gray-400 mb-4" />
+        <p className="text-gray-400">No scores yet</p>
+        <p className="text-sm text-gray-500 mt-2">Be the first to set a high score!</p>
+      </div>
+    );
+  }
+
+  const getRankIcon = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return <Trophy className="h-6 w-6 text-yellow-500" />;
+      case 2:
+        return <Medal className="h-6 w-6 text-gray-400" />;
+      case 3:
+        return <Award className="h-6 w-6 text-amber-600" />;
+      default:
+        return (
+          <div className="h-6 w-6 rounded-full bg-gray-600 flex items-center justify-center text-xs font-bold text-white">
+            {rank}
+          </div>
+        );
+    }
+  };
+
+  const getRankBadgeColor = (rank: number) => {
+    switch (rank) {
+      case 1:
+        return 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30';
+      case 2:
+        return 'bg-gray-400/20 text-gray-300 border-gray-400/30';
+      case 3:
+        return 'bg-amber-600/20 text-amber-400 border-amber-600/30';
+      default:
+        return 'bg-blue-500/20 text-blue-400 border-blue-500/30';
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      {leaderboardData.data.data.map((player: any, index: number) => {
+        const rank = index + 1;
+        return (
+          <Card key={player.walletAddress} className="bg-gray-800/50 border-gray-700 hover:bg-gray-800/70 transition-colors">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-4">
+                  <div className="flex-shrink-0">
+                    {getRankIcon(rank)}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center space-x-2">
+                      <p className="text-sm font-medium text-white truncate">
+                        {player.username || `Player ${player.walletAddress.slice(0, 6)}...${player.walletAddress.slice(-4)}`}
+                      </p>
+                      <Badge className={`text-xs ${getRankBadgeColor(rank)}`}>
+                        #{rank}
+                      </Badge>
+                    </div>
+                    <p className="text-xs text-gray-400 truncate">
+                      {player.walletAddress.slice(0, 8)}...{player.walletAddress.slice(-6)}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-white">
+                    {player.score.toLocaleString()}
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Games: {player.rank}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
+    </div>
+  );
+};
+
+export default Leaderboard;
