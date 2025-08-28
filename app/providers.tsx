@@ -63,18 +63,16 @@ export function Providers({ children }: { children: ReactNode }) {
         <PrivyProvider
           appId={process.env.NEXT_PUBLIC_PRIVY_APP_ID!}
           config={{
-            loginMethods: ['wallet', 'email'],
+            loginMethods: ['wallet'],
             appearance: {
               theme: 'light',
               accentColor: '#676FFF',
             },
             defaultChain: monadTestnet,
             supportedChains: [monadTestnet],
-            // Suppress token price fetch warnings for custom chains
             embeddedWallets: {
               createOnLogin: 'users-without-wallets',
               requireUserPasswordOnCreate: false,
-              // Remove the invalid noPromptOnSignature property
             },
           }}
         >
