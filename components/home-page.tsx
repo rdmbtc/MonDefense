@@ -98,25 +98,42 @@ export default function HomePage() {
 
   // Handle trailer progression
   const nextTrailerSlide = useCallback(async () => {
-    // First check if we're at the end
-    if (trailerIndex >= trailerAssets.length - 1) {
-      // End of trailer, go to main menu
-      if (backgroundMusicRef.current) {
-        backgroundMusicRef.current.pause();
-        backgroundMusicRef.current.currentTime = 0;
+    // Play audio for current slide first
+    try {
+      // Initialize background music on first slide only after user interaction
+      if (trailerIndex === 0 && !backgroundMusicRef.current) {
+        backgroundMusicRef.current = new Audio('/Trailer/background_music_trailer.mp3');
+        backgroundMusicRef.current.loop = true;
+        backgroundMusicRef.current.volume = 0.3;
+        await backgroundMusicRef.current.play();
       }
-      setGameMode('home');
-      return;
+
+      // Play sound effect for current slide
+      if (soundEffectRef.current) {
+        soundEffectRef.current.pause();
+        soundEffectRef.current.currentTime = 0;
+      }
+      soundEffectRef.current = new Audio(trailerAssets[trailerIndex].sound);
+      soundEffectRef.current.volume = 0.7;
+      await soundEffectRef.current.play();
+    } catch (error) {
+      console.warn('Audio playback failed:', error);
     }
 
-    // Play audio for current slide on user interaction
-    await playAudio(true);
-
-    // Advance to next slide after a short delay to let audio start
+    // Then advance to next slide after a delay
     setTimeout(() => {
-      setTrailerIndex(trailerIndex + 1);
+      if (trailerIndex >= trailerAssets.length - 1) {
+        // End of trailer, go to main menu
+        if (backgroundMusicRef.current) {
+          backgroundMusicRef.current.pause();
+          backgroundMusicRef.current.currentTime = 0;
+        }
+        setGameMode('home');
+      } else {
+        setTrailerIndex(trailerIndex + 1);
+      }
     }, 100);
-  }, [trailerIndex, trailerAssets.length, playAudio]);
+  }, [trailerIndex, trailerAssets]);
 
   // Handle keyboard events for trailer
   useEffect(() => {
