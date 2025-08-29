@@ -1,73 +1,118 @@
-import { createWalletClient, createPublicClient, http, parseEther } from 'viem';
-import { monadTestnet } from 'viem/chains';
+import { createPublicClient, createWalletClient, http } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
-import { GAME_CONFIG } from './game-config';
-import { CONTRACT_ABI } from '../utils/abi';
+import { monadTestnet } from 'viem/chains';
+import { GAME_CONTRACT_ABI } from './contract-abi';
 
-// Monad Games ID Contract ABI for UpdatePlayerData
-const MONAD_GAMES_ID_ABI = [
-  {
-    inputs: [
-      { name: "player", type: "address" },
-      { name: "scoreAmount", type: "uint256" },
-      { name: "transactionAmount", type: "uint256" }
-    ],
-    name: "updatePlayerData",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-] as const;
+// Contract configuration
+export const CONTRACT_ADDRESS = '0xceCBFF203C8B6044F52CE23D914A1bfD997541A4' as const;
 
-// Create public client for reading
+// Export the ABI for use in other files
+export const CONTRACT_ABI = GAME_CONTRACT_ABI;
+
+// Create public client for reading contract data
 export const publicClient = createPublicClient({
   chain: monadTestnet,
-  transport: http(),
+  transport: http()
 });
 
-// Create wallet client for writing (requires private key)
-export function createSignerClient(privateKey: string) {
+// Helper function to validate Ethereum address
+export function isValidAddress(address: string): boolean {
+  return /^0x[a-fA-F0-9]{40}$/.test(address);
+}
+
+// Helper function to get player data from contract (global totals)
+export async function getPlayerData(playerAddress: string) {
+  if (!isValidAddress(playerAddress)) {
+    throw new Error('Invalid player address');
+  }
+
+  try {
+    const [totalScore, totalTransactions] = await Promise.all([
+      publicClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: 'totalScoreOfPlayer',
+        args: [playerAddress as `0x${string}`]
+      }),
+      publicClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: 'totalTransactionsOfPlayer',
+        args: [playerAddress as `0x${string}`]
+      })
+    ]);
+
+    return {
+      totalScore,
+      totalTransactions
+    };
+  } catch (error) {
+    console.error('Error reading player data:', error);
+    throw new Error('Failed to read player data from contract');
+  }
+}
+
+// Helper function to get player data for a specific game
+export async function getPlayerDataPerGame(playerAddress: string, gameAddress: string) {
+  if (!isValidAddress(playerAddress) || !isValidAddress(gameAddress)) {
+    throw new Error('Invalid player or game address');
+  }
+
+  try {
+    const result = await publicClient.readContract({
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
+      functionName: 'playerDataPerGame',
+      args: [gameAddress as `0x${string}`, playerAddress as `0x${string}`]
+    });
+
+    return {
+      score: result[0],
+      transactions: result[1]
+    };
+  } catch (error) {
+    console.error('Error reading player data per game:', error);
+    throw new Error('Failed to read player data per game from contract');
+  }
+}
+
+// Helper function to create signer client
+function createSignerClient() {
+  const privateKey = process.env.SIGNER_PRIVATE_KEY;
+  if (!privateKey) {
+    throw new Error('SIGNER_PRIVATE_KEY environment variable is required');
+  }
+
   const account = privateKeyToAccount(privateKey as `0x${string}`);
   
   return createWalletClient({
     account,
     chain: monadTestnet,
-    transport: http(),
+    transport: http()
   });
 }
 
-// Update player data on Monad Games ID smart contract
+// Function to update player data on-chain
 export async function updatePlayerDataOnChain(
   playerAddress: string,
-  score: number,
-  transactionCount: number,
-  signerPrivateKey?: string
+  scoreAmount: number,
+  transactionAmount: number
 ) {
   try {
-    // Use environment variable for private key if not provided
-    const privateKey = signerPrivateKey || process.env.SIGNER_PRIVATE_KEY;
+    const walletClient = createSignerClient();
     
-    if (!privateKey) {
-      throw new Error('No signer private key provided');
-    }
-
-    const walletClient = createSignerClient(privateKey);
-    
-    // Call updatePlayerData on Monad Games ID contract
     const hash = await walletClient.writeContract({
-      address: GAME_CONFIG.BLOCKCHAIN.MONAD_GAMES_ID_CONTRACT as `0x${string}`,
-      abi: MONAD_GAMES_ID_ABI,
+      address: CONTRACT_ADDRESS,
+      abi: CONTRACT_ABI,
       functionName: 'updatePlayerData',
       args: [
-        playerAddress as `0x${string}`, // player address
-        BigInt(score), // score
-        BigInt(transactionCount) // transaction count
-      ],
+        playerAddress as `0x${string}`,
+        BigInt(scoreAmount),
+        BigInt(transactionAmount)
+      ]
     });
 
-    console.log('UpdatePlayerData transaction hash:', hash);
-    
-    // Wait for transaction confirmation
+    // Wait for transaction receipt
     const receipt = await publicClient.waitForTransactionReceipt({ hash });
     
     return {
@@ -83,37 +128,4 @@ export async function updatePlayerDataOnChain(
       error: error instanceof Error ? error.message : 'Unknown error'
     };
   }
-}
-
-// Read player total score from original contract (for backward compatibility)
-export async function getPlayerTotalScore(playerAddress: string) {
-  try {
-    const totalScore = await publicClient.readContract({
-      address: GAME_CONFIG.BLOCKCHAIN.MONAD_GAMES_ID_CONTRACT as `0x${string}`,
-      abi: CONTRACT_ABI,
-      functionName: 'totalScoreOfPlayer',
-      args: [playerAddress as `0x${string}`],
-    }) as bigint;
-
-    return {
-      success: true,
-      totalScore: totalScore.toString()
-    };
-  } catch (error) {
-    console.error('Error reading player total score:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
-  }
-}
-
-// Utility function to validate wallet address
-export function isValidWalletAddress(address: string): boolean {
-  return /^0x[a-fA-F0-9]{40}$/.test(address);
-}
-
-// Utility function to format transaction hash for display
-export function formatTransactionHash(hash: string): string {
-  return `${hash.slice(0, 6)}...${hash.slice(-4)}`;
 }

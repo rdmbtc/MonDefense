@@ -1,17 +1,5 @@
 import { NextResponse } from "next/server";
-import { createPublicClient, http } from "viem";
-import { monadTestnet } from "viem/chains";
-import { GAME_CONFIG } from "@/lib/game-config";
-
-const CONTRACT_ABI = [
-  {
-    inputs: [{ name: "", type: "address" }],
-    name: "totalScoreOfPlayer",
-    outputs: [{ name: "", type: "uint256" }],
-    stateMutability: "view",
-    type: "function",
-  },
-];
+import { getPlayerData, isValidAddress } from "../../../lib/blockchain";
 
 export async function POST(request: Request) {
   const { walletAddress } = await request.json();
@@ -23,31 +11,25 @@ export async function POST(request: Request) {
     );
   }
 
-  const publicClient = createPublicClient({
-    chain: monadTestnet,
-    transport: http(),
-  });
+  if (!isValidAddress(walletAddress)) {
+    return NextResponse.json(
+      { error: "Invalid wallet address format" },
+      { status: 400 }
+    );
+  }
 
   try {
-    const totalScore = await publicClient.readContract({
-      address: GAME_CONFIG.BLOCKCHAIN.MONAD_GAMES_ID_CONTRACT as `0x${string}`,
-      functionName: "totalScoreOfPlayer",
-      args: [walletAddress as `0x${string}`],
-      abi: CONTRACT_ABI,
-    });
-
-    if (totalScore === null || totalScore === undefined) {
-      return NextResponse.json(
-        { error: "No score found for the provided wallet address" },
-        { status: 404 }
-      );
-    }
+    const playerData = await getPlayerData(walletAddress);
 
     return NextResponse.json(
-      { totalScore: totalScore.toString() },
+      { 
+        totalScore: playerData.totalScore.toString(),
+        totalTransactions: playerData.totalTransactions.toString()
+      },
       { status: 200 }
     );
   } catch (error) {
+    console.error('Error fetching player data:', error);
     return NextResponse.json(
       {
         error: "Failed to fetch total score",
