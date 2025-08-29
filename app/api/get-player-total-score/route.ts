@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { createPublicClient, http } from "viem";
 import { monadTestnet } from "viem/chains";
+import { GAME_CONFIG } from "@/lib/game-config";
 
 const CONTRACT_ABI = [
   {
@@ -29,7 +30,7 @@ export async function POST(request: Request) {
 
   try {
     const totalScore = await publicClient.readContract({
-      address: process.env.CONTRACT_ADDRESS as `0x${string}`,
+      address: GAME_CONFIG.BLOCKCHAIN.MONAD_GAMES_ID_CONTRACT as `0x${string}`,
       functionName: "totalScoreOfPlayer",
       args: [walletAddress as `0x${string}`],
       abi: CONTRACT_ABI,
