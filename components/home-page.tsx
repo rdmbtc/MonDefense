@@ -51,25 +51,12 @@ export default function HomePage() {
 
   // Trailer images and sounds (0-4)
   const trailerAssets = [
-    { image: '/Chapter%20One/0.png', sound: '/Trailer/0.e' },
     { image: '/Trailer/0.png', sound: '/Trailer/0.wav' },
     { image: '/Trailer/1.png', sound: '/Trailer/1.wav' },
     { image: '/Trailer/2.png', sound: '/Trailer/2.wav' },
     { image: '/Trailer/3.png', sound: '/Trailer/3.wav' },
     { image: '/Trailer/4.png', sound: '/Trailer/4.wav' }
   ];
-
-  // Handle watch trailer button
-  const startTrailer = useCallback(async () => {
-    setGameMode('trailer');
-    setTrailerIndex(0);
-    // Audio will be handled by playAudio when user clicks/presses space
-  }, []);
-
-  // Handle skip trailer button
-  const skipTrailer = useCallback(() => {
-    setGameMode('home');
-  }, []);
 
   // Initialize and play audio
   const playAudio = useCallback(async (userInteracted = false) => {
@@ -96,6 +83,19 @@ export default function HomePage() {
       console.warn('Audio playback failed:', error);
     }
   }, [trailerIndex, trailerAssets]);
+
+  // Handle watch trailer button
+  const startTrailer = useCallback(async () => {
+    setGameMode('trailer');
+    setTrailerIndex(0);
+    // Play audio immediately since clicking "Watch Trailer" is user interaction
+    await playAudio(true);
+  }, [playAudio]);
+
+  // Handle skip trailer button
+  const skipTrailer = useCallback(() => {
+    setGameMode('home');
+  }, []);
 
   // Handle trailer progression
   const nextTrailerSlide = useCallback(async () => {

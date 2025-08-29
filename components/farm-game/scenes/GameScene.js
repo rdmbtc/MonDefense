@@ -1256,10 +1256,10 @@ if (isBrowser) {
                 // Calculate cost based on defense type
                 let cost = 0;
                 switch (defenseType) {
-                  case 'chog': cost = 35; break;
+                  case 'chog': cost = 25; break;
                   case 'molandak': cost = 50; break;
-                  case 'keon': cost = 100; break;
-                  case 'moyaki': cost = 150; break;
+                  case 'keon': cost = 150; break;
+                  case 'moyaki': cost = 80; break;
                   default: cost = 50; break;
                 }
                 
@@ -2779,7 +2779,7 @@ if (isBrowser) {
               keonImage.setInteractive({ useHandCursor: true });
               keonImage.on('pointerdown', () => { keonButton.emit('pointerdown'); });
             }
-            keonCostText = this.add.text(320, 570, '125', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
+            keonCostText = this.add.text(320, 570, '150', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
             this.toolbarButtons.keonImage = keonImage; // Store reference
             this.toolbarButtons.keonCostText = keonCostText; // Store reference
 
@@ -2807,7 +2807,7 @@ if (isBrowser) {
               moyakiImage.setInteractive({ useHandCursor: true });
                moyakiImage.on('pointerdown', () => { moyakiButton.emit('pointerdown'); });
             }
-            moyakiCostText = this.add.text(390, 570, '200', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
+            moyakiCostText = this.add.text(390, 570, '80', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
              this.toolbarButtons.moyakiImage = moyakiImage; // Store reference
              this.toolbarButtons.moyakiCostText = moyakiCostText; // Store reference
 
@@ -2834,8 +2834,8 @@ if (isBrowser) {
             // Add costs/labels underneath
             this.add.text(40, 570, 'Attack', { fontFamily: 'Arial', fontSize: labelFontSize, color: '#FFFFFF' }).setOrigin(0.5).setDepth(2001);
             this.add.text(110, 570, '5', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
-            this.add.text(180, 570, '45', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
-            this.add.text(250, 570, '65', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
+            this.add.text(180, 570, '25', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
+            this.add.text(250, 570, '50', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
             this.add.text(460, 570, 'Upgrade', { fontFamily: 'Arial', fontSize: labelFontSize, color: '#FFFFFF' }).setOrigin(0.5).setDepth(2001);
 
 
@@ -3962,10 +3962,10 @@ if (isBrowser) {
             }
             
             // Check defense costs
-            const cost = type === 'chog' ? 45 : 
-                         type === 'molandak' ? 65 : 
-                         type === 'keon' ? 125 : // Add keon cost
-                         type === 'moyaki' ? 200 : 0; // Add moyaki cost
+            const cost = type === 'chog' ? 25 : 
+                         type === 'molandak' ? 50 : 
+                         type === 'keon' ? 150 : // Add keon cost
+                         type === 'moyaki' ? 80 : 0; // Add moyaki cost
             
             // Check if player has enough coins
             if (this.gameState.farmCoins < cost) {
@@ -4817,7 +4817,7 @@ if (isBrowser) {
               feedbackText.setDepth(1003);
               
               // Call the global submission function
-              const transactionCount = Math.max(1, Math.floor(score / 1000));
+              const transactionCount = 1; // Always 1 transaction per game session
               const success = await window.submitGameScore(score, transactionCount);
               
               // Remove loading text
