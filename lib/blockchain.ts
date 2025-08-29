@@ -8,12 +8,11 @@ import { CONTRACT_ABI } from '../utils/abi';
 const MONAD_GAMES_ID_ABI = [
   {
     inputs: [
-      { name: "gameId", type: "uint256" },
       { name: "player", type: "address" },
-      { name: "score", type: "uint256" },
-      { name: "transactionCount", type: "uint256" }
+      { name: "scoreAmount", type: "uint256" },
+      { name: "transactionAmount", type: "uint256" }
     ],
-    name: "UpdatePlayerData",
+    name: "updatePlayerData",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -54,13 +53,12 @@ export async function updatePlayerDataOnChain(
 
     const walletClient = createSignerClient(privateKey);
     
-    // Call UpdatePlayerData on Monad Games ID contract
+    // Call updatePlayerData on Monad Games ID contract
     const hash = await walletClient.writeContract({
       address: GAME_CONFIG.BLOCKCHAIN.MONAD_GAMES_ID_CONTRACT as `0x${string}`,
       abi: MONAD_GAMES_ID_ABI,
-      functionName: 'UpdatePlayerData',
+      functionName: 'updatePlayerData',
       args: [
-        BigInt(GAME_CONFIG.BLOCKCHAIN.GAME_ID), // gameId
         playerAddress as `0x${string}`, // player address
         BigInt(score), // score
         BigInt(transactionCount) // transaction count
