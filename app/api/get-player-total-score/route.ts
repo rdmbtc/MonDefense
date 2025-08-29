@@ -23,8 +23,9 @@ export async function POST(request: Request) {
 
     return NextResponse.json(
       { 
-        totalScore: playerData.totalScore.toString(),
-        totalTransactions: playerData.totalTransactions.toString()
+        totalScore: parseInt(playerData.totalScore.toString()),
+        bestScore: playerData.totalScore.toString(),
+        gamesPlayed: parseInt(playerData.totalTransactions.toString())
       },
       { status: 200 }
     );

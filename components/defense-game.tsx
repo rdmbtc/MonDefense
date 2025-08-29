@@ -442,34 +442,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           )}
         </div>
         
-        {/* Score Submission Status */}
-        {authenticated && walletAddress && (
-          <div className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2">
-            <div className="text-white text-sm font-medium">
-              {isSubmitting ? (
-                <span className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white"></div>
-                  Submitting score...
-                </span>
-              ) : hasSubmittedScore ? (
-                <span className="text-green-400">✓ Score submitted</span>
-              ) : gameScore > 0 ? (
-                <div className="space-y-1">
-                  <Button
-                    onClick={() => handleScoreSubmission(gameScore, GAME_CONFIG.SCORE_SUBMISSION.TRANSACTION_THRESHOLD)}
-                    size="sm"
-                    className="bg-blue-600/80 hover:bg-blue-700/80 text-white border-blue-500/50 text-xs px-2 py-1 w-full"
-                    disabled={isSubmitting}
-                  >
-                    Submit Score
-                  </Button>
-                </div>
-              ) : (
-                <span className="text-white/60">Ready to play</span>
-              )}
-            </div>
-          </div>
-        )}
+
       </div>
 
       {/* Game Title */}
@@ -511,26 +484,12 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                   if (data && typeof data === 'number') {
                     // Add to both coins (for game mechanics) and score (for leaderboard)
                     addFarmCoins(data);
-                    setGameScore(prev => {
-                      const newScore = prev + data * 10; // Score is 10x coins earned
-                      // Check if we should auto-submit score based on threshold
-                      if (newScore > 0 && newScore % GAME_CONFIG.SCORE_SUBMISSION.SCORE_THRESHOLD === 0) {
-                        handleScoreSubmission(newScore, GAME_CONFIG.SCORE_SUBMISSION.TRANSACTION_THRESHOLD);
-                      }
-                      return newScore;
-                    });
+                    setGameScore(prev => prev + data * 10); // Score is 10x coins earned
                   }
                   break;
                 case 'enemyDefeated':
                   if (data && typeof data === 'number') {
-                    setGameScore(prev => {
-                      const newScore = prev + data; // Direct score from enemy defeat
-                      // Check if we should auto-submit score based on threshold
-                      if (newScore > 0 && newScore % GAME_CONFIG.SCORE_SUBMISSION.SCORE_THRESHOLD === 0) {
-                        handleScoreSubmission(newScore, GAME_CONFIG.SCORE_SUBMISSION.TRANSACTION_THRESHOLD);
-                      }
-                      return newScore;
-                    });
+                    setGameScore(prev => prev + data); // Direct score from enemy defeat
                   }
                   break;
                 case 'waveComplete':
@@ -539,10 +498,6 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                     setGameScore(prev => {
                       const newScore = prev + waveBonus;
                       toast.success(`Wave ${data} completed! +${waveBonus} bonus points!`);
-                      // Check if we should auto-submit score based on threshold
-                      if (newScore > 0 && newScore % GAME_CONFIG.SCORE_SUBMISSION.SCORE_THRESHOLD === 0) {
-                        handleScoreSubmission(newScore, GAME_CONFIG.SCORE_SUBMISSION.TRANSACTION_THRESHOLD);
-                      }
                       return newScore;
                     });
                   }
