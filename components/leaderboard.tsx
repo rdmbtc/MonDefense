@@ -107,7 +107,7 @@ const Leaderboard: React.FC = () => {
                     {player.score.toLocaleString()}
                   </p>
                   <p className="text-xs text-gray-400">
-                    Games: {player.rank}
+                    Best Score
                   </p>
                 </div>
               </div>
