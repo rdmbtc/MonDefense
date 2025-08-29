@@ -23,7 +23,7 @@ export interface UserData {
     id: number;
     username: string;
     walletAddress: string;
-  };
+  } | null;
 }
 
 export interface SessionData {

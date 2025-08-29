@@ -54,6 +54,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const [hasSubmittedScore, setHasSubmittedScore] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isProcessingChapter, setIsProcessingChapter] = useState(false);
   
   // Use custom hooks for API integration
   const { authenticated, user, ready, logout, login } = usePrivy();
@@ -74,7 +75,9 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     ready
   });
   
-  const username = usernameData?.user?.username || 'Anonymous';
+  // Improved username logic with better fallback handling
+  const username = usernameData?.user?.username || null;
+  const displayName = username || (walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : 'Anonymous');
 
   // Chapter One assets (images 0-7, sounds for 1,3,5,6,7)
   const chapterAssets = [
@@ -90,67 +93,116 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
 
   // Handle chapter progression
   const nextChapterSlide = useCallback(async () => {
+    // Check authentication before allowing game progression
+    if (!authenticated || !walletAddress) {
+      toast.error('Please sign in with Monad Games ID to play!');
+      login();
+      return;
+    }
+
+    // Prevent rapid clicks
+    if (isProcessingChapter) {
+      return;
+    }
+    setIsProcessingChapter(true);
+
     try {
       // Initialize and play background music on first slide with user interaction
       if (chapterIndex === 0 && !backgroundMusicRef.current) {
-        // Try multiple background music sources
-        const bgMusicSources = [
-          '/Chapter%20One/background_music_chapter_one.mp3',
-          '/assets/bg_music.mp3',
-          '/assets/sounds/game/bgm_gameplay.mp3'
-        ];
-        
-        for (const source of bgMusicSources) {
-          try {
-            backgroundMusicRef.current = new Audio(source);
-            backgroundMusicRef.current.loop = true;
-            backgroundMusicRef.current.volume = 0.3;
-            await backgroundMusicRef.current.play();
-            console.log('Background music loaded successfully:', source);
-            break;
-          } catch (bgError) {
-            console.warn('Failed to load background music from:', source, bgError);
-            backgroundMusicRef.current = null;
-          }
+        try {
+          backgroundMusicRef.current = new Audio('/Chapter%20One/background_music_chapter_one.mp3');
+          backgroundMusicRef.current.loop = true;
+          backgroundMusicRef.current.volume = 0.3;
+          
+          // Add event listeners to handle loading
+          backgroundMusicRef.current.addEventListener('canplaythrough', () => {
+            if (backgroundMusicRef.current && backgroundMusicRef.current.paused) {
+              backgroundMusicRef.current.play().catch(error => {
+                console.warn('Background music play failed:', error);
+              });
+            }
+          });
+          
+          backgroundMusicRef.current.addEventListener('error', (error) => {
+            console.warn('Background music error:', error);
+          });
+          
+          // Load the audio
+          backgroundMusicRef.current.load();
+          console.log('Background music initialized');
+        } catch (bgError) {
+          console.warn('Failed to initialize background music:', bgError);
+          backgroundMusicRef.current = null;
         }
       } else if (chapterIndex === 0 && backgroundMusicRef.current && backgroundMusicRef.current.paused) {
-        await backgroundMusicRef.current.play();
+        try {
+          await backgroundMusicRef.current.play();
+        } catch (playError) {
+          console.warn('Background music play failed:', playError);
+        }
       }
 
       // Play sound effect for current slide if it exists (on user interaction)
       if (chapterAssets[chapterIndex].sound) {
+        // Clean up previous sound effect
         if (soundEffectRef.current) {
           soundEffectRef.current.pause();
           soundEffectRef.current.currentTime = 0;
+          soundEffectRef.current = null;
         }
         
         try {
           soundEffectRef.current = new Audio(chapterAssets[chapterIndex].sound!);
           soundEffectRef.current.volume = 0.7;
-          await soundEffectRef.current.play();
-          console.log('Sound effect played:', chapterAssets[chapterIndex].sound);
+          
+          // Add event listener for when audio can play
+          soundEffectRef.current.addEventListener('canplaythrough', () => {
+            if (soundEffectRef.current) {
+              soundEffectRef.current.play().catch(error => {
+                console.warn('Sound effect play failed:', error);
+              });
+            }
+          });
+          
+          soundEffectRef.current.addEventListener('error', (error) => {
+            console.warn('Sound effect error:', error);
+          });
+          
+          // Load the audio
+          soundEffectRef.current.load();
+          console.log('Sound effect loaded:', chapterAssets[chapterIndex].sound);
         } catch (sfxError) {
-          console.warn('Failed to play sound effect:', chapterAssets[chapterIndex].sound, sfxError);
+          console.warn('Failed to load sound effect:', chapterAssets[chapterIndex].sound, sfxError);
         }
       }
     } catch (error) {
       console.warn('Chapter audio playback failed:', error);
     }
 
-    // Advance to next slide after a short delay to let audio start
+    // Advance to next slide after a delay to let audio start
     setTimeout(() => {
       if (chapterIndex < chapterAssets.length - 1) {
         setChapterIndex(chapterIndex + 1);
       } else {
         // End of chapter, start the game
+        // Double-check authentication before starting game
+        if (!authenticated || !walletAddress) {
+          toast.error('Authentication required to start the game!');
+          login();
+          setIsProcessingChapter(false);
+          return;
+        }
+        
         if (backgroundMusicRef.current) {
           backgroundMusicRef.current.pause();
           backgroundMusicRef.current.currentTime = 0;
+          backgroundMusicRef.current = null;
         }
         setGameMode('game');
         setGameStarted(true);
       }
-    }, 100);
+      setIsProcessingChapter(false);
+    }, 500); // Increased delay to allow audio to load
   }, [chapterIndex, chapterAssets]);
 
   // Handle keyboard events for chapter
@@ -194,8 +246,23 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       return false;
     }
 
-    if (!walletAddress || !sessionToken || !sessionId) {
-      toast.error('Authentication required for score submission');
+    // Enhanced authentication checks
+    if (!authenticated || !walletAddress || !sessionToken || !sessionId) {
+      console.error('Missing required data for score submission:', {
+        authenticated,
+        walletAddress: !!walletAddress,
+        sessionToken: !!sessionToken,
+        sessionId: !!sessionId
+      });
+      toast.error('Please sign in with Monad Games ID to submit scores!');
+      login();
+      return false;
+    }
+
+    // Check if user has a registered username
+    if (!username) {
+      toast.error('Please register a username at Monad Games ID to submit scores!');
+      window.open('https://monad-games-id-site.vercel.app/', '_blank');
       return false;
     }
 
@@ -382,6 +449,14 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           <Button 
             onClick={(e) => {
               e.stopPropagation();
+              
+              // Check authentication before skipping to game
+              if (!authenticated || !walletAddress) {
+                toast.error('Please sign in with Monad Games ID to play!');
+                login();
+                return;
+              }
+              
               if (backgroundMusicRef.current) {
                 backgroundMusicRef.current.pause();
                 backgroundMusicRef.current.currentTime = 0;
@@ -441,7 +516,10 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               {username ? (
                 <span className="text-white text-sm font-medium">Welcome, {username}!</span>
               ) : walletAddress ? (
-                <span className="text-white text-sm">{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
+                <div className="flex flex-col">
+                  <span className="text-white text-sm">{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
+                  <span className="text-yellow-400 text-xs">No username registered</span>
+                </div>
               ) : (
                 <span className="text-white text-sm">Authenticated</span>
               )}
@@ -496,7 +574,20 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
 
       {/* Game Container */}
       <div className="w-full h-screen flex items-center justify-center">
-        {gameMode === 'game' && gameStarted ? (
+        {!authenticated || !walletAddress ? (
+          <div className="text-center text-white">
+            <div className="mb-8">
+              <h2 className="text-3xl font-bold mb-4">🛡️ Mon Defense</h2>
+              <p className="text-lg mb-6">Sign in with Monad Games ID to start playing!</p>
+              <Button 
+                onClick={login}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
+              >
+                Sign in with Monad Games ID
+              </Button>
+            </div>
+          </div>
+        ) : gameMode === 'game' && gameStarted ? (
           <ClientWrapper 
             key="defense-game-instance"
             farmCoins={farmCoins}
