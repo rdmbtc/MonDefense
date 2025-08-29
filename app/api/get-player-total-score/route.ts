@@ -27,7 +27,9 @@ function setCachedPlayerData(walletAddress: string, data: any) {
   // Clean up old entries to prevent memory leaks
   if (playerDataCache.size > 100) {
     const oldestKey = playerDataCache.keys().next().value;
-    playerDataCache.delete(oldestKey);
+    if (oldestKey !== undefined) {
+      playerDataCache.delete(oldestKey);
+    }
   }
 }
 
