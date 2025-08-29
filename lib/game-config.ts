@@ -1,8 +1,5 @@
 // Game configuration
 export const GAME_CONFIG = {
-  // Your registered game address (original)
-  GAME_ADDRESS: '0x33d8711368801358714dc11d03c1c130ba5ca342',
-  
   // Monad Games ID Smart Contract Integration
   BLOCKCHAIN: {
     // Monad Games ID smart contract address for UpdatePlayerData()

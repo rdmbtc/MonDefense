@@ -91,7 +91,7 @@ export async function updatePlayerDataOnChain(
 export async function getPlayerTotalScore(playerAddress: string) {
   try {
     const totalScore = await publicClient.readContract({
-      address: GAME_CONFIG.GAME_ADDRESS as `0x${string}`,
+      address: GAME_CONFIG.BLOCKCHAIN.MONAD_GAMES_ID_CONTRACT as `0x${string}`,
       abi: CONTRACT_ABI,
       functionName: 'totalScoreOfPlayer',
       args: [playerAddress as `0x${string}`],

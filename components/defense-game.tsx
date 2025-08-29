@@ -225,7 +225,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [walletAddress, sessionToken, sessionId, gameSession.submitScore, onchainSubmission]);
+  }, [walletAddress, sessionToken, sessionId, gameSession.submitScore]);
 
 
 
@@ -288,7 +288,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         soundEffectRef.current.pause();
       }
     };
-  }, [gameMode, handleScoreSubmission]);
+  }, [gameMode, walletAddress, sessionToken, sessionId]);
 
 
 
