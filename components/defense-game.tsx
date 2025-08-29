@@ -90,27 +90,46 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
 
   // Handle chapter progression
   const nextChapterSlide = useCallback(async () => {
-    // Ensure audio context is activated on user interaction
-    if (chapterIndex === 0 && backgroundMusicRef.current && backgroundMusicRef.current.paused) {
-      try {
+    try {
+      // Initialize and play background music on first slide with user interaction
+      if (chapterIndex === 0 && !backgroundMusicRef.current) {
+        backgroundMusicRef.current = new Audio('/Chapter%20One/background_music_chapter_one.mp3');
+        backgroundMusicRef.current.loop = true;
+        backgroundMusicRef.current.volume = 0.3;
         await backgroundMusicRef.current.play();
-      } catch (error) {
-        console.warn('Background music failed to start:', error);
+      } else if (chapterIndex === 0 && backgroundMusicRef.current && backgroundMusicRef.current.paused) {
+        await backgroundMusicRef.current.play();
       }
+
+      // Play sound effect for current slide if it exists (on user interaction)
+      if (chapterAssets[chapterIndex].sound) {
+        if (soundEffectRef.current) {
+          soundEffectRef.current.pause();
+          soundEffectRef.current.currentTime = 0;
+        }
+        soundEffectRef.current = new Audio(chapterAssets[chapterIndex].sound!);
+        soundEffectRef.current.volume = 0.7;
+        await soundEffectRef.current.play();
+      }
+    } catch (error) {
+      console.warn('Chapter audio playback failed:', error);
     }
 
-    if (chapterIndex < chapterAssets.length - 1) {
-      setChapterIndex(chapterIndex + 1);
-    } else {
-      // End of chapter, start the game
-      if (backgroundMusicRef.current) {
-        backgroundMusicRef.current.pause();
-        backgroundMusicRef.current.currentTime = 0;
+    // Advance to next slide after a short delay to let audio start
+    setTimeout(() => {
+      if (chapterIndex < chapterAssets.length - 1) {
+        setChapterIndex(chapterIndex + 1);
+      } else {
+        // End of chapter, start the game
+        if (backgroundMusicRef.current) {
+          backgroundMusicRef.current.pause();
+          backgroundMusicRef.current.currentTime = 0;
+        }
+        setGameMode('game');
+        setGameStarted(true);
       }
-      setGameMode('game');
-      setGameStarted(true);
-    }
-  }, [chapterIndex, chapterAssets.length]);
+    }, 100);
+  }, [chapterIndex, chapterAssets]);
 
   // Handle keyboard events for chapter
   useEffect(() => {
@@ -125,38 +144,10 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     return () => window.removeEventListener('keydown', handleKeyPress);
   }, [gameMode, chapterIndex, nextChapterSlide]);
 
-  // Initialize and play audio
-  const playChapterAudio = useCallback(async () => {
-    try {
-      // Initialize background music on first slide
-      if (chapterIndex === 0 && !backgroundMusicRef.current) {
-        backgroundMusicRef.current = new Audio('/Chapter%20One/background_music_chapter_one.mp3');
-        backgroundMusicRef.current.loop = true;
-        backgroundMusicRef.current.volume = 0.3;
-        await backgroundMusicRef.current.play();
-      }
+  // Audio is now handled directly in nextChapterSlide on user interaction
 
-      // Play sound effect for current slide if it exists
-      if (chapterAssets[chapterIndex].sound) {
-        if (soundEffectRef.current) {
-          soundEffectRef.current.pause();
-          soundEffectRef.current.currentTime = 0;
-        }
-        soundEffectRef.current = new Audio(chapterAssets[chapterIndex].sound!);
-        soundEffectRef.current.volume = 0.7;
-        await soundEffectRef.current.play();
-      }
-    } catch (error) {
-      console.warn('Audio playback failed:', error);
-    }
-  }, [chapterIndex]);
-
-  // Play background music and sound effects for chapter
-  useEffect(() => {
-    if (gameMode === 'chapter') {
-      playChapterAudio();
-    }
-  }, [gameMode, chapterIndex, playChapterAudio]);
+  // Note: Audio is now handled in nextChapterSlide on user interaction
+  // This prevents browser autoplay restrictions
 
   // Start game session when user is authenticated
   useEffect(() => {

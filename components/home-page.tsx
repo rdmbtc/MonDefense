@@ -88,6 +88,7 @@ export default function HomePage() {
   const startTrailer = useCallback(async () => {
     setGameMode('trailer');
     setTrailerIndex(0);
+    setFirstInteraction(true); // Reset first interaction flag
     // Audio will be played on first user interaction (click/spacebar)
   }, []);
 
@@ -96,32 +97,36 @@ export default function HomePage() {
     setGameMode('home');
   }, []);
 
+  // Track if this is the first interaction
+  const [firstInteraction, setFirstInteraction] = useState(true);
+
   // Handle trailer progression
   const nextTrailerSlide = useCallback(async () => {
-    // Play audio for current slide first
     try {
-      // Initialize background music on first slide only after user interaction
-      if (trailerIndex === 0 && !backgroundMusicRef.current) {
-        backgroundMusicRef.current = new Audio('/Trailer/background_music_trailer.mp3');
-        backgroundMusicRef.current.loop = true;
-        backgroundMusicRef.current.volume = 0.3;
-        await backgroundMusicRef.current.play();
+      // On first interaction, initialize background music and play current slide audio
+      if (firstInteraction) {
+        // Initialize background music
+        if (!backgroundMusicRef.current) {
+          backgroundMusicRef.current = new Audio('/Trailer/background_music_trailer.mp3');
+          backgroundMusicRef.current.loop = true;
+          backgroundMusicRef.current.volume = 0.3;
+          await backgroundMusicRef.current.play();
+        }
+
+        // Play sound effect for current slide (0.wav for 0.png)
+        if (soundEffectRef.current) {
+          soundEffectRef.current.pause();
+          soundEffectRef.current.currentTime = 0;
+        }
+        soundEffectRef.current = new Audio(trailerAssets[trailerIndex].sound);
+        soundEffectRef.current.volume = 0.7;
+        await soundEffectRef.current.play();
+        
+        setFirstInteraction(false);
+        return; // Stay on current slide after first interaction
       }
 
-      // Play sound effect for current slide
-      if (soundEffectRef.current) {
-        soundEffectRef.current.pause();
-        soundEffectRef.current.currentTime = 0;
-      }
-      soundEffectRef.current = new Audio(trailerAssets[trailerIndex].sound);
-      soundEffectRef.current.volume = 0.7;
-      await soundEffectRef.current.play();
-    } catch (error) {
-      console.warn('Audio playback failed:', error);
-    }
-
-    // Then advance to next slide after a delay
-    setTimeout(() => {
+      // For subsequent interactions, advance to next slide and play its audio
       if (trailerIndex >= trailerAssets.length - 1) {
         // End of trailer, go to main menu
         if (backgroundMusicRef.current) {
@@ -130,10 +135,26 @@ export default function HomePage() {
         }
         setGameMode('home');
       } else {
-        setTrailerIndex(trailerIndex + 1);
+        // Advance to next slide
+        const nextIndex = trailerIndex + 1;
+        setTrailerIndex(nextIndex);
+        
+        // Play audio for the new slide
+        if (soundEffectRef.current) {
+          soundEffectRef.current.pause();
+          soundEffectRef.current.currentTime = 0;
+        }
+        soundEffectRef.current = new Audio(trailerAssets[nextIndex].sound);
+        soundEffectRef.current.volume = 0.7;
+        await soundEffectRef.current.play();
       }
-    }, 100);
-  }, [trailerIndex, trailerAssets]);
+    } catch (error) {
+      console.warn('Audio playback failed:', error);
+      if (firstInteraction) {
+        setFirstInteraction(false);
+      }
+    }
+  }, [trailerIndex, trailerAssets, firstInteraction]);
 
   // Handle keyboard events for trailer
   useEffect(() => {
