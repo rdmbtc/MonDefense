@@ -78,14 +78,14 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
 
   // Chapter One assets (images 0-7, sounds for 1,3,5,6,7)
   const chapterAssets = [
-    { image: '/Chapter%20One/0.png', sound: null },
-    { image: '/Chapter%20One/1.png', sound: '/Chapter%20One/1.wav' },
-    { image: '/Chapter%20One/2.png', sound: null },
-    { image: '/Chapter%20One/3.png', sound: '/Chapter%20One/3.wav' },
-    { image: '/Chapter%20One/4.png', sound: null },
-    { image: '/Chapter%20One/5.png', sound: '/Chapter%20One/5.wav' },
-    { image: '/Chapter%20One/6.png', sound: '/Chapter%20One/6.wav' },
-    { image: '/Chapter%20One/7.png', sound: '/Chapter%20One/7.wav' }
+    { image: '/Chapter One/0.png', sound: null },
+    { image: '/Chapter One/1.png', sound: '/Chapter One/1.wav' },
+    { image: '/Chapter One/2.png', sound: null },
+    { image: '/Chapter One/3.png', sound: '/Chapter One/3.wav' },
+    { image: '/Chapter One/4.png', sound: null },
+    { image: '/Chapter One/5.png', sound: '/Chapter One/5.wav' },
+    { image: '/Chapter One/6.png', sound: '/Chapter One/6.wav' },
+    { image: '/Chapter One/7.png', sound: '/Chapter One/7.wav' }
   ];
 
   // Handle chapter progression
@@ -93,10 +93,26 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     try {
       // Initialize and play background music on first slide with user interaction
       if (chapterIndex === 0 && !backgroundMusicRef.current) {
-        backgroundMusicRef.current = new Audio('/Chapter%20One/background_music_chapter_one.mp3');
-        backgroundMusicRef.current.loop = true;
-        backgroundMusicRef.current.volume = 0.3;
-        await backgroundMusicRef.current.play();
+        // Try multiple background music sources
+        const bgMusicSources = [
+          '/Chapter One/background_music_chapter_one.mp3',
+          '/assets/bg_music.mp3',
+          '/assets/sounds/game/bgm_gameplay.mp3'
+        ];
+        
+        for (const source of bgMusicSources) {
+          try {
+            backgroundMusicRef.current = new Audio(source);
+            backgroundMusicRef.current.loop = true;
+            backgroundMusicRef.current.volume = 0.3;
+            await backgroundMusicRef.current.play();
+            console.log('Background music loaded successfully:', source);
+            break;
+          } catch (bgError) {
+            console.warn('Failed to load background music from:', source, bgError);
+            backgroundMusicRef.current = null;
+          }
+        }
       } else if (chapterIndex === 0 && backgroundMusicRef.current && backgroundMusicRef.current.paused) {
         await backgroundMusicRef.current.play();
       }
@@ -107,9 +123,15 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           soundEffectRef.current.pause();
           soundEffectRef.current.currentTime = 0;
         }
-        soundEffectRef.current = new Audio(chapterAssets[chapterIndex].sound!);
-        soundEffectRef.current.volume = 0.7;
-        await soundEffectRef.current.play();
+        
+        try {
+          soundEffectRef.current = new Audio(chapterAssets[chapterIndex].sound!);
+          soundEffectRef.current.volume = 0.7;
+          await soundEffectRef.current.play();
+          console.log('Sound effect played:', chapterAssets[chapterIndex].sound);
+        } catch (sfxError) {
+          console.warn('Failed to play sound effect:', chapterAssets[chapterIndex].sound, sfxError);
+        }
       }
     } catch (error) {
       console.warn('Chapter audio playback failed:', error);
