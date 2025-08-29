@@ -88,9 +88,8 @@ export default function HomePage() {
   const startTrailer = useCallback(async () => {
     setGameMode('trailer');
     setTrailerIndex(0);
-    // Play audio immediately since clicking "Watch Trailer" is user interaction
-    await playAudio(true);
-  }, [playAudio]);
+    // Audio will be played on first user interaction (click/spacebar)
+  }, []);
 
   // Handle skip trailer button
   const skipTrailer = useCallback(() => {
@@ -99,19 +98,22 @@ export default function HomePage() {
 
   // Handle trailer progression
   const nextTrailerSlide = useCallback(async () => {
-    // Play audio on user interaction
+    // Play audio for current slide on user interaction
     await playAudio(true);
 
-    if (trailerIndex < trailerAssets.length - 1) {
-      setTrailerIndex(trailerIndex + 1);
-    } else {
-      // End of trailer, go to main menu
-      if (backgroundMusicRef.current) {
-        backgroundMusicRef.current.pause();
-        backgroundMusicRef.current.currentTime = 0;
+    // Advance to next slide after a short delay to let audio start
+    setTimeout(() => {
+      if (trailerIndex < trailerAssets.length - 1) {
+        setTrailerIndex(trailerIndex + 1);
+      } else {
+        // End of trailer, go to main menu
+        if (backgroundMusicRef.current) {
+          backgroundMusicRef.current.pause();
+          backgroundMusicRef.current.currentTime = 0;
+        }
+        setGameMode('home');
       }
-      setGameMode('home');
-    }
+    }, 100);
   }, [trailerIndex, trailerAssets.length, playAudio]);
 
   // Handle keyboard events for trailer
