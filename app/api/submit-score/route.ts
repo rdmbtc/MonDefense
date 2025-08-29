@@ -20,10 +20,10 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate score and transaction amounts are positive
-    if (scoreAmount <= 0 || transactionAmount <= 0) {
+    // Validate score and transaction amounts are non-negative
+    if (scoreAmount < 0 || transactionAmount < 0) {
       return NextResponse.json(
-        { error: "Score and transaction amounts must be positive" },
+        { error: "Score and transaction amounts must be non-negative" },
         { status: 400 }
       );
     }
