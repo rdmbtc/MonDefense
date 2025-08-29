@@ -42,5 +42,6 @@ export const apiEndpoints = {
   startGameSession: "/api/start-game-session",
   endGameSession: "/api/end-game-session",
   submitScore: "/api/submit-score",
+  submitScoreOnchain: "/api/submit-score-onchain",
   leaderBoard: "/api/leaderboard",
 } as const;

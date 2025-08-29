@@ -1,7 +1,22 @@
 // Game configuration
 export const GAME_CONFIG = {
-  // Your registered game address
+  // Your registered game address (original)
   GAME_ADDRESS: '0x33d8711368801358714dc11d03c1c130ba5ca342',
+  
+  // Monad Games ID Smart Contract Integration
+  BLOCKCHAIN: {
+    // Monad Games ID smart contract address for UpdatePlayerData()
+    MONAD_GAMES_ID_CONTRACT: '0xceCBFF203C8B6044F52CE23D914A1bfD997541A4',
+    
+    // Signer wallet address for on-chain transactions
+    SIGNER_WALLET: '0xD138925168aD03fEe0Cca73cD949F1077C82c093',
+    
+    // Game ID for leaderboard integration
+    GAME_ID: '119',
+    
+    // Leaderboard URL
+    LEADERBOARD_URL: 'https://monad-games-id-site.vercel.app/leaderboard?page=1&gameId=119'
+  },
   
   // Game settings
   SCORE_SUBMISSION: {

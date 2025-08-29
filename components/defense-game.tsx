@@ -14,6 +14,7 @@ import { usePlayerTotalScore } from '@/hooks/usePlayerTotalScore';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { useCrossAppAccount } from '@/hooks/useCrossAppAccount';
 import { useUsername } from '@/hooks/useUsername';
+import { useOnchainScoreSubmissionWithRetry } from '@/hooks/useOnchainScoreSubmission';
 import { GAME_CONFIG } from '@/lib/game-config';
 
 // Extend Window interface to include custom properties
@@ -61,6 +62,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const { data: playerStats } = usePlayerTotalScore(walletAddress, gameStarted, false);
   const { data: leaderboardData } = useLeaderboard(1);
   const gameSession = useGameSession(sessionToken);
+  const onchainSubmission = useOnchainScoreSubmissionWithRetry();
   
   // Debug username retrieval
   console.log('Username debug info:', {
@@ -171,7 +173,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     }
   }, [gameSession.startGameSession.data]);
 
-  // Handle score submission using the game session hook
+  // Handle score submission using both API and on-chain submission
   const handleScoreSubmission = useCallback(async (score: number, transactionCount: number = 1): Promise<boolean> => {
     if (!walletAddress || !sessionToken || !sessionId) {
       toast.error('Authentication required for score submission');
@@ -180,8 +182,9 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
 
     try {
       setIsSubmitting(true);
-      console.log('Submitting score via API:', score);
+      console.log('Submitting score via API and on-chain:', score);
       
+      // Submit to existing API
       await gameSession.submitScore.mutateAsync({
         player: walletAddress,
         scoreAmount: score,
@@ -189,8 +192,31 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         sessionId: sessionId
       });
 
+      // Submit to Monad Games ID smart contract on-chain
+      try {
+        const onchainResult = await onchainSubmission.submitWithRetry(
+          walletAddress,
+          score,
+          transactionCount,
+          2 // max retries
+        );
+        
+        if (onchainResult.success) {
+          console.log('On-chain submission successful:', {
+            transactionHash: onchainResult.transactionHash,
+            gameId: GAME_CONFIG.BLOCKCHAIN.GAME_ID
+          });
+          toast.success(`Score submitted! TX: ${onchainResult.transactionHash?.slice(0, 8)}...`);
+        } else {
+          console.warn('On-chain submission failed, but API submission succeeded');
+          toast.success('Score submitted to API (on-chain failed)');
+        }
+      } catch (onchainError) {
+        console.warn('On-chain submission failed:', onchainError);
+        toast.success('Score submitted to API (on-chain failed)');
+      }
+
       setHasSubmittedScore(true);
-      toast.success('Score submitted successfully!');
       return true;
     } catch (error) {
       console.error('Error submitting score:', error);
@@ -199,7 +225,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [walletAddress, sessionToken, sessionId, gameSession.submitScore]);
+  }, [walletAddress, sessionToken, sessionId, gameSession.submitScore, onchainSubmission]);
 
 
 
