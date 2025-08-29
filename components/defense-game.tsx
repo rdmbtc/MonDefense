@@ -175,6 +175,12 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
 
   // Handle score submission using both API and on-chain submission
   const handleScoreSubmission = useCallback(async (score: number, transactionCount: number = 1): Promise<boolean> => {
+    // Prevent multiple submissions
+    if (isSubmitting) {
+      console.log('Score submission already in progress, ignoring duplicate call');
+      return false;
+    }
+
     if (!walletAddress || !sessionToken || !sessionId) {
       toast.error('Authentication required for score submission');
       return false;
@@ -225,7 +231,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [walletAddress, sessionToken, sessionId, gameSession.submitScore]);
+  }, [walletAddress, sessionToken, sessionId, gameSession.submitScore, isSubmitting]);
 
 
 
@@ -244,6 +250,12 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       // Expose global function for Phaser game to call directly
       window.submitGameScore = async (score: number, transactionCount: number): Promise<boolean> => {
         try {
+          // Prevent multiple submissions - check if already submitted or submitting
+          if (hasSubmittedScore || isSubmitting) {
+            console.log('Score already submitted or submission in progress');
+            return false;
+          }
+
           // Only submit if user is authenticated and has session token
           if (walletAddress && sessionToken && sessionId) {
             const result = await handleScoreSubmission(score, transactionCount);
@@ -288,7 +300,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         soundEffectRef.current.pause();
       }
     };
-  }, [gameMode, walletAddress, sessionToken, sessionId]);
+  }, [gameMode, walletAddress, sessionToken, sessionId, hasSubmittedScore, isSubmitting, handleScoreSubmission]);
 
 
 
@@ -507,8 +519,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                   if (onGameEnd && gameScore > 0) {
                     onGameEnd(gameScore);
                   }
-                  // Submit score via API
-                  handleScoreSubmission(gameScore);
+                  // Score submission is handled by the Phaser game's submit button
                   break;
                 case 'gameWon':
                   const victoryBonus = 5000;
@@ -518,8 +529,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                   if (onGameEnd) {
                     onGameEnd(finalScore);
                   }
-                  // Submit final score via API
-                  handleScoreSubmission(finalScore);
+                  // Score submission is handled by the Phaser game's submit button
                   break;
                 default:
                   break;

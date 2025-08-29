@@ -72,15 +72,32 @@ export function useOnchainScoreSubmissionWithRetry() {
         if (result.success) {
           return result;
         } else {
-          lastError = new Error(result.error || 'Unknown error');
-          console.warn(`On-chain submission attempt ${attempt} failed:`, result.error);
+          // If we get a response but it failed, don't retry as the transaction may have been processed
+          // Only retry on network/API errors, not blockchain transaction failures
+          console.error('On-chain submission failed (no retry):', result.error);
+          throw new Error(result.error || 'Blockchain transaction failed');
         }
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown error');
-        console.warn(`On-chain submission attempt ${attempt} failed:`, error);
+        
+        // Only retry on network/connection errors, not on blockchain transaction errors
+        const isNetworkError = error instanceof Error && (
+          error.message.includes('fetch') ||
+          error.message.includes('network') ||
+          error.message.includes('timeout') ||
+          error.message.includes('ECONNREFUSED') ||
+          error.message.includes('500')
+        );
+        
+        if (!isNetworkError) {
+          console.error('Non-retryable error:', error);
+          throw lastError;
+        }
+        
+        console.warn(`Network error on attempt ${attempt}, will retry:`, error);
       }
       
-      // Wait before retry (exponential backoff)
+      // Wait before retry (exponential backoff) - only for network errors
       if (attempt < maxRetries) {
         const delay = Math.pow(2, attempt) * 1000; // 2s, 4s, 8s...
         await new Promise(resolve => setTimeout(resolve, delay));

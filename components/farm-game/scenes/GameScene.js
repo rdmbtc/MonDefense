@@ -104,6 +104,7 @@ if (isBrowser) {
           this.soundManager = null; // Will be initialized in create()
           this.lastEnemyCleanupTime = 0; // Add this property to track cleanup timing
           this.volumeControls = null; // Add property for volume controls
+          this.isSubmittingScore = false; // Flag to prevent multiple score submissions
         }
         
         init(data) {
@@ -1044,6 +1045,9 @@ if (isBrowser) {
         // Start the game
         startGame() {
           try {
+            // Reset submission flag for new game
+            this.isSubmittingScore = false;
+            
             // --- Add log ---
             console.log("startGame: Initiated. Preparing to clean up previous game...");
             // --- End log ---
@@ -4801,6 +4805,14 @@ if (isBrowser) {
 
         // Add method to submit score via API
         async submitScore(score, waves) {
+          // Prevent multiple submissions
+          if (this.isSubmittingScore) {
+            console.log('Score submission already in progress, ignoring duplicate request');
+            return;
+          }
+          
+          this.isSubmittingScore = true;
+          
           try {
             console.log(`Submitting score: Score=${score}, Waves=${waves}`);
             
@@ -4872,6 +4884,9 @@ if (isBrowser) {
                 errorText.destroy();
               }
             });
+          } finally {
+            // Reset submission flag
+            this.isSubmittingScore = false;
           }
         }
 

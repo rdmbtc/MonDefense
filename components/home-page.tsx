@@ -98,21 +98,23 @@ export default function HomePage() {
 
   // Handle trailer progression
   const nextTrailerSlide = useCallback(async () => {
+    // First check if we're at the end
+    if (trailerIndex >= trailerAssets.length - 1) {
+      // End of trailer, go to main menu
+      if (backgroundMusicRef.current) {
+        backgroundMusicRef.current.pause();
+        backgroundMusicRef.current.currentTime = 0;
+      }
+      setGameMode('home');
+      return;
+    }
+
     // Play audio for current slide on user interaction
     await playAudio(true);
 
     // Advance to next slide after a short delay to let audio start
     setTimeout(() => {
-      if (trailerIndex < trailerAssets.length - 1) {
-        setTrailerIndex(trailerIndex + 1);
-      } else {
-        // End of trailer, go to main menu
-        if (backgroundMusicRef.current) {
-          backgroundMusicRef.current.pause();
-          backgroundMusicRef.current.currentTime = 0;
-        }
-        setGameMode('home');
-      }
+      setTrailerIndex(trailerIndex + 1);
     }, 100);
   }, [trailerIndex, trailerAssets.length, playAudio]);
 
