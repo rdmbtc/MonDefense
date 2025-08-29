@@ -48,6 +48,14 @@ export async function getPlayerData(playerAddress: string) {
     };
   } catch (error) {
     console.error('Error reading player data:', error);
+    
+    // Check if it's a rate limit error and preserve the original error
+    const errorMessage = (error as Error).message;
+    if (errorMessage.includes('429') || errorMessage.includes('request limit reached')) {
+      // Re-throw the original error to preserve all details for the API layer
+      throw error;
+    }
+    
     throw new Error('Failed to read player data from contract');
   }
 }

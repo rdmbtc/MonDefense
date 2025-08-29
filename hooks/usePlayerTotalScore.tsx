@@ -28,10 +28,19 @@ export function usePlayerTotalScore(
       return data;
     },
     enabled: !!walletAddress,
-    staleTime: 0,
-    gcTime: 1000 * 60 * 2,
-    retry: 20,
-    refetchInterval: shouldRefetch ? 5000 : false,
-    refetchIntervalInBackground: shouldRefetch,
+    staleTime: 1000 * 30, // Cache for 30 seconds to reduce API calls
+    gcTime: 1000 * 60 * 5, // Keep in cache for 5 minutes
+    retry: (failureCount, error: any) => {
+      // Don't retry on rate limit errors (429)
+      if (error?.response?.status === 429) {
+        console.warn('Rate limit hit, not retrying');
+        return false;
+      }
+      // Only retry up to 3 times for other errors
+      return failureCount < 3;
+    },
+    retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000), // Exponential backoff
+    refetchInterval: shouldRefetch ? 15000 : false, // Reduced from 5s to 15s
+    refetchIntervalInBackground: false, // Don't refetch in background to reduce load
   });
 }
