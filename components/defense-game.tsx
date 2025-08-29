@@ -216,7 +216,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
-  }, [gameMode, chapterIndex, nextChapterSlide]);
+  }, [gameMode]);
 
   // Audio is now handled directly in nextChapterSlide on user interaction
 
@@ -228,7 +228,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     if (authenticated && walletAddress && !sessionId) {
       gameSession.startGameSession.mutate({ walletAddress });
     }
-  }, [authenticated, walletAddress, sessionId, gameSession.startGameSession]);
+  }, [authenticated, walletAddress, sessionId]);
 
   // Handle session token from game session hook
   useEffect(() => {
