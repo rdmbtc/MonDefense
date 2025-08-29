@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { randomUUID } from "crypto";
+import { sessionManager } from "@/lib/session-manager";
 
 export async function POST(request: Request) {
   try {
@@ -14,16 +15,23 @@ export async function POST(request: Request) {
     }
 
     const sessionId = randomUUID();
+    const startTime = Date.now();
+
+    // Create session using shared session manager
+    sessionManager.createSession(sessionId, walletAddress);
 
     const sessionToken = jwt.sign(
       {
         player: walletAddress,
         sessionId,
+        startTime,
         iat: Math.floor(Date.now() / 1000),
       },
       process.env.JWT_SECRET!,
       { expiresIn: "2h" } // Session expires in 2 hours
     );
+
+    console.log(`Started game session: ${sessionId} for player: ${walletAddress}`);
 
     return NextResponse.json({
       success: true,

@@ -1,29 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { SessionData } from "@/types";
-
-// In-memory session tracking (matches submit-score implementation)
-const activeSessions = new Map<
-  string,
-  {
-    sessionId: string;
-    player: string;
-    startTime: number;
-    lastActivity: number;
-  }
->();
-
-// Session statistics tracking
-const sessionStats = new Map<
-  string,
-  {
-    totalScore: number;
-    totalTransactions: number;
-    submissionCount: number;
-    startTime: number;
-    endTime?: number;
-  }
->();
+import { sessionManager } from "@/lib/session-manager";
 
 export async function POST(request: NextRequest) {
   try {
@@ -71,7 +49,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 4. VALIDATE SESSION EXISTS AND IS ACTIVE
-    const activeSession = activeSessions.get(sessionId);
+    const activeSession = sessionManager.getActiveSession(sessionId);
     if (!activeSession) {
       // Session might not be tracked in memory (server restart), but JWT is valid
       console.warn(
@@ -89,45 +67,22 @@ export async function POST(request: NextRequest) {
     const sessionDuration = endTime - sessionData.startTime;
     const sessionDurationMinutes = Math.round(sessionDuration / 60000);
 
-    // 6. COLLECT FINAL SESSION STATISTICS
-    const currentStats = sessionStats.get(sessionId) || {
+    // 6. COLLECT FINAL SESSION STATISTICS AND END SESSION
+    const currentStats = sessionManager.endSession(sessionId) || {
       totalScore: 0,
       totalTransactions: 0,
       submissionCount: 0,
       startTime: sessionData.startTime,
+      endTime: endTime,
     };
 
-    // 7. SESSION CLEANUP
-    try {
-      // Remove from active sessions
-      if (activeSessions.has(sessionId)) {
-        activeSessions.delete(sessionId);
-        console.log(`Removed session ${sessionId} from active sessions`);
-      }
-
-      // Archive session statistics (in production, save to database)
-      sessionStats.set(sessionId, currentStats);
-
-      // Clean up old session stats (keep last 1000 sessions to prevent memory issues)
-      if (sessionStats.size > 1000) {
-        const oldestSessionIds = Array.from(sessionStats.keys()).slice(
-          0,
-          -1000
-        );
-        oldestSessionIds.forEach(id => sessionStats.delete(id));
-      }
-
-      console.log(`Successfully ended game session: ${sessionId}`, {
-        player: sessionData.player,
-        duration: sessionDurationMinutes,
-        totalScore: currentStats.totalScore,
-        totalTransactions: currentStats.totalTransactions,
-        submissionCount: currentStats.submissionCount,
-      });
-    } catch (cleanupError) {
-      console.error("Error during session cleanup:", cleanupError);
-      // Continue with response even if cleanup partially fails
-    }
+    console.log(`Successfully ended game session: ${sessionId}`, {
+      player: sessionData.player,
+      duration: sessionDurationMinutes,
+      totalScore: currentStats.totalScore,
+      totalTransactions: currentStats.totalTransactions,
+      submissionCount: currentStats.submissionCount,
+    });
 
     // 8. RETURN SUCCESS RESPONSE WITH SESSION SUMMARY
     return NextResponse.json(

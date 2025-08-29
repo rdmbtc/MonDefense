@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
 import { SessionData } from "@/types";
+import { sessionManager } from "@/lib/session-manager";
 
 export async function POST(request: Request) {
   try {
@@ -55,13 +56,24 @@ export async function POST(request: Request) {
       );
     }
 
-    // 3. PROCESS SCORE SUBMISSION
+    // 3. UPDATE SESSION TRACKING
+    sessionManager.updateSessionActivity(sessionId);
+    
+    // Update session statistics
+    const currentStats = sessionManager.updateSessionStats(
+      sessionId,
+      scoreAmount,
+      transactionAmount
+    );
+
+    // 4. PROCESS SCORE SUBMISSION
     console.log("Processing score submission with data:", {
       player,
       scoreAmount,
       transactionAmount,
       sessionId,
-      sessionData
+      sessionData,
+      updatedStats: currentStats
     });
 
     // Generate a mock transaction hash for consistency
@@ -73,6 +85,8 @@ export async function POST(request: Request) {
       transactionAmount,
       transactionHash: mockTransactionHash,
       sessionId,
+      totalSessionScore: currentStats.totalScore,
+      totalSubmissions: currentStats.submissionCount,
     });
 
     return NextResponse.json({
