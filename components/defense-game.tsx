@@ -259,11 +259,10 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       return false;
     }
 
-    // Check if user has a registered username
+    // Check if user has a registered username (optional - allow submission without username)
     if (!username) {
-      toast.error('Please register a username at Monad Games ID to submit scores!');
-      window.open('https://monad-games-id-site.vercel.app/', '_blank');
-      return false;
+      console.log('No username found, but allowing score submission with wallet address');
+      toast.info('Consider registering a username at Monad Games ID for better leaderboard display!');
     }
 
     try {
