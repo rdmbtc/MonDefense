@@ -51,13 +51,16 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const backgroundMusicPlayPromise = useRef<Promise<void> | null>(null);
   const soundEffectPlayPromise = useRef<Promise<void> | null>(null);
   
+  // Audio state management
+  const [audioBlocked, setAudioBlocked] = useState(false);
+  const [firstChapterInteraction, setFirstChapterInteraction] = useState(true);
+  
   // API integration state
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hasSubmittedScore, setHasSubmittedScore] = useState(false);
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isProcessingChapter, setIsProcessingChapter] = useState(false);
-  const [firstChapterInteraction, setFirstChapterInteraction] = useState(true);
   
   // Use custom hooks for API integration
   const { authenticated, user, ready, logout, login } = usePrivy();
@@ -84,14 +87,14 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
 
   // Chapter One assets (images 0-7, sounds for 1,3,5,6,7)
   const chapterAssets = [
-    { image: '/Chapter%20One/0.png', sound: undefined },
-    { image: '/Chapter%20One/1.png', sound: '/Chapter One/1.wav' },
-    { image: '/Chapter%20One/2.png', sound: undefined },
-    { image: '/Chapter%20One/3.png', sound: '/Chapter One/3.wav' },
-    { image: '/Chapter%20One/4.png', sound: undefined },
-    { image: '/Chapter%20One/5.png', sound: '/Chapter One/5.wav' },
-    { image: '/Chapter%20One/6.png', sound: '/Chapter One/6.wav' },
-    { image: '/Chapter%20One/7.png', sound: '/Chapter One/7.wav' }
+    { image: '/ChapterOne/0.png', sound: undefined },
+    { image: '/ChapterOne/1.png', sound: '/ChapterOne/1.wav' },
+    { image: '/ChapterOne/2.png', sound: undefined },
+    { image: '/ChapterOne/3.png', sound: '/ChapterOne/3.wav' },
+    { image: '/ChapterOne/4.png', sound: undefined },
+    { image: '/ChapterOne/5.png', sound: '/ChapterOne/5.wav' },
+    { image: '/ChapterOne/6.png', sound: '/ChapterOne/6.wav' },
+    { image: '/ChapterOne/7.png', sound: '/ChapterOne/7.wav' }
   ];
 
   // Handle chapter progression
@@ -114,7 +117,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       if (firstChapterInteraction) {
         // Initialize background music
         if (!backgroundMusicRef.current) {
-          backgroundMusicRef.current = new Audio('/Chapter One/background_music_chapter_one.mp3');
+          backgroundMusicRef.current = new Audio('/ChapterOne/background_music_chapter_one.mp3');
           backgroundMusicRef.current.loop = true;
           backgroundMusicRef.current.volume = 0.3;
           
@@ -126,9 +129,14 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               if (backgroundMusicRef.current) {
                 backgroundMusicPlayPromise.current = backgroundMusicRef.current.play();
                 await backgroundMusicPlayPromise.current;
+                console.log('Background music started successfully');
               }
             } catch (bgMusicError) {
               console.warn('Background music playback failed:', bgMusicError);
+                if (bgMusicError.name === 'NotAllowedError') {
+                  setAudioBlocked(true);
+                  toast.error('Audio blocked by browser. Click "Enable Audio" to play sounds.');
+                }
             } finally {
               backgroundMusicPlayPromise.current = null;
             }
@@ -166,8 +174,13 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               try {
                 soundEffectPlayPromise.current = soundEffectRef.current.play();
                 await soundEffectPlayPromise.current;
+                console.log(`Sound effect started successfully: ${soundPath}`);
               } catch (playError) {
                 console.warn('Sound effect playback failed:', playError);
+                if (playError.name === 'NotAllowedError') {
+                  setAudioBlocked(true);
+                  toast.error('Audio blocked by browser. Click "Enable Audio" to play sounds.');
+                }
               } finally {
                 soundEffectPlayPromise.current = null;
               }
@@ -525,8 +538,8 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           </div>
         </div>
 
-        {/* Skip button */}
-        <div className="absolute top-4 md:top-8 left-4 md:left-8 z-10">
+        {/* Skip button and Audio Enable button */}
+        <div className="absolute top-4 md:top-8 left-4 md:left-8 z-10 flex flex-col gap-2">
           <Button 
             onClick={(e) => {
               e.stopPropagation();
@@ -571,6 +584,46 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           >
             Skip Chapter
           </Button>
+          
+          {/* Audio Enable Button - only show when audio is blocked */}
+          {audioBlocked && (
+            <Button 
+              onClick={async (e) => {
+                e.stopPropagation();
+                try {
+                  // Try to play background music
+                  if (!backgroundMusicRef.current) {
+                    backgroundMusicRef.current = new Audio('/ChapterOne/background_music_chapter_one.mp3');
+                    backgroundMusicRef.current.loop = true;
+                    backgroundMusicRef.current.volume = 0.3;
+                  }
+                  
+                  await backgroundMusicRef.current.play();
+                  
+                  // If successful, also try to play current slide sound
+                  if (chapterAssets[chapterIndex].sound) {
+                    if (soundEffectRef.current) {
+                      soundEffectRef.current.pause();
+                      soundEffectRef.current.currentTime = 0;
+                    }
+                    soundEffectRef.current = new Audio(chapterAssets[chapterIndex].sound);
+                    soundEffectRef.current.volume = 0.7;
+                    await soundEffectRef.current.play();
+                  }
+                  
+                  setAudioBlocked(false);
+                  toast.success('Audio enabled successfully!');
+                } catch (error) {
+                  console.warn('Failed to enable audio:', error);
+                  toast.error('Could not enable audio. Please check browser settings.');
+                }
+              }}
+              variant="outline"
+              className="bg-green-600/70 backdrop-blur border-green-500/20 text-white hover:bg-green-500/70 text-xs md:text-sm px-2 md:px-4 py-1 md:py-2 animate-pulse"
+            >
+              🔊 Enable Audio
+            </Button>
+          )}
         </div>
       </div>
     );
