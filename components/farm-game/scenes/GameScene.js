@@ -1088,7 +1088,7 @@ if (isBrowser) {
         applyWeatherEffects(weather) {
           // Reset background overlay
           this.weatherSystem.weatherBackground.setAlpha(0);
-          this.weatherSystem.weatherBackground.setTint(0xFFFFFF);
+          this.weatherSystem.weatherBackground.setFillStyle(0x000000, 0);
           
           switch (weather) {
             case 'sunny':
@@ -1098,39 +1098,39 @@ if (isBrowser) {
               
             case 'rainy':
               // Dark blue overlay and rain particles
-              this.weatherSystem.weatherBackground.setTint(0x4A90E2);
+              this.weatherSystem.weatherBackground.setFillStyle(0x4A90E2, 0.2);
               this.weatherSystem.weatherText.setColor('#4A90E2');
               this.createRainParticles();
               // Fade in overlay
               this.tweens.add({
                 targets: this.weatherSystem.weatherBackground,
-                alpha: 0.2,
+                alpha: 1,
                 duration: 1000
               });
               break;
               
             case 'snow':
               // Light blue overlay and snow particles
-              this.weatherSystem.weatherBackground.setTint(0xE6F3FF);
+              this.weatherSystem.weatherBackground.setFillStyle(0xE6F3FF, 0.3);
               this.weatherSystem.weatherText.setColor('#87CEEB');
               this.createSnowParticles();
               // Fade in overlay
               this.tweens.add({
                 targets: this.weatherSystem.weatherBackground,
-                alpha: 0.3,
+                alpha: 1,
                 duration: 1000
               });
               break;
               
             case 'cloudy':
               // Gray overlay and moving clouds
-              this.weatherSystem.weatherBackground.setTint(0x808080);
+              this.weatherSystem.weatherBackground.setFillStyle(0x808080, 0.15);
               this.weatherSystem.weatherText.setColor('#808080');
               this.createCloudParticles();
               // Fade in overlay
               this.tweens.add({
                 targets: this.weatherSystem.weatherBackground,
-                alpha: 0.15,
+                alpha: 1,
                 duration: 1000
               });
               break;
