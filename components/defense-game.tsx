@@ -55,6 +55,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isProcessingChapter, setIsProcessingChapter] = useState(false);
+  const [firstChapterInteraction, setFirstChapterInteraction] = useState(true);
   
   // Use custom hooks for API integration
   const { authenticated, user, ready, logout, login } = usePrivy();
@@ -107,98 +108,66 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     setIsProcessingChapter(true);
 
     try {
-      // Initialize and play background music on first slide with user interaction
-      if (chapterIndex === 0 && !backgroundMusicRef.current) {
-        try {
-          // Use the correct path for background music
+      // On first interaction, initialize background music and play current slide audio
+      if (firstChapterInteraction) {
+        // Initialize background music
+        if (!backgroundMusicRef.current) {
           backgroundMusicRef.current = new Audio('/Chapter One/background_music_chapter_one.mp3');
           backgroundMusicRef.current.loop = true;
           backgroundMusicRef.current.volume = 0.3;
-          
-          // Try to play immediately with user interaction
-          backgroundMusicRef.current.play().catch(error => {
-            console.warn('Background music play failed:', error);
-            // Fallback: try loading first then playing
-            backgroundMusicRef.current?.load();
-            setTimeout(() => {
-              backgroundMusicRef.current?.play().catch(retryError => {
-                console.warn('Background music retry failed:', retryError);
-              });
-            }, 200);
-          });
-          
-          console.log('Background music initialized');
-        } catch (bgError) {
-          console.warn('Failed to initialize background music:', bgError);
-          backgroundMusicRef.current = null;
-        }
-      } else if (chapterIndex === 0 && backgroundMusicRef.current && backgroundMusicRef.current.paused) {
-        try {
           await backgroundMusicRef.current.play();
-        } catch (playError) {
-          console.warn('Background music play failed:', playError);
         }
-      }
 
-      // Play sound effect for current slide if it exists (on user interaction)
-      if (chapterAssets[chapterIndex].sound) {
-        // Clean up previous sound effect
-        if (soundEffectRef.current) {
-          soundEffectRef.current.pause();
-          soundEffectRef.current.currentTime = 0;
-          soundEffectRef.current = null;
-        }
-        
-        try {
-          soundEffectRef.current = new Audio(chapterAssets[chapterIndex].sound!);
+        // Play sound effect for current slide if it exists
+        if (chapterAssets[chapterIndex].sound) {
+          if (soundEffectRef.current) {
+            soundEffectRef.current.pause();
+            soundEffectRef.current.currentTime = 0;
+          }
+          soundEffectRef.current = new Audio(chapterAssets[chapterIndex].sound);
           soundEffectRef.current.volume = 0.7;
-          
-          // Try to play immediately with user interaction
-          soundEffectRef.current.play().catch(error => {
-            console.warn('Sound effect play failed:', error);
-            // Fallback: try loading first then playing
-            soundEffectRef.current?.load();
-            setTimeout(() => {
-              soundEffectRef.current?.play().catch(retryError => {
-                console.warn('Sound effect retry failed:', retryError);
-              });
-            }, 100);
-          });
-          
-          console.log('Sound effect loaded:', chapterAssets[chapterIndex].sound);
-        } catch (sfxError) {
-          console.warn('Failed to load sound effect:', chapterAssets[chapterIndex].sound, sfxError);
-        }
-      }
-    } catch (error) {
-      console.warn('Chapter audio playback failed:', error);
-    }
-
-    // Advance to next slide after a delay to let audio start
-    setTimeout(() => {
-      if (chapterIndex < chapterAssets.length - 1) {
-        setChapterIndex(chapterIndex + 1);
-      } else {
-        // End of chapter, start the game
-        // Double-check authentication before starting game
-        if (!authenticated || !walletAddress) {
-          toast.error('Authentication required to start the game!');
-          login();
-          setIsProcessingChapter(false);
-          return;
+          await soundEffectRef.current.play();
         }
         
+        setFirstChapterInteraction(false);
+        setIsProcessingChapter(false);
+        return; // Stay on current slide after first interaction
+      }
+
+      // For subsequent interactions, advance to next slide and play its audio
+      if (chapterIndex >= chapterAssets.length - 1) {
+        // End of chapter, start the game
         if (backgroundMusicRef.current) {
           backgroundMusicRef.current.pause();
           backgroundMusicRef.current.currentTime = 0;
-          backgroundMusicRef.current = null;
         }
         setGameMode('game');
         setGameStarted(true);
+      } else {
+        // Advance to next slide
+        const nextIndex = chapterIndex + 1;
+        setChapterIndex(nextIndex);
+        
+        // Play audio for the new slide if it exists
+        if (chapterAssets[nextIndex].sound) {
+          if (soundEffectRef.current) {
+            soundEffectRef.current.pause();
+            soundEffectRef.current.currentTime = 0;
+          }
+          soundEffectRef.current = new Audio(chapterAssets[nextIndex].sound);
+          soundEffectRef.current.volume = 0.7;
+          await soundEffectRef.current.play();
+        }
       }
-      setIsProcessingChapter(false);
-    }, 500); // Increased delay to allow audio to load
-  }, [chapterIndex, chapterAssets]);
+    } catch (error) {
+      console.warn('Audio playback failed:', error);
+      if (firstChapterInteraction) {
+        setFirstChapterInteraction(false);
+      }
+    }
+    
+    setIsProcessingChapter(false);
+  }, [chapterIndex, chapterAssets, firstChapterInteraction, authenticated, walletAddress]);
 
   // Handle keyboard events for chapter
   useEffect(() => {
@@ -211,6 +180,13 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
 
     window.addEventListener('keydown', handleKeyPress);
     return () => window.removeEventListener('keydown', handleKeyPress);
+  }, [gameMode, nextChapterSlide]);
+
+  // Reset firstChapterInteraction when entering chapter mode
+  useEffect(() => {
+    if (gameMode === 'chapter') {
+      setFirstChapterInteraction(true);
+    }
   }, [gameMode]);
 
   // Audio is now handled directly in nextChapterSlide on user interaction
