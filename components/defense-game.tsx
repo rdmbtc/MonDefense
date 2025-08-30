@@ -82,13 +82,13 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   // Chapter One assets (images 0-7, sounds for 1,3,5,6,7)
   const chapterAssets = [
     { image: '/Chapter%20One/0.png', sound: null },
-    { image: '/Chapter%20One/1.png', sound: '/Chapter%20One/1.wav' },
+    { image: '/Chapter%20One/1.png', sound: '/Chapter One/1.wav' },
     { image: '/Chapter%20One/2.png', sound: null },
-    { image: '/Chapter%20One/3.png', sound: '/Chapter%20One/3.wav' },
+    { image: '/Chapter%20One/3.png', sound: '/Chapter One/3.wav' },
     { image: '/Chapter%20One/4.png', sound: null },
-    { image: '/Chapter%20One/5.png', sound: '/Chapter%20One/5.wav' },
-    { image: '/Chapter%20One/6.png', sound: '/Chapter%20One/6.wav' },
-    { image: '/Chapter%20One/7.png', sound: '/Chapter%20One/7.wav' }
+    { image: '/Chapter%20One/5.png', sound: '/Chapter One/5.wav' },
+    { image: '/Chapter%20One/6.png', sound: '/Chapter One/6.wav' },
+    { image: '/Chapter%20One/7.png', sound: '/Chapter One/7.wav' }
   ];
 
   // Handle chapter progression
@@ -111,7 +111,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       if (chapterIndex === 0 && !backgroundMusicRef.current) {
         try {
           // Use the correct path for background music
-          backgroundMusicRef.current = new Audio('/Chapter%20One/background_music_chapter_one.mp3');
+          backgroundMusicRef.current = new Audio('/Chapter One/background_music_chapter_one.mp3');
           backgroundMusicRef.current.loop = true;
           backgroundMusicRef.current.volume = 0.3;
           
