@@ -115,18 +115,30 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           backgroundMusicRef.current = new Audio('/Chapter One/background_music_chapter_one.mp3');
           backgroundMusicRef.current.loop = true;
           backgroundMusicRef.current.volume = 0.3;
-          await backgroundMusicRef.current.play();
+          try {
+            await backgroundMusicRef.current.play();
+          } catch (bgMusicError) {
+            console.warn('Background music playback failed:', bgMusicError);
+          }
         }
 
         // Play sound effect for current slide if it exists
         if (chapterAssets[chapterIndex].sound) {
           if (soundEffectRef.current) {
-            soundEffectRef.current.pause();
-            soundEffectRef.current.currentTime = 0;
+            try {
+              soundEffectRef.current.pause();
+              soundEffectRef.current.currentTime = 0;
+            } catch (e) {
+              // Ignore pause errors
+            }
           }
           soundEffectRef.current = new Audio(chapterAssets[chapterIndex].sound);
           soundEffectRef.current.volume = 0.7;
-          await soundEffectRef.current.play();
+          try {
+            await soundEffectRef.current.play();
+          } catch (playError) {
+            console.warn('Sound effect playback failed:', playError);
+          }
         }
         
         setFirstChapterInteraction(false);
@@ -138,8 +150,12 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       if (chapterIndex >= chapterAssets.length - 1) {
         // End of chapter, start the game
         if (backgroundMusicRef.current) {
-          backgroundMusicRef.current.pause();
-          backgroundMusicRef.current.currentTime = 0;
+          try {
+            backgroundMusicRef.current.pause();
+            backgroundMusicRef.current.currentTime = 0;
+          } catch (e) {
+            // Ignore pause errors
+          }
         }
         setGameMode('game');
         setGameStarted(true);
@@ -150,13 +166,25 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         
         // Play audio for the new slide if it exists
         if (chapterAssets[nextIndex].sound) {
+          // Stop current sound effect if playing
           if (soundEffectRef.current) {
-            soundEffectRef.current.pause();
-            soundEffectRef.current.currentTime = 0;
+            try {
+              soundEffectRef.current.pause();
+              soundEffectRef.current.currentTime = 0;
+            } catch (e) {
+              // Ignore pause errors
+            }
           }
+          
+          // Create and play new sound effect
           soundEffectRef.current = new Audio(chapterAssets[nextIndex].sound);
           soundEffectRef.current.volume = 0.7;
-          await soundEffectRef.current.play();
+          
+          try {
+            await soundEffectRef.current.play();
+          } catch (playError) {
+            console.warn('Sound effect playback failed:', playError);
+          }
         }
       }
     } catch (error) {
@@ -428,8 +456,12 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               }
               
               if (backgroundMusicRef.current) {
-                backgroundMusicRef.current.pause();
-                backgroundMusicRef.current.currentTime = 0;
+                try {
+                  backgroundMusicRef.current.pause();
+                  backgroundMusicRef.current.currentTime = 0;
+                } catch (e) {
+                  // Ignore pause errors
+                }
               }
               setGameMode('game');
               setGameStarted(true);
