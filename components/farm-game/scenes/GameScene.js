@@ -278,9 +278,10 @@ if (isBrowser) {
             // Use the fireball particles as fallbacks
             this.load.image('magic_particle', '/fireball.png');
             this.load.image('fireball_red', '/fireball.png');
+            
             this.load.image('fireball_blue', '/iceball.png');
             
-            // Load essential pixel for effects
+            // Load essential pixel texture for weather effects (rain, snow particles)
             this.load.image('pixel', 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8/5+hHgAHggJ/PchI7wAAAABJRU5ErkJggg==');
             
             // Add load error handling
@@ -1017,6 +1018,70 @@ if (isBrowser) {
           }
         }
         
+        // UI Animation Methods
+        addUIAnimations(element, options = {}) {
+          if (!element) return;
+          
+          const config = {
+            hoverScale: options.hoverScale || 1.1,
+            clickScale: options.clickScale || 0.95,
+            duration: options.duration || 150,
+            useHandCursor: options.useHandCursor !== false, // Default to true
+            hitArea: options.hitArea || { x: -40, y: -30, width: 80, height: 60 },
+            ...options
+          };
+          
+          // Make element interactive with proper configuration
+          element.setInteractive({ useHandCursor: config.useHandCursor });
+          
+          // Set custom hit area if provided
+          if (config.hitArea && element.input) {
+            element.input.hitArea.setTo(config.hitArea.x, config.hitArea.y, config.hitArea.width, config.hitArea.height);
+          }
+          
+          // Hover animations
+          element.on('pointerover', () => {
+            this.tweens.add({
+              targets: element,
+              scaleX: config.hoverScale,
+              scaleY: config.hoverScale,
+              duration: config.duration,
+              ease: 'Back.easeOut'
+            });
+          });
+          
+          element.on('pointerout', () => {
+            this.tweens.add({
+              targets: element,
+              scaleX: 1,
+              scaleY: 1,
+              duration: config.duration,
+              ease: 'Back.easeOut'
+            });
+          });
+          
+          // Click animations
+          element.on('pointerdown', () => {
+            this.tweens.add({
+              targets: element,
+              scaleX: config.clickScale,
+              scaleY: config.clickScale,
+              duration: config.duration / 2,
+              ease: 'Power2'
+            });
+          });
+          
+          element.on('pointerup', () => {
+            this.tweens.add({
+              targets: element,
+              scaleX: config.hoverScale,
+              scaleY: config.hoverScale,
+              duration: config.duration / 2,
+              ease: 'Power2'
+            });
+          });
+        }
+        
         // Weather System Methods
         initializeWeatherSystem() {
           // Initialize weather background overlay
@@ -1031,6 +1096,12 @@ if (isBrowser) {
            if (this.weatherSystem.currentWeather === newWeather) return;
            
            console.log(`Weather changing from ${this.weatherSystem.currentWeather} to ${newWeather}`);
+           
+           // Clean up ColorMatrix effects
+           if (this.weatherSystem.colorMatrix && this.cameras.main.postFX) {
+             this.cameras.main.postFX.clear();
+             this.weatherSystem.colorMatrix = null;
+           }
            
            // Fade out current weather effects
            if (this.weatherSystem.weatherParticles) {
@@ -1141,14 +1212,34 @@ if (isBrowser) {
           this.weatherSystem.weatherParticles = this.add.particles(0, 0, 'pixel', {
             x: { min: 0, max: 800 },
             y: -10,
-            speedY: { min: 200, max: 400 },
-            speedX: { min: -50, max: -20 },
-            scale: { min: 0.5, max: 2 },
-            alpha: { min: 0.3, max: 0.8 },
-            tint: 0x4A90E2,
-            lifespan: 3000,
-            frequency: 50
+            speedY: { min: 300, max: 500 },
+            speedX: { min: -30, max: -10 },
+            scale: { min: 1, max: 3 },
+            alpha: { min: 0.6, max: 1.0 },
+            tint: 0x87CEEB,
+            lifespan: 2000,
+            frequency: 30,
+            gravityY: 100
           });
+          
+          // Set higher depth to ensure visibility
+          this.weatherSystem.weatherParticles.setDepth(1000);
+          
+          // Apply rainy mood ColorMatrix effects to the camera
+          if (this.cameras.main.postFX) {
+            // Clear any existing color matrix effects
+            this.cameras.main.postFX.clear();
+            
+            // Add ColorMatrix for rainy mood - darker, more saturated blues
+            const colorMatrix = this.cameras.main.postFX.addColorMatrix();
+            colorMatrix.brightness(-0.2);    // Darker
+            colorMatrix.contrast(0.1);       // Slight contrast increase
+            colorMatrix.saturate(0.2);       // More saturated
+            colorMatrix.hue(240);            // Shift towards blue hues
+            
+            // Store reference for cleanup
+            this.weatherSystem.colorMatrix = colorMatrix;
+          }
         }
         
         createSnowParticles() {
@@ -1157,12 +1248,32 @@ if (isBrowser) {
             y: -10,
             speedY: { min: 50, max: 150 },
             speedX: { min: -30, max: 30 },
-            scale: { min: 1, max: 3 },
-            alpha: { min: 0.6, max: 1 },
+            scale: { min: 1, max: 4 },
+            alpha: { min: 0.7, max: 1 },
             tint: 0xFFFFFF,
-            lifespan: 5000,
-            frequency: 80
+            lifespan: 6000,
+            frequency: 60,
+            gravityY: 20
           });
+          
+          // Set higher depth to ensure visibility
+          this.weatherSystem.weatherParticles.setDepth(1000);
+          
+          // Apply snow mood ColorMatrix effects to the camera
+          if (this.cameras.main.postFX) {
+            // Clear any existing color matrix effects
+            this.cameras.main.postFX.clear();
+            
+            // Add ColorMatrix for snow mood - cooler, brighter, more contrast
+            const colorMatrix = this.cameras.main.postFX.addColorMatrix();
+            colorMatrix.brightness(0.1);     // Slightly brighter
+            colorMatrix.contrast(0.2);       // More contrast
+            colorMatrix.saturate(-0.3);      // Less saturated (more grey/white)
+            colorMatrix.hue(200);            // Shift towards blue hues
+            
+            // Store reference for cleanup
+            this.weatherSystem.colorMatrix = colorMatrix;
+          }
         }
         
         createCloudParticles() {
@@ -1171,12 +1282,30 @@ if (isBrowser) {
             y: { min: 50, max: 150 },
             speedX: { min: 20, max: 60 },
             speedY: 0,
-            scale: { min: 8, max: 15 },
-            alpha: { min: 0.2, max: 0.5 },
+            scale: { min: 10, max: 20 },
+            alpha: { min: 0.3, max: 0.6 },
             tint: 0xC0C0C0,
-            lifespan: 8000,
-            frequency: 200
+            lifespan: 10000,
+            frequency: 150
           });
+          
+          // Set higher depth to ensure visibility
+          this.weatherSystem.weatherParticles.setDepth(1000);
+          
+          // Apply cloudy mood ColorMatrix effects to the camera
+          if (this.cameras.main.postFX) {
+            // Clear any existing color matrix effects
+            this.cameras.main.postFX.clear();
+            
+            // Add ColorMatrix for cloudy mood - desaturated, slightly darker
+            const colorMatrix = this.cameras.main.postFX.addColorMatrix();
+            colorMatrix.brightness(-0.1);    // Slightly darker
+            colorMatrix.saturate(-0.2);      // Less saturated (more grey)
+            colorMatrix.contrast(-0.1);      // Less contrast
+            
+            // Store reference for cleanup
+            this.weatherSystem.colorMatrix = colorMatrix;
+          }
         }
         
         checkWeatherChange() {
@@ -1833,6 +1962,72 @@ if (isBrowser) {
           const g = (color >> 8) & 0xFF;
           const b = color & 0xFF;
           return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+        }
+        
+        // Show wave completion message with dramatic animation
+        showWaveCompletionMessage() {
+          try {
+            // Create wave completion text
+            const completionText = this.add.text(400, 200, `Wave ${this.gameState.wave} Complete!`, {
+              fontFamily: 'Arial Black, Impact, sans-serif',
+              fontSize: '48px',
+              color: '#00FF00',
+              stroke: '#000000',
+              strokeThickness: 4,
+              shadow: {
+                offsetX: 3,
+                offsetY: 3,
+                color: '#000000',
+                blur: 5
+              }
+            }).setOrigin(0.5);
+            completionText.setDepth(2000);
+            
+            // Initial state for dramatic entrance
+            completionText.setScale(0);
+            completionText.setAlpha(0);
+            completionText.setRotation(-0.2);
+            
+            // Dramatic entrance animation
+            this.tweens.add({
+              targets: completionText,
+              scale: { from: 0, to: 1.3 },
+              alpha: { from: 0, to: 1 },
+              rotation: { from: -0.2, to: 0 },
+              duration: 600,
+              ease: 'Back.easeOut',
+              onComplete: () => {
+                // Settle animation
+                this.tweens.add({
+                  targets: completionText,
+                  scale: 1,
+                  duration: 200,
+                  ease: 'Power2',
+                  onComplete: () => {
+                    // Hold for a moment, then fade out
+                    this.tweens.add({
+                      targets: completionText,
+                      alpha: 0,
+                      scale: 0.8,
+                      duration: 400,
+                      ease: 'Power2',
+                      delay: 600,
+                      onComplete: () => {
+                        completionText.destroy();
+                      }
+                    });
+                  }
+                });
+              }
+            });
+            
+            // Play wave complete sound if available
+            if (this.soundManager && this.soundManager.play) {
+              this.soundManager.play('wave_complete');
+            }
+          } catch (error) {
+            console.error("Error showing wave completion message:", error);
+          }
         }
         
         showStartButton() {
@@ -2788,13 +2983,12 @@ if (isBrowser) {
 
             // Add attack button
             const attackButton = this.add.rectangle(40, 550, buttonWidth, buttonHeight, 0xFF4400).setDepth(2000);
-            attackButton.setInteractive({ useHandCursor: true });
-            attackButton.input.hitArea.setTo(-40, -30, 80, 60);
             attackButton.on('pointerdown', () => {
               this.pendingDefensePlacement = false; // Reset placement flag
               this.setToolMode('attack');
             });
             addBounceEffect(attackButton); // Add bounce effect
+            this.addUIAnimations(attackButton); // Add UI animations - this will handle setInteractive
             this.toolbarButtons.attack = attackButton; // Store reference
 
             const attackText = this.add.text(40, 550, '👆', {
@@ -2807,13 +3001,12 @@ if (isBrowser) {
 
             // Add crop button
             const cropButton = this.add.rectangle(110, 550, buttonWidth, buttonHeight, 0x006600).setDepth(2000);
-            cropButton.setInteractive({ useHandCursor: true });
-            cropButton.input.hitArea.setTo(-40, -30, 80, 60);
             cropButton.on('pointerdown', () => {
               this.pendingDefensePlacement = false; // Reset placement flag
               this.setToolMode('plant');
             });
             addBounceEffect(cropButton); // Add bounce effect
+            this.addUIAnimations(cropButton); // Add UI animations - this will handle setInteractive
             this.toolbarButtons.plant = cropButton; // Store reference
 
             // IMPORTANT: Always use tree images for crops - NEVER change this!
@@ -2835,8 +3028,6 @@ if (isBrowser) {
 
             // Add chog button (ABS mage)
             const chogButton = this.add.rectangle(180, 550, buttonWidth, buttonHeight, 0x000066).setDepth(2000);
-            chogButton.setInteractive({ useHandCursor: true });
-            chogButton.input.hitArea.setTo(-40, -30, 80, 60);
             chogButton.on('pointerdown', () => {
               this.pendingDefenseType = 'chog';
               this.pendingDefensePlacement = true;
@@ -2844,6 +3035,7 @@ if (isBrowser) {
               this.showFloatingText(400, 300, "ABS Ice Mage selected - Click map to place", 0x0088FF);
             });
              addBounceEffect(chogButton); // Add bounce effect
+             this.addUIAnimations(chogButton); // Add UI animations - this will handle setInteractive
              this.toolbarButtons.chog = chogButton; // Store reference
 
             // Use ABS image instead of emoji
@@ -2865,8 +3057,6 @@ if (isBrowser) {
 
             // Add molandak button (MON mage)
             const molandakButton = this.add.rectangle(250, 550, buttonWidth, buttonHeight, 0x660000).setDepth(2000);
-            molandakButton.setInteractive({ useHandCursor: true });
-            molandakButton.input.hitArea.setTo(-40, -30, 80, 60);
             molandakButton.on('pointerdown', () => {
               this.pendingDefenseType = 'molandak';
               this.pendingDefensePlacement = true;
@@ -2874,6 +3064,7 @@ if (isBrowser) {
               this.showFloatingText(400, 300, "MON Fire Mage selected - Click map to place", 0xFF4400);
             });
             addBounceEffect(molandakButton); // Add bounce effect
+            this.addUIAnimations(molandakButton); // Add UI animations - this will handle setInteractive
             this.toolbarButtons.molandak = molandakButton; // Store reference
 
 
@@ -2901,8 +3092,6 @@ if (isBrowser) {
 
             // keon Button
             keonButton = this.add.rectangle(320, 550, buttonWidth, buttonHeight, 0x990099).setDepth(2000);
-            keonButton.setInteractive({ useHandCursor: true });
-            keonButton.input.hitArea.setTo(-40, -30, 80, 60);
             keonButton.on('pointerdown', () => {
               this.pendingDefenseType = 'keon';
               this.pendingDefensePlacement = true;
@@ -2910,6 +3099,7 @@ if (isBrowser) {
               this.showFloatingText(400, 300, "keon selected - Click map to place", 0xFF00FF);
             });
             addBounceEffect(keonButton); // Add bounce effect
+            this.addUIAnimations(keonButton); // Add UI animations - this will handle setInteractive
             this.toolbarButtons.keon = keonButton; // Store reference
 
             if (this.textures.exists('keon_idle')) {
@@ -2928,8 +3118,6 @@ if (isBrowser) {
 
             // moyaki Button
             moyakiButton = this.add.rectangle(390, 550, buttonWidth, buttonHeight, 0x990000).setDepth(2000);
-            moyakiButton.setInteractive({ useHandCursor: true });
-            moyakiButton.input.hitArea.setTo(-40, -30, 80, 60);
             moyakiButton.on('pointerdown', () => {
               this.pendingDefenseType = 'moyaki';
               this.pendingDefensePlacement = true;
@@ -2937,6 +3125,7 @@ if (isBrowser) {
               this.showFloatingText(400, 300, "moyaki selected - Click map to place", 0xFF0000);
             });
             addBounceEffect(moyakiButton); // Add bounce effect
+            this.addUIAnimations(moyakiButton); // Add UI animations - this will handle setInteractive
             this.toolbarButtons.moyaki = moyakiButton; // Store reference
 
 
@@ -2961,10 +3150,9 @@ if (isBrowser) {
 
             // Add upgrade button
             const upgradeButton = this.add.rectangle(460, 550, buttonWidth, buttonHeight, 0x555500).setDepth(2000);
-            upgradeButton.setInteractive({ useHandCursor: true });
-            upgradeButton.input.hitArea.setTo(-40, -30, 80, 60);
             upgradeButton.on('pointerdown', () => this.toggleUpgradePanel());
             addBounceEffect(upgradeButton); // Add bounce effect
+            this.addUIAnimations(upgradeButton); // Add UI animations - this will handle setInteractive
             this.toolbarButtons.upgrade = upgradeButton; // Store reference
 
             const upgradeText = this.add.text(460, 550, '⚙️', {
@@ -3362,12 +3550,15 @@ if (isBrowser) {
             if (shouldAdvance) {
               console.log(`Wave ${this.gameState.wave} complete. Conditions met. Triggering next wave.`);
               
+              // Show wave completion notification with animation
+              this.showWaveCompletionMessage();
+              
               // Prevent calling forceNextWave multiple times rapidly
               this.waveChangeInProgress = true;
               this._lastWaveChangeTime = time; // Track when the change started
               
               // Add a brief delay before actually forcing the next wave
-              this.time.delayedCall(500, () => {
+              this.time.delayedCall(1500, () => {
                 if (this.gameState?.isActive) {
                   this.forceNextWave();
                 } else {
@@ -3578,16 +3769,45 @@ if (isBrowser) {
           }
         }
 
-        // Toggle the upgrade panel visibility
+        // Toggle the upgrade panel visibility with smooth animations
         toggleUpgradePanel() {
           try {
             if (!this.upgradeSystem) return;
             
             // Get current state
             const isVisible = this.upgradeSystem.uiElements?.panel?.visible || false;
+            const panel = this.upgradeSystem.uiElements?.panel;
             
-            // Toggle visibility
-            this.upgradeSystem.setUIVisible(!isVisible);
+            if (!panel) return;
+            
+            if (isVisible) {
+              // Animate panel sliding out and fading
+              this.tweens.add({
+                targets: panel,
+                x: panel.x + 300, // Slide to the right
+                alpha: 0,
+                duration: 250,
+                ease: 'Power2',
+                onComplete: () => {
+                  this.upgradeSystem.setUIVisible(false);
+                  panel.x -= 300; // Reset position for next show
+                  panel.alpha = 1; // Reset alpha for next show
+                }
+              });
+            } else {
+              // Show panel first, then animate it sliding in
+              this.upgradeSystem.setUIVisible(true);
+              panel.x += 300; // Start position (off-screen)
+              panel.alpha = 0; // Start transparent
+              
+              this.tweens.add({
+                targets: panel,
+                x: panel.x - 300, // Slide to original position
+                alpha: 1,
+                duration: 250,
+                ease: 'Power2'
+              });
+            }
             
             // Update defense buttons
             this.updateAdvancedDefenseButtons();
@@ -4763,7 +4983,7 @@ if (isBrowser) {
             // Calculate final stats (Already captured above)
             // const coinsEarned = finalCoins; // Use captured value
 
-            // Add game over text
+            // Add game over text with dramatic entrance animation
             const resultText = victory ? 'Victory!' : 'Game Over';
             const gameOverText = this.add.text(400, 200, resultText, {
               fontFamily: 'Arial Black, Impact, sans-serif',
@@ -4779,8 +4999,28 @@ if (isBrowser) {
               }
             }).setOrigin(0.5);
             gameOverText.setDepth(1001);
+            
+            // Animate game over text with dramatic entrance
+            gameOverText.setScale(0);
+            gameOverText.setAlpha(0);
+            this.tweens.add({
+              targets: gameOverText,
+              scale: { from: 0, to: 1.2 },
+              alpha: { from: 0, to: 1 },
+              duration: 600,
+              ease: 'Back.easeOut',
+              onComplete: () => {
+                // Slight bounce effect
+                this.tweens.add({
+                  targets: gameOverText,
+                  scale: 1,
+                  duration: 200,
+                  ease: 'Power2'
+                });
+              }
+            });
 
-            // Show statistics
+            // Show statistics with staggered entrance animations
             const scoreText = this.add.text(400, 280, `Score: ${finalScore}`, {
               fontFamily: 'Arial',
               fontSize: '32px',
@@ -4789,6 +5029,8 @@ if (isBrowser) {
               strokeThickness: 3
             }).setOrigin(0.5);
             scoreText.setDepth(1001);
+            scoreText.setAlpha(0);
+            scoreText.setY(scoreText.y + 20);
 
             const wavesText = this.add.text(400, 330, `Waves: ${completedWaves}`, {
               fontFamily: 'Arial',
@@ -4798,6 +5040,8 @@ if (isBrowser) {
               strokeThickness: 3
             }).setOrigin(0.5);
             wavesText.setDepth(1001);
+            wavesText.setAlpha(0);
+            wavesText.setY(wavesText.y + 20);
 
             const coinsText = this.add.text(400, 380, `Coins: ${finalCoins}`, {
               fontFamily: 'Arial',
@@ -4807,13 +5051,45 @@ if (isBrowser) {
               strokeThickness: 3
             }).setOrigin(0.5);
             coinsText.setDepth(1001);
+            coinsText.setAlpha(0);
+            coinsText.setY(coinsText.y + 20);
+            
+            // Animate statistics with staggered entrance
+            this.tweens.add({
+              targets: scoreText,
+              alpha: 1,
+              y: scoreText.y - 20,
+              duration: 400,
+              ease: 'Power2',
+              delay: 800
+            });
+            
+            this.tweens.add({
+              targets: wavesText,
+              alpha: 1,
+              y: wavesText.y - 20,
+              duration: 400,
+              ease: 'Power2',
+              delay: 1000
+            });
+            
+            this.tweens.add({
+              targets: coinsText,
+              alpha: 1,
+              y: coinsText.y - 20,
+              duration: 400,
+              ease: 'Power2',
+              delay: 1200
+            });
 
-            // Create score submission button with proper styling
+            // Create score submission button with proper styling and entrance animation
             const buttonWidth = 220;
             const buttonHeight = 60;
             const submitButton = this.add.rectangle(400, 450, buttonWidth, buttonHeight, 0x6B46C1, 1);
             submitButton.setStrokeStyle(4, 0x553C9A);
             submitButton.setDepth(1001);
+            submitButton.setAlpha(0);
+            submitButton.setScale(0.8);
 
             const submitText = this.add.text(400, 450, 'Submit Score', {
               fontFamily: 'Arial',
@@ -4823,11 +5099,15 @@ if (isBrowser) {
               strokeThickness: 1
             }).setOrigin(0.5);
             submitText.setDepth(1002);
+            submitText.setAlpha(0);
+            submitText.setScale(0.8);
 
-            // Create restart button with proper styling
+            // Create restart button with proper styling and entrance animation
             const restartButton = this.add.rectangle(400, 530, buttonWidth, buttonHeight, 0x4CAF50, 1);
             restartButton.setStrokeStyle(4, 0x45A049);
             restartButton.setDepth(1001);
+            restartButton.setAlpha(0);
+            restartButton.setScale(0.8);
 
             const restartText = this.add.text(400, 530, 'Play Again', {
               fontFamily: 'Arial',
@@ -4837,6 +5117,27 @@ if (isBrowser) {
               strokeThickness: 1
             }).setOrigin(0.5);
             restartText.setDepth(1002);
+            restartText.setAlpha(0);
+            restartText.setScale(0.8);
+            
+            // Animate buttons with staggered entrance
+            this.tweens.add({
+              targets: [submitButton, submitText],
+              alpha: 1,
+              scale: 1,
+              duration: 300,
+              ease: 'Back.easeOut',
+              delay: 1500
+            });
+            
+            this.tweens.add({
+              targets: [restartButton, restartText],
+              alpha: 1,
+              scale: 1,
+              duration: 300,
+              ease: 'Back.easeOut',
+              delay: 1700
+            });
 
             // Add submit button hover effect and interaction
             submitButton.setInteractive({ useHandCursor: true })

@@ -151,22 +151,47 @@ class UltimateAbilities {
     
     container.add([bg, icon, cooldownOverlay, cooldownText, manaCost]);
     
+    // Apply UI animations to the button container
+    if (this.scene.addUIAnimations) {
+      this.scene.addUIAnimations(container, {
+        hoverScale: 1.1,
+        clickScale: 0.9,
+        duration: 200
+      });
+    }
+    
     // Button interaction
     bg.on('pointerdown', () => {
       this.useAbility(ability.id);
     });
     
-    // Hover effects
+    // Enhanced hover effects with color changes
     bg.on('pointerover', () => {
       if (this.canUseAbility(ability.id)) {
         bg.setFillStyle(0x3a3a3a);
         this.showTooltip(ability, x, y);
+        
+        // Add glow effect
+        this.scene.tweens.add({
+          targets: bg,
+          alpha: 0.8,
+          duration: 150,
+          ease: 'Power2'
+        });
       }
     });
     
     bg.on('pointerout', () => {
       bg.setFillStyle(0x2a2a2a);
       this.hideTooltip();
+      
+      // Remove glow effect
+      this.scene.tweens.add({
+        targets: bg,
+        alpha: 1,
+        duration: 150,
+        ease: 'Power2'
+      });
     });
     
     return {

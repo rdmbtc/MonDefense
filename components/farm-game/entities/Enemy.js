@@ -173,6 +173,12 @@ export default class Enemy {
         this.sprite.setInteractive({ useHandCursor: true, pixelPerfect: false }); // Make it interactive for clicks with larger hitbox
         this.sprite.flipX = true; // ADDED: Flip the sprite horizontally to face left
         
+        // Add idle animation to the sprite
+        this.addIdleAnimation();
+        
+        // Add entrance animation
+        this.addEntranceAnimation();
+        
         // Make sprite more interactive
         this.sprite.on('pointerdown', () => {
           if (this.scene && this.scene.gameState && typeof this.scene.gameState.clickDamage === 'number') {
@@ -444,42 +450,190 @@ export default class Enemy {
       // ADDED: Log before calling scene method
       console.log(`Enemy ${this.id} calling scene.enemyReachedEnd`);
       
-      if (this.scene && typeof this.scene.enemyReachedEnd === 'function') {
-        // Call the scene's enemyReachedEnd method to handle damage to player
-        this.scene.enemyReachedEnd(this);
-      } else {
-        // Fallback if the scene doesn't have the method
-        if (this.scene.gameState) {
-          this.scene.gameState.lives--;
-          
-          if (typeof this.scene.updateLivesText === 'function') {
-            this.scene.updateLivesText();
-          }
-          
-          console.log("Enemy reached farm! Lives remaining:", this.scene.gameState.lives);
-          
-          // Show warning text if possible
-          if (typeof this.scene.showFloatingText === 'function') {
-            this.scene.showFloatingText(50, 300, 'Farm Invaded! -1 Life', 0xFF0000);
-          }
-          
-          // Check for game over
-          if (this.scene.gameState.lives <= 0) {
-            console.log("Game over! No lives remaining.");
-            if (typeof this.scene.endGame === 'function') {
-              this.scene.endGame();
+      // Add attack animation before dealing damage
+      this.addFarmAttackAnimation();
+      
+      // Delay the actual damage to allow animation to play
+      this.scene.time.delayedCall(600, () => {
+        if (this.scene && typeof this.scene.enemyReachedEnd === 'function') {
+          // Call the scene's enemyReachedEnd method to handle damage to player
+          this.scene.enemyReachedEnd(this);
+        } else {
+          // Fallback if the scene doesn't have the method
+          if (this.scene.gameState) {
+            this.scene.gameState.lives--;
+            
+            if (typeof this.scene.updateLivesText === 'function') {
+              this.scene.updateLivesText();
             }
+            
+            console.log("Enemy reached farm! Lives remaining:", this.scene.gameState.lives);
+            
+            // Show warning text if possible
+            if (typeof this.scene.showFloatingText === 'function') {
+              this.scene.showFloatingText(50, 300, 'Farm Invaded! -1 Life', 0xFF0000);
+            }
+            
+            // Check for game over
+            if (this.scene.gameState.lives <= 0) {
+              console.log("Game over! No lives remaining.");
+              if (typeof this.scene.endGame === 'function') {
+                this.scene.endGame();
+              }
+            }
+            
+            // Remove the enemy
+            this.destroy();
           }
-          
-          // Remove the enemy
-          this.destroy();
         }
-      }
+      });
     } catch (error) {
       console.error("Error in reachedEnd:", error);
       // Still try to destroy the enemy
       this.destroy();
     }
+  }
+  
+  addFarmAttackAnimation() {
+    if (!this.sprite || !this.scene) return;
+    
+    // Type-specific attack animations
+    if (this.type === 'bird') {
+      // Bird dive attack
+      this.scene.tweens.add({
+        targets: this.sprite,
+        scaleX: 1.3,
+        scaleY: 0.7,
+        rotation: -0.3,
+        duration: 200,
+        ease: 'Power2.easeOut',
+        yoyo: true,
+        repeat: 2
+      });
+      
+      // Pecking motion
+      this.scene.tweens.add({
+        targets: this.sprite,
+        y: this.sprite.y + 10,
+        duration: 150,
+        ease: 'Power2.easeOut',
+        yoyo: true,
+        repeat: 3
+      });
+    } else if (this.type === 'rabbit') {
+      // Rabbit nibbling attack
+      this.scene.tweens.add({
+        targets: this.sprite,
+        scaleX: 1.2,
+        scaleY: 0.9,
+        duration: 100,
+        ease: 'Power2',
+        yoyo: true,
+        repeat: 5
+      });
+      
+      // Head bobbing
+      this.scene.tweens.add({
+        targets: this.sprite,
+        rotation: 0.2,
+        duration: 120,
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+        repeat: 4
+      });
+    } else if (this.type === 'deer') {
+      // Deer trampling attack
+      this.scene.tweens.add({
+        targets: this.sprite,
+        scaleY: 1.3,
+        y: this.sprite.y - 5,
+        duration: 200,
+        ease: 'Power2.easeOut',
+        yoyo: true,
+        repeat: 2
+      });
+      
+      // Antler thrust
+      this.scene.tweens.add({
+        targets: this.sprite,
+        x: this.sprite.x - 15,
+        rotation: -0.2,
+        duration: 250,
+        ease: 'Power2.easeOut',
+        yoyo: true
+      });
+    } else {
+      // Default attack animation for other types
+      this.scene.tweens.add({
+        targets: this.sprite,
+        scaleX: 1.4,
+        scaleY: 0.8,
+        rotation: 0.3,
+        duration: 200,
+        ease: 'Power2.easeOut',
+        yoyo: true,
+        repeat: 2
+      });
+    }
+    
+    // Create attack impact effect
+    this.createAttackImpactEffect();
+    
+    // Screen shake effect for dramatic impact
+    if (this.scene.cameras && this.scene.cameras.main) {
+      this.scene.cameras.main.shake(400, 0.01);
+    }
+  }
+  
+  createAttackImpactEffect() {
+    if (!this.scene) return;
+    
+    // Create impact particles
+    const impactColor = this.type === 'bird' ? 0xFFFF00 : 
+                       this.type === 'rabbit' ? 0x90EE90 : 
+                       this.type === 'deer' ? 0x8B4513 : 0xFF6B6B;
+    
+    for (let i = 0; i < 12; i++) {
+      const angle = (Math.PI * 2 / 12) * i;
+      const distance = 20 + Math.random() * 15;
+      const impactX = this.x + Math.cos(angle) * distance;
+      const impactY = this.y + Math.sin(angle) * distance;
+      
+      const particle = this.scene.add.circle(this.x, this.y, 4, impactColor, 0.8);
+      particle.setDepth(200);
+      
+      this.scene.tweens.add({
+        targets: particle,
+        x: impactX,
+        y: impactY,
+        alpha: 0,
+        scale: 0.3,
+        duration: 500,
+        ease: 'Power2.easeOut',
+        onComplete: () => particle.destroy()
+      });
+    }
+    
+    // Create damage text effect
+    const damageText = this.scene.add.text(this.x, this.y - 30, 'FARM DAMAGE!', {
+      fontSize: '16px',
+      fill: '#FF0000',
+      fontWeight: 'bold',
+      stroke: '#FFFFFF',
+      strokeThickness: 2
+    });
+    damageText.setOrigin(0.5);
+    damageText.setDepth(250);
+    
+    this.scene.tweens.add({
+      targets: damageText,
+      y: damageText.y - 40,
+      alpha: 0,
+      scale: 1.5,
+      duration: 800,
+      ease: 'Power2.easeOut',
+      onComplete: () => damageText.destroy()
+    });
   }
   
   takeDamage(amount) {
@@ -518,6 +672,9 @@ export default class Enemy {
        this.health = 0;
       console.log(`Enemy ${this.type} with <1.5 HP force killed`);
     }
+    
+    // Add damage animation
+    this.addDamageAnimation();
     
     // Play hit sound if soundManager is available
     if (this.scene && this.scene.soundManager) {
@@ -980,7 +1137,7 @@ export default class Enemy {
       
       // Update score - 2 points per enemy kill
       if (typeof this.scene.gameState.score === 'number') {
-        this.scene.gameState.score += 2;
+        this.scene.gameState.score += 10;
         if (typeof this.scene.updateScoreText === 'function') {
           this.scene.updateScoreText();
         }
@@ -1060,6 +1217,308 @@ export default class Enemy {
       case 'rabbit': return '🐰';
       case 'deer': return '🦌';
       default: return '❓';
+    }
+  }
+  
+  // Animation Methods
+  addIdleAnimation() {
+    if (!this.sprite || !this.scene) return;
+    
+    // Create subtle floating animation with type-specific variations
+    const baseY = this.sprite.y;
+    const floatAmount = this.type === 'bird' ? 5 : 3;
+    const duration = this.type === 'bird' ? 600 : 1000 + Math.random() * 500;
+    
+    this.scene.tweens.add({
+      targets: this.sprite,
+      y: baseY - floatAmount,
+      duration: duration,
+      ease: 'Sine.easeInOut',
+      yoyo: true,
+      repeat: -1
+    });
+    
+    // Type-specific animations
+    if (this.type === 'bird') {
+      // Wing flapping rotation
+      this.scene.tweens.add({
+        targets: this.sprite,
+        rotation: 0.15,
+        duration: 400,
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+        repeat: -1
+      });
+      
+      // Slight horizontal sway for flying motion
+      this.scene.tweens.add({
+        targets: this.sprite,
+        x: this.sprite.x + 2,
+        duration: 800,
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+        repeat: -1
+      });
+    } else if (this.type === 'rabbit') {
+      // Ear twitch effect
+      this.scene.tweens.add({
+        targets: this.sprite,
+        scaleX: 1.1,
+        duration: 200,
+        ease: 'Power2',
+        yoyo: true,
+        repeat: -1,
+        repeatDelay: 2000 + Math.random() * 3000
+      });
+    } else if (this.type === 'deer') {
+      // Graceful head movement
+      this.scene.tweens.add({
+        targets: this.sprite,
+        rotation: 0.05,
+        duration: 1500,
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+        repeat: -1
+      });
+    }
+  }
+  
+  addEntranceAnimation() {
+    if (!this.container || !this.scene) return;
+    
+    // Type-specific entrance animations
+    if (this.type === 'bird') {
+      // Birds fly in from above
+      const originalY = this.container.y;
+      this.container.y = originalY - 100;
+      this.container.setAlpha(0.3);
+      this.container.setScale(0.5);
+      
+      this.scene.tweens.add({
+        targets: this.container,
+        y: originalY,
+        alpha: 1,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 600,
+        ease: 'Power2.easeOut'
+      });
+      
+      // Add wing flap effect during entrance
+      this.scene.tweens.add({
+        targets: this.container,
+        rotation: 0.2,
+        duration: 100,
+        ease: 'Power2',
+        yoyo: true,
+        repeat: 3
+      });
+    } else if (this.type === 'rabbit') {
+      // Rabbits hop in
+      this.container.setAlpha(0);
+      this.container.setScale(0.3);
+      
+      this.scene.tweens.add({
+        targets: this.container,
+        alpha: 1,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 400,
+        ease: 'Bounce.easeOut'
+      });
+      
+      // Add hop effect
+      const originalY = this.container.y;
+      this.scene.tweens.add({
+        targets: this.container,
+        y: originalY - 20,
+        duration: 200,
+        ease: 'Power2.easeOut',
+        yoyo: true
+      });
+    } else {
+      // Default dramatic entrance for other types
+      this.container.setAlpha(0);
+      this.container.setScale(0);
+      
+      this.scene.tweens.add({
+        targets: this.container,
+        alpha: 1,
+        scaleX: 1,
+        scaleY: 1,
+        duration: 500,
+        ease: 'Back.easeOut'
+      });
+    }
+    
+    // Add entrance particle effect
+    this.createEntranceParticleEffect();
+  }
+  
+  createEntranceParticleEffect() {
+    if (!this.scene) return;
+    
+    // Create entrance particles based on enemy type
+    const particleColor = this.type === 'bird' ? 0x87CEEB : 
+                         this.type === 'rabbit' ? 0xDEB887 : 0xFFFFFF;
+    
+    for (let i = 0; i < 8; i++) {
+      const angle = (Math.PI * 2 / 8) * i;
+      const startX = this.x + Math.cos(angle) * 30;
+      const startY = this.y + Math.sin(angle) * 30;
+      
+      const particle = this.scene.add.circle(startX, startY, 3, particleColor, 0.7);
+      particle.setDepth(150);
+      
+      this.scene.tweens.add({
+        targets: particle,
+        x: this.x,
+        y: this.y,
+        alpha: 0,
+        scale: 0.2,
+        duration: 400,
+        ease: 'Power2.easeIn',
+        onComplete: () => particle.destroy()
+      });
+    }
+  }
+  
+  addMovementAnimation() {
+    if (!this.sprite || !this.scene) return;
+    
+    // Type-specific movement animations
+    if (this.type === 'bird') {
+      // Flying motion with wing beats
+      this.scene.tweens.add({
+        targets: this.sprite,
+        scaleY: 0.85,
+        scaleX: 1.1,
+        duration: 150,
+        ease: 'Power2',
+        yoyo: true,
+        repeat: -1
+      });
+      
+      // Altitude variation for flying
+      this.scene.tweens.add({
+        targets: this.sprite,
+        y: this.sprite.y + 8,
+        duration: 300,
+        ease: 'Sine.easeInOut',
+        yoyo: true,
+        repeat: -1
+      });
+    } else if (this.type === 'rabbit') {
+      // Hopping motion
+      this.scene.tweens.add({
+        targets: this.sprite,
+        scaleY: 0.8,
+        duration: 250,
+        ease: 'Power2',
+        yoyo: true,
+        repeat: -1
+      });
+      
+      // Slight forward lean while hopping
+      this.scene.tweens.add({
+        targets: this.sprite,
+        rotation: -0.1,
+        duration: 250,
+        ease: 'Power2',
+        yoyo: true,
+        repeat: -1
+      });
+    } else {
+      // Default walking bounce for other types
+      this.scene.tweens.add({
+        targets: this.sprite,
+        scaleY: 0.9,
+        duration: 200,
+        ease: 'Power2',
+        yoyo: true,
+        repeat: -1
+      });
+    }
+  }
+  
+  addDamageAnimation() {
+    if (!this.sprite || !this.scene) return;
+    
+    // Enhanced damage animation with multiple effects
+    const originalTint = this.sprite.tint;
+    const originalScale = { x: this.sprite.scaleX, y: this.sprite.scaleY };
+    
+    // Flash red with intensity based on damage
+    this.sprite.setTint(0xff0000);
+    
+    // Recoil effect - enemy gets pushed back slightly
+    this.scene.tweens.add({
+      targets: this.sprite,
+      x: this.sprite.x + 8,
+      scaleX: originalScale.x * 1.2,
+      scaleY: originalScale.y * 0.8,
+      duration: 80,
+      ease: 'Power2.easeOut',
+      yoyo: true,
+      onComplete: () => {
+        if (this.sprite) {
+          this.sprite.x = 0; // Reset to container center
+          this.sprite.setScale(originalScale.x, originalScale.y);
+        }
+      }
+    });
+    
+    // Shake effect with decreasing intensity
+    for (let i = 0; i < 4; i++) {
+      this.scene.time.delayedCall(i * 40, () => {
+        if (this.sprite) {
+          const intensity = (4 - i) * 2;
+          this.scene.tweens.add({
+            targets: this.sprite,
+            x: this.sprite.x + (Math.random() - 0.5) * intensity,
+            y: this.sprite.y + (Math.random() - 0.5) * intensity,
+            duration: 30,
+            ease: 'Power2'
+          });
+        }
+      });
+    }
+    
+    // Create damage spark effect
+    this.createDamageSparkEffect();
+    
+    // Remove red tint with fade
+    this.scene.tweens.add({
+      targets: this.sprite,
+      tint: originalTint,
+      duration: 300,
+      ease: 'Power2.easeOut'
+    });
+  }
+  
+  createDamageSparkEffect() {
+    if (!this.scene) return;
+    
+    // Create small spark particles at impact point
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI * 2 / 6) * i;
+      const distance = 15 + Math.random() * 10;
+      const sparkX = this.x + Math.cos(angle) * distance;
+      const sparkY = this.y + Math.sin(angle) * distance;
+      
+      const spark = this.scene.add.circle(sparkX, sparkY, 2, 0xFFFF00, 0.8);
+      spark.setDepth(200);
+      
+      this.scene.tweens.add({
+        targets: spark,
+        x: sparkX + Math.cos(angle) * 20,
+        y: sparkY + Math.sin(angle) * 20,
+        alpha: 0,
+        scale: 0.2,
+        duration: 400,
+        ease: 'Power2.easeOut',
+        onComplete: () => spark.destroy()
+      });
     }
   }
   

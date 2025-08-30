@@ -680,6 +680,462 @@ export default class Defense {
       }
     });
   }
+
+  // Add idle animation for defenses
+  addIdleAnimation() {
+    if (!this.scene || !this.sprite) return;
+    
+    // Type-specific idle animations
+    if (this.type === 'chog') {
+      // Nature-themed floating with gentle sway
+      this.scene.tweens.add({
+        targets: this.sprite,
+        y: this.sprite.y - 3,
+        duration: 2500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+      
+      // Gentle rotation like leaves in wind
+      this.scene.tweens.add({
+        targets: this.sprite,
+        rotation: 0.08,
+        duration: 4000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+      
+      // Subtle scale breathing effect
+      this.scene.tweens.add({
+        targets: this.sprite,
+        scaleX: 1.02,
+        scaleY: 1.02,
+        duration: 3000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    } else if (this.type === 'molandak') {
+      // Ice-themed crystalline shimmer
+      this.scene.tweens.add({
+        targets: this.sprite,
+        y: this.sprite.y - 2,
+        duration: 2000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+      
+      // Sharp, precise rotation like ice crystals
+      this.scene.tweens.add({
+        targets: this.sprite,
+        rotation: 0.12,
+        duration: 3500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Power2.easeInOut'
+      });
+      
+      // Periodic frost effect
+      this.addPeriodicFrostEffect();
+    } else if (this.type === 'moyaki') {
+      // Fire-themed flickering
+      this.scene.tweens.add({
+        targets: this.sprite,
+        y: this.sprite.y - 4,
+        duration: 1800,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Power2.easeInOut'
+      });
+      
+      // Intense flickering rotation
+      this.scene.tweens.add({
+        targets: this.sprite,
+        rotation: 0.15,
+        duration: 2500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Power2.easeInOut'
+      });
+      
+      // Fire ember effect
+      this.addPeriodicEmberEffect();
+    } else if (this.type === 'keon') {
+      // Divine/premium floating with aura
+      this.scene.tweens.add({
+        targets: this.sprite,
+        y: this.sprite.y - 5,
+        duration: 3000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+      
+      // Majestic slow rotation
+      this.scene.tweens.add({
+        targets: this.sprite,
+        rotation: 0.2,
+        duration: 5000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+      
+      // Divine glow pulse
+      this.addDivineGlowEffect();
+    } else {
+      // Default subtle floating for other types
+      this.scene.tweens.add({
+        targets: this.sprite,
+        y: this.sprite.y - 2,
+        duration: 2000 + Math.random() * 1000,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+      });
+    }
+  }
+  
+  addPeriodicFrostEffect() {
+    if (!this.scene) return;
+    
+    const createFrostParticle = () => {
+      if (!this.active || !this.scene) return;
+      
+      const particle = this.scene.add.circle(
+        this.x + (Math.random() - 0.5) * 30,
+        this.y + (Math.random() - 0.5) * 30,
+        2, 0x88DDFF, 0.7
+      );
+      particle.setDepth(150);
+      
+      this.scene.tweens.add({
+        targets: particle,
+        y: particle.y - 20,
+        alpha: 0,
+        scale: 0.3,
+        duration: 2000,
+        ease: 'Power2.easeOut',
+        onComplete: () => particle.destroy()
+      });
+    };
+    
+    // Create frost particles periodically
+    this.scene.time.addEvent({
+      delay: 3000 + Math.random() * 2000,
+      callback: createFrostParticle,
+      loop: true
+    });
+  }
+  
+  addPeriodicEmberEffect() {
+    if (!this.scene) return;
+    
+    const createEmber = () => {
+      if (!this.active || !this.scene) return;
+      
+      const ember = this.scene.add.circle(
+        this.x + (Math.random() - 0.5) * 25,
+        this.y + (Math.random() - 0.5) * 25,
+        1.5, 0xFF6600, 0.8
+      );
+      ember.setDepth(150);
+      
+      this.scene.tweens.add({
+        targets: ember,
+        y: ember.y - 30,
+        x: ember.x + (Math.random() - 0.5) * 20,
+        alpha: 0,
+        scale: 0.2,
+        duration: 1500,
+        ease: 'Power2.easeOut',
+        onComplete: () => ember.destroy()
+      });
+    };
+    
+    // Create embers periodically
+    this.scene.time.addEvent({
+      delay: 2000 + Math.random() * 1500,
+      callback: createEmber,
+      loop: true
+    });
+  }
+  
+  addDivineGlowEffect() {
+    if (!this.scene) return;
+    
+    const createGlowPulse = () => {
+      if (!this.active || !this.scene) return;
+      
+      const glow = this.scene.add.circle(this.x, this.y, 25, 0xFFD700, 0.3);
+      glow.setDepth(140);
+      
+      this.scene.tweens.add({
+        targets: glow,
+        scale: 2,
+        alpha: 0,
+        duration: 2000,
+        ease: 'Power2.easeOut',
+        onComplete: () => glow.destroy()
+      });
+    };
+    
+    // Create divine glow pulses
+    this.scene.time.addEvent({
+      delay: 4000 + Math.random() * 2000,
+      callback: createGlowPulse,
+      loop: true
+    });
+  }
+
+  // Add placement animation
+  addPlacementAnimation() {
+    if (!this.scene || !this.sprite) return;
+    
+    // Start small and grow
+    this.sprite.setScale(0.1);
+    this.sprite.setAlpha(0.5);
+    
+    this.scene.tweens.add({
+      targets: this.sprite,
+      scaleX: 1.0,
+      scaleY: 1.0,
+      alpha: 1.0,
+      duration: 300,
+      ease: 'Back.easeOut'
+    });
+    
+    // Create placement particles
+    const particleCount = 8;
+    for (let i = 0; i < particleCount; i++) {
+      const angle = (i / particleCount) * Math.PI * 2;
+      const particle = this.scene.add.circle(
+        this.x + Math.cos(angle) * 30,
+        this.y + Math.sin(angle) * 30,
+        3,
+        0xFFD700,
+        0.8
+      );
+      particle.setDepth(150);
+      
+      this.scene.tweens.add({
+        targets: particle,
+        x: this.x,
+        y: this.y,
+        alpha: 0,
+        scale: 0.2,
+        duration: 400,
+        ease: 'Power2.easeIn',
+        onComplete: () => particle.destroy()
+      });
+    }
+  }
+
+  // Add upgrade animation
+  addUpgradeAnimation() {
+    if (!this.scene || !this.sprite) return;
+    
+    // Type-specific upgrade effects
+    if (this.type === 'chog') {
+      this.createNatureUpgradeEffect();
+    } else if (this.type === 'molandak') {
+      this.createIceUpgradeEffect();
+    } else if (this.type === 'moyaki') {
+      this.createFireUpgradeEffect();
+    } else if (this.type === 'keon') {
+      this.createDivineUpgradeEffect();
+    } else {
+      this.createDefaultUpgradeEffect();
+    }
+    
+    // Enhanced flash effect
+    this.scene.tweens.add({
+      targets: this.sprite,
+      alpha: 0.2,
+      duration: 80,
+      yoyo: true,
+      repeat: 4,
+      ease: 'Power2.easeInOut'
+    });
+    
+    // Enhanced scale bounce with rotation
+    this.scene.tweens.add({
+      targets: this.sprite,
+      scaleX: 1.4,
+      scaleY: 1.4,
+      rotation: 0.2,
+      duration: 300,
+      yoyo: true,
+      ease: 'Back.easeOut'
+    });
+  }
+  
+  createNatureUpgradeEffect() {
+    // Nature growth spiral
+    for (let i = 0; i < 16; i++) {
+      const angle = (Math.PI * 2 / 16) * i;
+      const radius = 35 + i * 2;
+      const x = this.x + Math.cos(angle) * radius;
+      const y = this.y + Math.sin(angle) * radius;
+      
+      const leaf = this.scene.add.circle(x, y, 4, 0x00FF44, 0.9);
+      leaf.setDepth(200);
+      
+      this.scene.tweens.add({
+        targets: leaf,
+        x: this.x,
+        y: this.y,
+        scale: 0.1,
+        alpha: 0,
+        rotation: angle * 2,
+        duration: 600 + i * 20,
+        ease: 'Power2.easeIn',
+        onComplete: () => leaf.destroy()
+      });
+    }
+  }
+  
+  createIceUpgradeEffect() {
+    // Ice crystal formation
+    for (let i = 0; i < 12; i++) {
+      const angle = (Math.PI * 2 / 12) * i;
+      const x = this.x + Math.cos(angle) * 40;
+      const y = this.y + Math.sin(angle) * 40;
+      
+      const crystal = this.scene.add.circle(x, y, 5, 0x88DDFF, 0.9);
+      crystal.setDepth(200);
+      
+      // Crystalline growth animation
+      this.scene.tweens.add({
+        targets: crystal,
+        scale: 2,
+        alpha: 0,
+        rotation: Math.PI,
+        duration: 700,
+        ease: 'Power2.easeOut',
+        onComplete: () => crystal.destroy()
+      });
+    }
+    
+    // Central ice burst
+    const iceBurst = this.scene.add.circle(this.x, this.y, 25, 0xAAEEFF, 0.6);
+    iceBurst.setDepth(195);
+    
+    this.scene.tweens.add({
+      targets: iceBurst,
+      scale: 3,
+      alpha: 0,
+      duration: 800,
+      ease: 'Power2.easeOut',
+      onComplete: () => iceBurst.destroy()
+    });
+  }
+  
+  createFireUpgradeEffect() {
+    // Fire explosion upgrade
+    for (let i = 0; i < 20; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const distance = 20 + Math.random() * 30;
+      const x = this.x + Math.cos(angle) * distance;
+      const y = this.y + Math.sin(angle) * distance;
+      
+      const flame = this.scene.add.circle(x, y, 6, 0xFF4400, 0.9);
+      flame.setDepth(200);
+      
+      this.scene.tweens.add({
+        targets: flame,
+        y: flame.y - 40 - Math.random() * 30,
+        x: flame.x + (Math.random() - 0.5) * 40,
+        scale: 0.1,
+        alpha: 0,
+        duration: 800 + Math.random() * 300,
+        ease: 'Power2.easeOut',
+        onComplete: () => flame.destroy()
+      });
+    }
+    
+    // Central fire nova
+    const fireNova = this.scene.add.circle(this.x, this.y, 30, 0xFF6600, 0.7);
+    fireNova.setDepth(195);
+    
+    this.scene.tweens.add({
+      targets: fireNova,
+      scale: 4,
+      alpha: 0,
+      duration: 900,
+      ease: 'Power2.easeOut',
+      onComplete: () => fireNova.destroy()
+    });
+  }
+  
+  createDivineUpgradeEffect() {
+    // Divine ascension effect
+    for (let i = 0; i < 24; i++) {
+      const angle = (Math.PI * 2 / 24) * i;
+      const radius = 50;
+      const x = this.x + Math.cos(angle) * radius;
+      const y = this.y + Math.sin(angle) * radius;
+      
+      const divineParticle = this.scene.add.circle(x, y, 3, 0xFFD700, 1.0);
+      divineParticle.setDepth(200);
+      
+      this.scene.tweens.add({
+        targets: divineParticle,
+        x: this.x,
+        y: this.y - 60,
+        scale: 0.2,
+        alpha: 0,
+        rotation: angle * 3,
+        duration: 1000,
+        ease: 'Power2.easeOut',
+        onComplete: () => divineParticle.destroy()
+      });
+    }
+    
+    // Divine pillar of light
+    const divinePillar = this.scene.add.circle(this.x, this.y, 20, 0xFFFFAA, 0.8);
+    divinePillar.setDepth(195);
+    
+    this.scene.tweens.add({
+      targets: divinePillar,
+      scaleX: 5,
+      scaleY: 8,
+      alpha: 0,
+      duration: 1200,
+      ease: 'Power2.easeOut',
+      onComplete: () => divinePillar.destroy()
+    });
+  }
+  
+  createDefaultUpgradeEffect() {
+    // Default upgrade particles
+    const upgradeColor = this.type === 'chog' ? 0x00AA00 :
+                        this.type === 'molandak' ? 0x0088FF :
+                        this.type === 'moyaki' ? 0xFF4400 : 0xFFD700;
+    
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      const particle = this.scene.add.circle(this.x, this.y, 2, upgradeColor, 0.9);
+      particle.setDepth(160);
+      
+      const targetX = this.x + Math.cos(angle) * 50;
+      const targetY = this.y + Math.sin(angle) * 50;
+      
+      this.scene.tweens.add({
+        targets: particle,
+        x: targetX,
+        y: targetY,
+        alpha: 0,
+        scale: 0.1,
+        duration: 600,
+        ease: 'Power2.easeOut',
+        onComplete: () => particle.destroy()
+      });
+    }
+  }
   
   attack(enemy) {
     if (!this.active) return false;
@@ -764,27 +1220,32 @@ export default class Defense {
     // Record last attack time
     this.lastAttackTime = this.scene ? this.scene.time.now : 0;
     
-    // Show attack animation
+    // Show enhanced attack animation
     if (this.type === 'chog') {
-      // CHOG basic attack animation
+      // CHOG nature attack animation
       if (this.sprite) {
         this.sprite.setTexture('chog_attack');
 
-        // Cast animation effect
+        // Enhanced nature cast animation
         if (this.scene && this.scene.tweens) {
+          // Main casting animation with nature energy
           this.scene.tweens.add({
             targets: this.sprite,
-            scaleX: 1.05,
-            scaleY: 1.05,
-            duration: 150,
+            scaleX: 1.15,
+            scaleY: 1.15,
+            rotation: 0.1,
+            duration: 200,
             yoyo: true,
+            ease: 'Back.easeOut',
             onComplete: () => {
-              // Switch back to idle sprite
               if (this.sprite && this.sprite.active) {
                 this.sprite.setTexture('chog_idle');
               }
             }
           });
+          
+          // Nature energy buildup effect
+          this.createNatureEnergyEffect();
         }
       }
 
@@ -798,21 +1259,26 @@ export default class Defense {
       if (this.sprite) {
         this.sprite.setTexture('molandak_attack');
 
-        // Cast animation effect
+        // Enhanced ice cast animation
         if (this.scene && this.scene.tweens) {
+          // Crystalline formation animation
           this.scene.tweens.add({
             targets: this.sprite,
-            scaleX: 1.1,
-            scaleY: 1.1,
-            duration: 200,
+            scaleX: 1.2,
+            scaleY: 1.2,
+            rotation: -0.15,
+            duration: 250,
             yoyo: true,
+            ease: 'Power2.easeOut',
             onComplete: () => {
-              // Switch back to idle sprite
               if (this.sprite && this.sprite.active) {
                 this.sprite.setTexture('molandak_idle');
               }
             }
           });
+          
+          // Ice crystal formation effect
+          this.createIceCrystalEffect();
         }
       }
 
@@ -826,21 +1292,26 @@ export default class Defense {
       if (this.sprite) {
         this.sprite.setTexture('moyaki_attack');
 
-        // Cast animation effect
+        // Enhanced fire cast animation
         if (this.scene && this.scene.tweens) {
+          // Intense fire buildup
           this.scene.tweens.add({
             targets: this.sprite,
-            scaleX: 1.1,
-            scaleY: 1.1,
-            duration: 180,
+            scaleX: 1.25,
+            scaleY: 1.25,
+            rotation: 0.2,
+            duration: 220,
             yoyo: true,
+            ease: 'Power2.easeOut',
             onComplete: () => {
-              // Switch back to idle sprite
               if (this.sprite && this.sprite.active) {
                 this.sprite.setTexture('moyaki_idle');
               }
             }
           });
+          
+          // Fire eruption effect
+          this.createFireEruptionEffect();
         }
       }
 
@@ -850,25 +1321,30 @@ export default class Defense {
       // Show spell effect
       this.showDamageText(enemy, `${damageAmount.toFixed(1)}`, 0xFF4400);
     } else if (this.type === 'keon') {
-      // KEON premium attack animation
+      // KEON divine attack animation
       if (this.sprite) {
         this.sprite.setTexture('keon_attack');
 
-        // Enhanced cast animation effect for premium unit
+        // Enhanced divine cast animation
         if (this.scene && this.scene.tweens) {
+          // Majestic divine power buildup
           this.scene.tweens.add({
             targets: this.sprite,
-            scaleX: 1.2,
-            scaleY: 1.2,
-            duration: 250,
+            scaleX: 1.3,
+            scaleY: 1.3,
+            rotation: 0.25,
+            duration: 300,
             yoyo: true,
+            ease: 'Back.easeOut',
             onComplete: () => {
-              // Switch back to idle sprite
               if (this.sprite && this.sprite.active) {
                 this.sprite.setTexture('keon_idle');
               }
             }
           });
+          
+          // Divine radiance effect
+          this.createDivineRadianceEffect();
         }
       }
 
@@ -1399,6 +1875,128 @@ export default class Defense {
     }
   }
   
+  createNatureEnergyEffect() {
+    if (!this.scene) return;
+    
+    // Create swirling nature particles
+    for (let i = 0; i < 6; i++) {
+      const angle = (Math.PI * 2 / 6) * i;
+      const particle = this.scene.add.circle(
+        this.x + Math.cos(angle) * 15,
+        this.y + Math.sin(angle) * 15,
+        3, 0x00FF00, 0.8
+      );
+      particle.setDepth(160);
+      
+      this.scene.tweens.add({
+        targets: particle,
+        x: this.x,
+        y: this.y,
+        scale: 0.3,
+        alpha: 0,
+        duration: 400,
+        ease: 'Power2.easeIn',
+        onComplete: () => particle.destroy()
+      });
+    }
+  }
+  
+  createIceCrystalEffect() {
+    if (!this.scene) return;
+    
+    // Create ice crystal formation
+    for (let i = 0; i < 8; i++) {
+      const angle = (Math.PI * 2 / 8) * i;
+      const crystal = this.scene.add.circle(
+        this.x,
+        this.y,
+        2, 0x88DDFF, 0.9
+      );
+      crystal.setDepth(160);
+      
+      const targetX = this.x + Math.cos(angle) * 25;
+      const targetY = this.y + Math.sin(angle) * 25;
+      
+      this.scene.tweens.add({
+        targets: crystal,
+        x: targetX,
+        y: targetY,
+        scale: 1.5,
+        alpha: 0,
+        duration: 500,
+        ease: 'Power2.easeOut',
+        onComplete: () => crystal.destroy()
+      });
+    }
+  }
+  
+  createFireEruptionEffect() {
+    if (!this.scene) return;
+    
+    // Create fire eruption particles
+    for (let i = 0; i < 10; i++) {
+      const flame = this.scene.add.circle(
+        this.x + (Math.random() - 0.5) * 20,
+        this.y + (Math.random() - 0.5) * 20,
+        4, 0xFF4400, 0.9
+      );
+      flame.setDepth(160);
+      
+      this.scene.tweens.add({
+        targets: flame,
+        y: flame.y - 30 - Math.random() * 20,
+        x: flame.x + (Math.random() - 0.5) * 30,
+        scale: 0.2,
+        alpha: 0,
+        duration: 600,
+        ease: 'Power2.easeOut',
+        onComplete: () => flame.destroy()
+      });
+    }
+  }
+  
+  createDivineRadianceEffect() {
+    if (!this.scene) return;
+    
+    // Create divine light rays
+    for (let i = 0; i < 12; i++) {
+      const angle = (Math.PI * 2 / 12) * i;
+      const ray = this.scene.add.circle(
+        this.x,
+        this.y,
+        2, 0xFFD700, 0.8
+      );
+      ray.setDepth(160);
+      
+      const targetX = this.x + Math.cos(angle) * 40;
+      const targetY = this.y + Math.sin(angle) * 40;
+      
+      this.scene.tweens.add({
+        targets: ray,
+        x: targetX,
+        y: targetY,
+        scale: 2,
+        alpha: 0,
+        duration: 700,
+        ease: 'Power2.easeOut',
+        onComplete: () => ray.destroy()
+      });
+    }
+    
+    // Central divine burst
+    const burst = this.scene.add.circle(this.x, this.y, 20, 0xFFFFAA, 0.6);
+    burst.setDepth(155);
+    
+    this.scene.tweens.add({
+      targets: burst,
+      scale: 3,
+      alpha: 0,
+      duration: 800,
+      ease: 'Power2.easeOut',
+      onComplete: () => burst.destroy()
+    });
+  }
+
   createAttackEffect(enemy) {
     // --- START FIX for scene/tween errors ---
     // Early exit checks
@@ -1415,10 +2013,11 @@ export default class Defense {
     const enemyY = enemy.y || 0;
 
     try {
-        for (let i = 0; i < 8; i++) {
-            const angle = (Math.PI * 2 / 8) * i;
-            const x = enemyX + Math.cos(angle) * 20;
-            const y = enemyY + Math.sin(angle) * 20;
+        // Enhanced impact effect with more particles
+        for (let i = 0; i < 12; i++) {
+            const angle = (Math.PI * 2 / 12) * i;
+            const x = enemyX + Math.cos(angle) * 25;
+            const y = enemyY + Math.sin(angle) * 25;
 
             // Check scene validity *again* right before creating graphics/tweens
             if (!this.scene || !this.scene.add || !this.scene.tweens) {
@@ -1427,20 +2026,21 @@ export default class Defense {
             }
 
             const spark = this.scene.add.circle(
-                x, y, 3,
+                x, y, 4,
                 effectColor,
-                0.8
+                0.9
             ).setDepth(190); // Ensure visibility
 
-            // Animate spark outward
+            // Animate spark outward with more dynamic movement
             this.scene.tweens.add({
                 targets: spark,
-                x: x + Math.cos(angle) * 15,
-                y: y + Math.sin(angle) * 15,
+                x: x + Math.cos(angle) * (20 + Math.random() * 15),
+                y: y + Math.sin(angle) * (20 + Math.random() * 15),
                 alpha: 0,
-                scale: 0.5,
-                duration: 300,
-                ease: 'Quad.easeOut',
+                scale: 0.2,
+                rotation: Math.random() * Math.PI * 2,
+                duration: 400 + Math.random() * 200,
+                ease: 'Power2.easeOut',
                 onComplete: () => {
                     // Check if spark and scene still exist before destroying
                     if (spark && spark.scene) {
@@ -1449,6 +2049,19 @@ export default class Defense {
                 }
             });
         }
+        
+        // Add central impact flash
+        const flash = this.scene.add.circle(enemyX, enemyY, 15, 0xFFFFFF, 0.8);
+        flash.setDepth(195);
+        
+        this.scene.tweens.add({
+          targets: flash,
+          scale: 2.5,
+          alpha: 0,
+          duration: 300,
+          ease: 'Power2.easeOut',
+          onComplete: () => flash.destroy()
+        });
     } catch (error) {
         console.error("Error creating attack effect sparks:", error, "Enemy:", enemy);
         if (this.scene) {
@@ -2163,4 +2776,4 @@ export default class Defense {
           }
       }
   }
-} 
+}
