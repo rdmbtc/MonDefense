@@ -990,25 +990,7 @@ if (isBrowser) {
               color: '#FF0000'
             });
             
-            // Add Next Wave button with a delay before it appears
-            const nextWaveButton = this.add.rectangle(750, 30, 120, 40, 0x00AA00);
-            nextWaveButton.setInteractive({ useHandCursor: true });
-            nextWaveButton.on('pointerdown', () => {
-              this.forceNextWave();
-            });
-            
-            const nextWaveText = this.add.text(750, 30, "Next Wave", {
-              fontFamily: 'Arial',
-              fontSize: '16px',
-              color: '#FFFFFF'
-            }).setOrigin(0.5);
-            
-            // Store reference to button for enabling/disabling
-            this.nextWaveButton = { button: nextWaveButton, text: nextWaveText };
-            
-            // Hide initially until game starts
-            this.nextWaveButton.button.visible = false;
-            this.nextWaveButton.text.visible = false;
+            // Next Wave button removed - waves now progress automatically
             
             console.log("UI created");
           } catch (error) {
@@ -1016,31 +998,7 @@ if (isBrowser) {
           }
         }
         
-        // Show Next Wave button after a delay
-        showNextWaveButton() {
-          // Don't show button if auto-wave is enabled
-          if (this.gameState?.autoWave) {
-            return;
-          }
-        
-          // Show button if it was hidden
-          if (this.nextWaveButton) {
-            this.nextWaveButton.button.visible = true;
-            this.nextWaveButton.text.visible = true;
-            
-            // Make the button more noticeable with animation
-            this.tweens.add({
-              targets: [this.nextWaveButton.button, this.nextWaveButton.text],
-              scale: { from: 0.8, to: 1 },
-              duration: 500,
-              yoyo: true,
-              repeat: 2
-            });
-            
-            // Change color to make it more noticeable
-            this.nextWaveButton.button.fillColor = 0xFF8800;
-          }
-        }
+        // showNextWaveButton method removed - no longer needed
         
         // Start the game
         startGame() {
@@ -1135,21 +1093,7 @@ if (isBrowser) {
             // Start first wave - IMPORTANT: must be after setting gameState and resetting flags
             this.startWave();
             
-            // Handle Next Wave button visibility based on autoWave
-            if (!this.gameState.autoWave) {
-              // Ensure button exists before showing
-              if (!this.nextWaveButton || !this.nextWaveButton.button) {
-                // Recreate if necessary (though ideally it persists)
-                // this.createUI(); // Or a more specific function
-              }
-              this.showNextWaveButton();
-            } else {
-              // Hide next wave button if it exists when auto-wave is enabled
-              if (this.nextWaveButton && this.nextWaveButton.button) {
-                this.nextWaveButton.button.visible = false;
-                this.nextWaveButton.text.visible = false;
-              }
-            }
+            // Next Wave button handling removed - waves progress automatically
             
             // Start background music if sound manager exists and isn't already playing
             if (this.soundManager && (!this.soundManager.currentMusic || !this.soundManager.currentMusic.isPlaying)) {
@@ -1835,21 +1779,7 @@ if (isBrowser) {
             // Start first wave - IMPORTANT: must be after setting gameState and resetting flags
             this.startWave();
             
-            // Handle Next Wave button visibility based on autoWave
-            if (!this.gameState.autoWave) {
-              // Ensure button exists before showing
-              if (!this.nextWaveButton || !this.nextWaveButton.button) {
-                // Recreate if necessary (though ideally it persists)
-                // this.createUI(); // Or a more specific function
-              }
-              this.showNextWaveButton();
-            } else {
-              // Hide next wave button if it exists when auto-wave is enabled
-              if (this.nextWaveButton && this.nextWaveButton.button) {
-                this.nextWaveButton.button.visible = false;
-                this.nextWaveButton.text.visible = false;
-              }
-            }
+            // Next Wave button handling removed - waves progress automatically
             
             // Start background music if sound manager exists and isn't already playing
             if (this.soundManager && (!this.soundManager.currentMusic || !this.soundManager.currentMusic.isPlaying)) {
@@ -4871,7 +4801,7 @@ if (isBrowser) {
                 }
                 
                 // Show success feedback
-                const successText = this.add.text(400, 450, 'Score submitted successfully!\nUse "Play Again" to start a new game', {
+                const successText = this.add.text(400, 450, 'Score submitted successfully!\nUse "Play Again" to start a new game\n(Click to dismiss)', {
                   fontFamily: 'Arial',
                   fontSize: '20px',
                   color: '#00FF00',
@@ -4880,6 +4810,15 @@ if (isBrowser) {
                   align: 'center'
                 }).setOrigin(0.5);
                 successText.setDepth(1003);
+                
+                // Make success text clickable to dismiss
+                successText.setInteractive({ useHandCursor: true })
+                  .on('pointerdown', () => {
+                    successText.destroy();
+                  });
+                
+                // Store reference for cleanup during game restart
+                this.successText = successText;
                 
               } else {
                 // Re-enable button on failure
@@ -5040,15 +4979,19 @@ if (isBrowser) {
             if (this.farmCoinsText) this.farmCoinsText.setText(`Coins: ${this.gameState.farmCoins}`);
             if (this.waveText) this.waveText.setText("Wave: 1");
             if (this.livesText) this.livesText.setText("Lives: 3");
-            if (this.nextWaveButton) {
-              this.nextWaveButton.button.visible = false;
-              this.nextWaveButton.text.visible = false;
-            }
+            // Next Wave button cleanup removed - button no longer exists
             
             // Reset upgrade system UI if necessary
             if (this.upgradeSystem && typeof this.upgradeSystem.resetUI === 'function') {
               this.upgradeSystem.resetUI(); // Assuming resetUI hides/resets the panel
               this.upgradeSystem.setUIVisible(false); // Ensure it's hidden
+            }
+            
+            // Clean up success text if it exists
+            if (this.successText && typeof this.successText.destroy === 'function') {
+              this.successText.destroy();
+              this.successText = null;
+              console.log('Success text cleaned up.');
             }
             
             // Clear any lingering floating text or effects

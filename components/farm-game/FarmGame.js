@@ -543,25 +543,7 @@ const FarmGameInner = ({ farmCoins, addFarmCoins, gameMode = 'farm', onGameEvent
             </div>
             
             <div className="mt-6">
-              <button 
-                className="py-2 px-4 bg-gradient-to-r from-red-600 to-red-800 text-white font-bold rounded hover:from-red-500 hover:to-red-700 transition-all shadow-md"
-                onClick={() => {
-                  if (gameInstanceRef.current) {
-                    try {
-                      const scene = gameInstanceRef.current.scene.getScene('GameScene');
-                      if (scene && scene.forceNextWave) {
-                        scene.forceNextWave();
-                      } else {
-                        console.log("Scene or forceNextWave method not found");
-                      }
-                    } catch (error) {
-                      console.error("Error forcing next wave:", error);
-                    }
-                  }
-                }}
-              >
-                Force Next Wave
-              </button>
+              {/* Force Next Wave button removed - waves now progress automatically */}
             </div>
           </div>
         </div>
@@ -570,23 +552,7 @@ const FarmGameInner = ({ farmCoins, addFarmCoins, gameMode = 'farm', onGameEvent
       {/* Mobile controls footer - only shown on mobile */}
       {isMobile && (
         <div className="w-full mt-2 p-2 bg-black/30 text-white text-sm flex justify-between items-center">
-          <button 
-            className="py-1 px-2 bg-blue-600 text-white text-xs rounded"
-            onClick={() => {
-              if (gameInstanceRef.current) {
-                try {
-                  const scene = gameInstanceRef.current.scene.getScene('GameScene');
-                  if (scene && scene.forceNextWave) {
-                    scene.forceNextWave();
-                  }
-                } catch (error) {
-                  console.error("Error forcing next wave:", error);
-                }
-              }
-            }}
-          >
-            Force Next Wave
-          </button>
+          {/* Force Next Wave button removed - waves now progress automatically */}
           <div className="flex space-x-2">
             <button className="py-1 px-2 bg-green-600 text-white text-xs rounded">P</button>
             <button className="py-1 px-2 bg-amber-600 text-white text-xs rounded">1</button>
