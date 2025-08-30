@@ -978,9 +978,9 @@ export default class Enemy {
         }
       }
       
-      // Update score
+      // Update score - 2 points per enemy kill
       if (typeof this.scene.gameState.score === 'number') {
-        this.scene.gameState.score += this.value * 10;
+        this.scene.gameState.score += 2;
         if (typeof this.scene.updateScoreText === 'function') {
           this.scene.updateScoreText();
         }

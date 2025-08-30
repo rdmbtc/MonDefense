@@ -2706,6 +2706,14 @@ if (isBrowser) {
             this.gameState.wave++;
             this.updateWaveText();
             
+            // Add 1 point for wave completion
+            if (typeof this.gameState.score === 'number') {
+              this.gameState.score += 1;
+              if (typeof this.updateScoreText === 'function') {
+                this.updateScoreText();
+              }
+            }
+            
             // Debug log the wave change
             console.log(`Wave increased to ${this.gameState.wave}`);
             
