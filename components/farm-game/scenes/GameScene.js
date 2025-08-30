@@ -688,7 +688,7 @@ if (isBrowser) {
                 }
                 
                 // Calculate cost
-                const cost = this.pendingDefenseType === 'chog' ? 35 : 50;
+                const cost = this.pendingDefenseType === 'chog' ? 25 : 50;
                 
                 // Check if enough coins
                 if (this.gameState.farmCoins < cost) {
@@ -1402,10 +1402,10 @@ if (isBrowser) {
                 let cost = 0;
                 switch (defenseType) {
                   case 'chog': cost = 25; break;
-                  case 'molandak': cost = 50; break;
-                  case 'keon': cost = 150; break;
-                  case 'moyaki': cost = 80; break;
-                  default: cost = 50; break;
+        case 'molandak': cost = 50; break;
+        case 'keon': cost = 150; break;
+        case 'moyaki': cost = 80; break;
+        default: cost = 50; break;
                 }
                 
                 // Check if enough coins
@@ -3095,7 +3095,7 @@ if (isBrowser) {
             }
             
             // Calculate cost based on defense type
-            const cost = defenseType === 'chog' ? 30 : defenseType === 'molandak' ? 65 : defenseType === 'moyaki' ? 75 : defenseType === 'keon' ? 200 : 50;
+            const cost = defenseType === 'chog' ? 25 : defenseType === 'molandak' ? 50 : defenseType === 'moyaki' ? 80 : defenseType === 'keon' ? 150 : 50;
             
             // Check if player has enough coins
             if (this.gameState.farmCoins < cost) {
