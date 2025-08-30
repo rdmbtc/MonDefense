@@ -110,25 +110,23 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       // Initialize and play background music on first slide with user interaction
       if (chapterIndex === 0 && !backgroundMusicRef.current) {
         try {
+          // Use the correct path for background music
           backgroundMusicRef.current = new Audio('/Chapter%20One/background_music_chapter_one.mp3');
           backgroundMusicRef.current.loop = true;
           backgroundMusicRef.current.volume = 0.3;
           
-          // Add event listeners to handle loading
-          backgroundMusicRef.current.addEventListener('canplaythrough', () => {
-            if (backgroundMusicRef.current && backgroundMusicRef.current.paused) {
-              backgroundMusicRef.current.play().catch(error => {
-                console.warn('Background music play failed:', error);
+          // Try to play immediately with user interaction
+          backgroundMusicRef.current.play().catch(error => {
+            console.warn('Background music play failed:', error);
+            // Fallback: try loading first then playing
+            backgroundMusicRef.current?.load();
+            setTimeout(() => {
+              backgroundMusicRef.current?.play().catch(retryError => {
+                console.warn('Background music retry failed:', retryError);
               });
-            }
+            }, 200);
           });
           
-          backgroundMusicRef.current.addEventListener('error', (error) => {
-            console.warn('Background music error:', error);
-          });
-          
-          // Load the audio
-          backgroundMusicRef.current.load();
           console.log('Background music initialized');
         } catch (bgError) {
           console.warn('Failed to initialize background music:', bgError);
@@ -155,21 +153,18 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           soundEffectRef.current = new Audio(chapterAssets[chapterIndex].sound!);
           soundEffectRef.current.volume = 0.7;
           
-          // Add event listener for when audio can play
-          soundEffectRef.current.addEventListener('canplaythrough', () => {
-            if (soundEffectRef.current) {
-              soundEffectRef.current.play().catch(error => {
-                console.warn('Sound effect play failed:', error);
+          // Try to play immediately with user interaction
+          soundEffectRef.current.play().catch(error => {
+            console.warn('Sound effect play failed:', error);
+            // Fallback: try loading first then playing
+            soundEffectRef.current?.load();
+            setTimeout(() => {
+              soundEffectRef.current?.play().catch(retryError => {
+                console.warn('Sound effect retry failed:', retryError);
               });
-            }
+            }, 100);
           });
           
-          soundEffectRef.current.addEventListener('error', (error) => {
-            console.warn('Sound effect error:', error);
-          });
-          
-          // Load the audio
-          soundEffectRef.current.load();
           console.log('Sound effect loaded:', chapterAssets[chapterIndex].sound);
         } catch (sfxError) {
           console.warn('Failed to load sound effect:', chapterAssets[chapterIndex].sound, sfxError);

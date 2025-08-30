@@ -4702,16 +4702,25 @@ if (isBrowser) {
             // Add submit button hover effect and interaction
             submitButton.setInteractive({ useHandCursor: true })
               .on('pointerover', () => {
-                submitButton.fillColor = 0x553C9A;
-                this.tweens.add({ targets: submitButton, scale: 1.05, duration: 100 });
-                this.input.setDefaultCursor('pointer');
+                if (!this.isSubmittingScore) {
+                  submitButton.fillColor = 0x553C9A;
+                  this.tweens.add({ targets: submitButton, scale: 1.05, duration: 100 });
+                  this.input.setDefaultCursor('pointer');
+                }
               })
               .on('pointerout', () => {
-                submitButton.fillColor = 0x6B46C1;
-                this.tweens.add({ targets: submitButton, scale: 1.0, duration: 100 });
-                this.input.setDefaultCursor('default');
+                if (!this.isSubmittingScore) {
+                  submitButton.fillColor = 0x6B46C1;
+                  this.tweens.add({ targets: submitButton, scale: 1.0, duration: 100 });
+                  this.input.setDefaultCursor('default');
+                }
               })
               .on('pointerdown', () => {
+                // Prevent multiple submissions
+                if (this.isSubmittingScore) {
+                  return;
+                }
+
                 // Play click sound if available
                 if (this.soundManager) {
                   this.soundManager.play('ui_click_confirm', { volume: 0.8 }); 
@@ -4724,8 +4733,8 @@ if (isBrowser) {
                   duration: 80,
                   yoyo: true,
                   onComplete: () => {
-                    // Submit score via API
-                    this.submitScore(finalScore, completedWaves);
+                    // Submit score via API and handle UI updates
+                    this.submitScore(finalScore, completedWaves, submitButton, submitText);
                   }
                 });
               });
@@ -4804,7 +4813,7 @@ if (isBrowser) {
         }
 
         // Add method to submit score via API
-        async submitScore(score, waves) {
+        async submitScore(score, waves, submitButton, submitText) {
           // Prevent multiple submissions
           if (this.isSubmittingScore) {
             console.log('Score submission already in progress, ignoring duplicate request');
@@ -4812,6 +4821,14 @@ if (isBrowser) {
           }
           
           this.isSubmittingScore = true;
+          
+          // Disable the submit button immediately
+          if (submitButton && submitText) {
+            submitButton.fillColor = 0x666666; // Gray out the button
+            submitButton.disableInteractive();
+            submitText.setColor('#AAAAAA'); // Gray out the text
+            submitText.setText('Submitting...');
+          }
           
           try {
             console.log(`Submitting score: Score=${score}, Waves=${waves}`);
@@ -4836,29 +4853,52 @@ if (isBrowser) {
               feedbackText.destroy();
               
               if (success) {
+                // Update button to show success and hide it
+                if (submitButton && submitText) {
+                  submitText.setText('Score Submitted!');
+                  submitText.setColor('#00FF00');
+                  
+                  // Fade out the submit button after showing success
+                  this.tweens.add({
+                    targets: [submitButton, submitText],
+                    alpha: 0,
+                    duration: 2000,
+                    onComplete: () => {
+                      submitButton.destroy();
+                      submitText.destroy();
+                    }
+                  });
+                }
+                
                 // Show success feedback
-                const successText = this.add.text(400, 400, 'Score submitted successfully!', {
+                const successText = this.add.text(400, 450, 'Score submitted successfully!\nUse "Play Again" to start a new game', {
                   fontFamily: 'Arial',
-                  fontSize: '24px',
+                  fontSize: '20px',
                   color: '#00FF00',
                   stroke: '#000000',
-                  strokeThickness: 2
+                  strokeThickness: 2,
+                  align: 'center'
                 }).setOrigin(0.5);
                 successText.setDepth(1003);
                 
-                // Fade out the success text after 3 seconds
-                this.tweens.add({
-                  targets: successText,
-                  alpha: 0,
-                  duration: 3000,
-                  onComplete: () => {
-                    successText.destroy();
-                  }
-                });
               } else {
+                // Re-enable button on failure
+                if (submitButton && submitText) {
+                  submitButton.fillColor = 0x6B46C1;
+                  submitButton.setInteractive({ useHandCursor: true });
+                  submitText.setColor('#FFFFFF');
+                  submitText.setText('Submit Score');
+                }
                 throw new Error('Submission failed');
               }
             } else {
+              // Re-enable button if submission not available
+              if (submitButton && submitText) {
+                submitButton.fillColor = 0x6B46C1;
+                submitButton.setInteractive({ useHandCursor: true });
+                submitText.setColor('#FFFFFF');
+                submitText.setText('Submit Score');
+              }
               throw new Error('Score submission not available');
             }
             
@@ -4866,20 +4906,21 @@ if (isBrowser) {
             console.error('Error submitting score:', error);
             
             // Show error feedback
-            const errorText = this.add.text(400, 400, 'Score submission failed', {
+            const errorText = this.add.text(400, 400, 'Score submission failed\nTry again or use "Play Again"', {
               fontFamily: 'Arial',
-              fontSize: '24px',
+              fontSize: '20px',
               color: '#FF0000',
               stroke: '#000000',
-              strokeThickness: 2
+              strokeThickness: 2,
+              align: 'center'
             }).setOrigin(0.5);
             errorText.setDepth(1003);
             
-            // Fade out the error text after 3 seconds
+            // Fade out the error text after 4 seconds
             this.tweens.add({
               targets: errorText,
               alpha: 0,
-              duration: 3000,
+              duration: 4000,
               onComplete: () => {
                 errorText.destroy();
               }
