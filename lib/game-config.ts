@@ -9,10 +9,10 @@ export const GAME_CONFIG = {
     SIGNER_WALLET: '0xD138925168aD03fEe0Cca73cD949F1077C82c093',
     
     // Game ID for leaderboard integration
-    GAME_ID: '119',
+    GAME_ID: '230',
     
     // Leaderboard URL
-    LEADERBOARD_URL: 'https://monad-games-id-site.vercel.app/leaderboard?page=1&gameId=119'
+    LEADERBOARD_URL: 'https://monad-games-id-site.vercel.app/leaderboard?page=1&gameId=230'
   },
   
   // Game settings
