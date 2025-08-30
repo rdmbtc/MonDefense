@@ -88,13 +88,13 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   // Chapter One assets (images 0-7, sounds for 1,3,5,6,7)
   const chapterAssets = [
     { image: '/ChapterOne/0.png', sound: undefined },
-    { image: '/ChapterOne/1.png', sound: '/ChapterOne/1.wav' },
+    { image: '/ChapterOne/1.png', sound: '/ChapterOne/1.mp3' },
     { image: '/ChapterOne/2.png', sound: undefined },
-    { image: '/ChapterOne/3.png', sound: '/ChapterOne/3.wav' },
+    { image: '/ChapterOne/3.png', sound: '/ChapterOne/3.mp3' },
     { image: '/ChapterOne/4.png', sound: undefined },
-    { image: '/ChapterOne/5.png', sound: '/ChapterOne/5.wav' },
-    { image: '/ChapterOne/6.png', sound: '/ChapterOne/6.wav' },
-    { image: '/ChapterOne/7.png', sound: '/ChapterOne/7.wav' }
+    { image: '/ChapterOne/5.png', sound: '/ChapterOne/5.mp3' },
+    { image: '/ChapterOne/6.png', sound: '/ChapterOne/6.mp3' },
+    { image: '/ChapterOne/7.png', sound: '/ChapterOne/7.mp3' }
   ];
 
   // Handle chapter progression

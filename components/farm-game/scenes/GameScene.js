@@ -105,6 +105,15 @@ if (isBrowser) {
           this.lastEnemyCleanupTime = 0; // Add this property to track cleanup timing
           this.volumeControls = null; // Add property for volume controls
           this.isSubmittingScore = false; // Flag to prevent multiple score submissions
+          
+          // Weather System Properties
+          this.weatherSystem = {
+            currentWeather: 'sunny', // sunny, rainy, snow, cloudy
+            weatherParticles: null,
+            weatherBackground: null,
+            weatherText: null,
+            lastWeatherChange: 1 // Track last wave when weather changed
+          };
         }
         
         init(data) {
@@ -596,6 +605,9 @@ if (isBrowser) {
             // Create UI elements
             this.createUI();
             
+            // Initialize weather system
+            this.initializeWeatherSystem();
+            
             // Set up defenses array
             this.defenses = [];
             
@@ -990,11 +1002,196 @@ if (isBrowser) {
               color: '#FF0000'
             });
             
+            // Weather UI
+            this.weatherSystem.weatherText = this.add.text(10, 90, "Weather: Sunny", {
+              fontFamily: 'Arial',
+              fontSize: '18px',
+              color: '#FFD700'
+            });
+            
             // Next Wave button removed - waves now progress automatically
             
             console.log("UI created");
           } catch (error) {
             console.error("Error creating UI:", error);
+          }
+        }
+        
+        // Weather System Methods
+        initializeWeatherSystem() {
+          // Initialize weather background overlay
+          this.weatherSystem.weatherBackground = this.add.rectangle(400, 300, 800, 600, 0x000000, 0);
+          this.weatherSystem.weatherBackground.setDepth(-1);
+          
+          // Set initial weather
+          this.updateWeather('sunny');
+        }
+        
+        updateWeather(newWeather) {
+           if (this.weatherSystem.currentWeather === newWeather) return;
+           
+           console.log(`Weather changing from ${this.weatherSystem.currentWeather} to ${newWeather}`);
+           
+           // Fade out current weather effects
+           if (this.weatherSystem.weatherParticles) {
+             this.tweens.add({
+               targets: this.weatherSystem.weatherParticles,
+               alpha: 0,
+               duration: 1000,
+               onComplete: () => {
+                 if (this.weatherSystem.weatherParticles) {
+                   this.weatherSystem.weatherParticles.destroy();
+                   this.weatherSystem.weatherParticles = null;
+                 }
+               }
+             });
+           }
+           
+           // Fade out current background overlay
+           if (this.weatherSystem.weatherBackground) {
+             this.tweens.add({
+               targets: this.weatherSystem.weatherBackground,
+               alpha: 0,
+               duration: 800
+             });
+           }
+           
+           this.weatherSystem.currentWeather = newWeather;
+           
+           // Animate weather text change
+           if (this.weatherSystem.weatherText) {
+             const weatherName = newWeather.charAt(0).toUpperCase() + newWeather.slice(1);
+             
+             // Scale and fade animation for text
+             this.tweens.add({
+               targets: this.weatherSystem.weatherText,
+               scale: 1.3,
+               alpha: 0.5,
+               duration: 300,
+               yoyo: true,
+               onStart: () => {
+                 this.weatherSystem.weatherText.setText(`Weather: ${weatherName}`);
+               },
+               onComplete: () => {
+                 this.weatherSystem.weatherText.setScale(1);
+                 this.weatherSystem.weatherText.setAlpha(1);
+               }
+             });
+           }
+           
+           // Delay applying new weather effects for smooth transition
+           this.time.delayedCall(1200, () => {
+             this.applyWeatherEffects(newWeather);
+           });
+         }
+        
+        applyWeatherEffects(weather) {
+          // Reset background overlay
+          this.weatherSystem.weatherBackground.setAlpha(0);
+          this.weatherSystem.weatherBackground.setTint(0xFFFFFF);
+          
+          switch (weather) {
+            case 'sunny':
+              // Bright and clear
+              this.weatherSystem.weatherText.setColor('#FFD700');
+              break;
+              
+            case 'rainy':
+              // Dark blue overlay and rain particles
+              this.weatherSystem.weatherBackground.setTint(0x4A90E2);
+              this.weatherSystem.weatherText.setColor('#4A90E2');
+              this.createRainParticles();
+              // Fade in overlay
+              this.tweens.add({
+                targets: this.weatherSystem.weatherBackground,
+                alpha: 0.2,
+                duration: 1000
+              });
+              break;
+              
+            case 'snow':
+              // Light blue overlay and snow particles
+              this.weatherSystem.weatherBackground.setTint(0xE6F3FF);
+              this.weatherSystem.weatherText.setColor('#87CEEB');
+              this.createSnowParticles();
+              // Fade in overlay
+              this.tweens.add({
+                targets: this.weatherSystem.weatherBackground,
+                alpha: 0.3,
+                duration: 1000
+              });
+              break;
+              
+            case 'cloudy':
+              // Gray overlay and moving clouds
+              this.weatherSystem.weatherBackground.setTint(0x808080);
+              this.weatherSystem.weatherText.setColor('#808080');
+              this.createCloudParticles();
+              // Fade in overlay
+              this.tweens.add({
+                targets: this.weatherSystem.weatherBackground,
+                alpha: 0.15,
+                duration: 1000
+              });
+              break;
+          }
+        }
+        
+        createRainParticles() {
+          this.weatherSystem.weatherParticles = this.add.particles(0, 0, 'pixel', {
+            x: { min: 0, max: 800 },
+            y: -10,
+            speedY: { min: 200, max: 400 },
+            speedX: { min: -50, max: -20 },
+            scale: { min: 0.5, max: 2 },
+            alpha: { min: 0.3, max: 0.8 },
+            tint: 0x4A90E2,
+            lifespan: 3000,
+            frequency: 50
+          });
+        }
+        
+        createSnowParticles() {
+          this.weatherSystem.weatherParticles = this.add.particles(0, 0, 'pixel', {
+            x: { min: 0, max: 800 },
+            y: -10,
+            speedY: { min: 50, max: 150 },
+            speedX: { min: -30, max: 30 },
+            scale: { min: 1, max: 3 },
+            alpha: { min: 0.6, max: 1 },
+            tint: 0xFFFFFF,
+            lifespan: 5000,
+            frequency: 80
+          });
+        }
+        
+        createCloudParticles() {
+          this.weatherSystem.weatherParticles = this.add.particles(0, 0, 'pixel', {
+            x: { min: -50, max: 850 },
+            y: { min: 50, max: 150 },
+            speedX: { min: 20, max: 60 },
+            speedY: 0,
+            scale: { min: 8, max: 15 },
+            alpha: { min: 0.2, max: 0.5 },
+            tint: 0xC0C0C0,
+            lifespan: 8000,
+            frequency: 200
+          });
+        }
+        
+        checkWeatherChange() {
+          // Change weather every 5 waves
+          if (this.gameState.wave % 5 === 1 && this.gameState.wave !== this.weatherSystem.lastWeatherChange) {
+            const weatherTypes = ['sunny', 'rainy', 'snow', 'cloudy'];
+            const currentIndex = weatherTypes.indexOf(this.weatherSystem.currentWeather);
+            const nextIndex = (currentIndex + 1) % weatherTypes.length;
+            
+            this.updateWeather(weatherTypes[nextIndex]);
+            this.weatherSystem.lastWeatherChange = this.gameState.wave;
+            
+            // Show weather change notification
+            const weatherName = weatherTypes[nextIndex].charAt(0).toUpperCase() + weatherTypes[nextIndex].slice(1);
+            this.showFloatingText(400, 200, `Weather: ${weatherName}!`, 0xFFD700);
           }
         }
         
@@ -1967,6 +2164,10 @@ if (isBrowser) {
             // Update UI
             this.updateWaveText();
             this.showWaveStartText(this.gameState.wave); // <-- ADD THIS LINE
+            
+            // Check for weather changes every 5 waves
+            this.checkWeatherChange();
+            
             this.soundManager?.play('wave_start');
     
             // Short delay before first spawn
