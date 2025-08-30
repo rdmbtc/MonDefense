@@ -432,9 +432,14 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         try {
           // Wait for any ongoing play promise to resolve first
           if (backgroundMusicPlayPromise.current) {
-            await backgroundMusicPlayPromise.current.catch(() => {});
+            backgroundMusicPlayPromise.current.catch(() => {}).then(() => {
+              if (backgroundMusicRef.current) {
+                backgroundMusicRef.current.pause();
+              }
+            });
+          } else {
+            backgroundMusicRef.current.pause();
           }
-          backgroundMusicRef.current.pause();
         } catch (e) {
           // Ignore pause errors
         }
@@ -443,9 +448,14 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         try {
           // Wait for any ongoing play promise to resolve first
           if (soundEffectPlayPromise.current) {
-            await soundEffectPlayPromise.current.catch(() => {});
+            soundEffectPlayPromise.current.catch(() => {}).then(() => {
+              if (soundEffectRef.current) {
+                soundEffectRef.current.pause();
+              }
+            });
+          } else {
+            soundEffectRef.current.pause();
           }
-          soundEffectRef.current.pause();
         } catch (e) {
           // Ignore pause errors
         }
@@ -532,16 +542,29 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                 try {
                   // Wait for any ongoing play promise to resolve first
                   if (backgroundMusicPlayPromise.current) {
-                    await backgroundMusicPlayPromise.current.catch(() => {});
-                  }
-                  backgroundMusicRef.current.pause();
-                  backgroundMusicRef.current.currentTime = 0;
-                } catch (e) {
-                  // Ignore pause errors
-                }
-              }
-              setGameMode('game');
-              setGameStarted(true);
+                     backgroundMusicPlayPromise.current.catch(() => {}).then(() => {
+                       if (backgroundMusicRef.current) {
+                         backgroundMusicRef.current.pause();
+                         backgroundMusicRef.current.currentTime = 0;
+                       }
+                       setGameMode('game');
+                       setGameStarted(true);
+                     });
+                   } else {
+                     backgroundMusicRef.current.pause();
+                     backgroundMusicRef.current.currentTime = 0;
+                     setGameMode('game');
+                     setGameStarted(true);
+                   }
+                 } catch (e) {
+                   // Ignore pause errors
+                   setGameMode('game');
+                   setGameStarted(true);
+                 }
+               } else {
+                 setGameMode('game');
+                 setGameStarted(true);
+               }
             }}
             variant="outline"
             className="bg-black/70 backdrop-blur border-white/20 text-white hover:bg-white/20 text-xs md:text-sm px-2 md:px-4 py-1 md:py-2"
