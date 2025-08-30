@@ -34,6 +34,12 @@ export default class Defense {
     // Get current wave for scaling
     const currentWave = this.scene.gameState?.wave || 1;
     
+    // Wave-based lifetime system
+    this.placementWave = currentWave; // Track when this defense was placed
+    this.waveLifetime = this.getWaveLifetime(type); // How many waves this defense survives
+    this.expirationWave = this.placementWave + this.waveLifetime; // When this defense expires
+    this.isExpired = false;
+    
     // Set properties based on defense type
     if (type === 'chog') {
       this.cost = 25; // Basic/starter defense - more affordable
@@ -107,6 +113,88 @@ export default class Defense {
     
     // Apply any existing upgrades
     this.applyUpgrades();
+  }
+  
+  // Get wave lifetime based on defense type
+  getWaveLifetime(type) {
+    const lifetimes = {
+      'chog': 2,      // Basic defense - 2 waves
+      'molandak': 3,  // Mid-tier defense - 3 waves
+      'moyaki': 3,    // Mid-tier defense - 3 waves
+      'keon': 4       // Premium defense - 4 waves
+    };
+    return lifetimes[type] || 2; // Default to 2 waves
+  }
+  
+  // Check if defense should expire based on current wave
+  checkWaveExpiration(currentWave) {
+    if (this.isExpired) return true;
+    
+    if (currentWave >= this.expirationWave) {
+      this.expireDefense();
+      return true;
+    }
+    return false;
+  }
+  
+  // Handle defense expiration
+  expireDefense() {
+    if (this.isExpired) return;
+    
+    this.isExpired = true;
+    this.active = false;
+    
+    // Show expiration animation
+    this.addExpirationAnimation();
+    
+    // Schedule destruction after animation
+    this.scene.time.delayedCall(1500, () => {
+      this.destroy();
+    });
+  }
+  
+  // Add expiration animation
+  addExpirationAnimation() {
+    if (!this.sprite || !this.scene) return;
+    
+    // Flash red to indicate expiration
+    this.scene.tweens.add({
+      targets: this.sprite,
+      tint: 0xFF0000,
+      duration: 200,
+      yoyo: true,
+      repeat: 3
+    });
+    
+    // Fade out
+    this.scene.tweens.add({
+      targets: this.sprite,
+      alpha: 0,
+      scale: 0.5,
+      duration: 1000,
+      delay: 600,
+      ease: 'Power2.easeIn'
+    });
+    
+    // Show expiration text
+    const expirationText = this.scene.add.text(this.x, this.y - 30, 'EXPIRED', {
+      fontSize: '16px',
+      fontFamily: 'Arial',
+      color: '#FF0000',
+      stroke: '#000000',
+      strokeThickness: 2
+    }).setOrigin(0.5);
+    
+    expirationText.setDepth(200);
+    
+    this.scene.tweens.add({
+      targets: expirationText,
+      y: this.y - 60,
+      alpha: 0,
+      duration: 1500,
+      ease: 'Power2.easeOut',
+      onComplete: () => expirationText.destroy()
+    });
   }
   
   createChogMage() {

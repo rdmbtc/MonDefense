@@ -1210,16 +1210,16 @@ if (isBrowser) {
         
         createRainParticles() {
           this.weatherSystem.weatherParticles = this.add.particles(0, 0, 'pixel', {
-            x: { min: 0, max: 800 },
-            y: -10,
-            speedY: { min: 300, max: 500 },
-            speedX: { min: -30, max: -10 },
-            scale: { min: 1, max: 3 },
-            alpha: { min: 0.6, max: 1.0 },
-            tint: 0x87CEEB,
-            lifespan: 2000,
-            frequency: 30,
-            gravityY: 100
+            x: { min: -50, max: 850 }, // Wider spawn area for better coverage
+            y: -20,
+            speedY: { min: 600, max: 900 }, // Much faster falling speed
+            speedX: { min: -50, max: -20 }, // More diagonal rain effect
+            scale: { min: 2, max: 6 }, // Larger, more visible raindrops
+            alpha: { min: 0.8, max: 1.0 }, // More opaque for better visibility
+            tint: 0x6BB6FF, // Brighter blue for better visibility
+            lifespan: 1500, // Shorter lifespan for faster refresh
+            frequency: 15, // Much denser rain (lower frequency = more particles)
+            gravityY: 200 // Stronger gravity for realistic fall
           });
           
           // Set higher depth to ensure visibility
@@ -1244,16 +1244,16 @@ if (isBrowser) {
         
         createSnowParticles() {
           this.weatherSystem.weatherParticles = this.add.particles(0, 0, 'pixel', {
-            x: { min: 0, max: 800 },
-            y: -10,
-            speedY: { min: 50, max: 150 },
-            speedX: { min: -30, max: 30 },
-            scale: { min: 1, max: 4 },
-            alpha: { min: 0.7, max: 1 },
+            x: { min: -50, max: 850 }, // Wider spawn area
+            y: -20,
+            speedY: { min: 80, max: 200 }, // Slightly faster falling
+            speedX: { min: -40, max: 40 }, // More wind effect
+            scale: { min: 2, max: 6 }, // Larger snowflakes
+            alpha: { min: 0.8, max: 1 }, // More visible
             tint: 0xFFFFFF,
-            lifespan: 6000,
-            frequency: 60,
-            gravityY: 20
+            lifespan: 8000, // Longer lifespan for gentle drift
+            frequency: 25, // Much denser snowfall (was 60, now 25)
+            gravityY: 30 // Slightly stronger gravity
           });
           
           // Set higher depth to ensure visibility
@@ -2239,6 +2239,14 @@ if (isBrowser) {
             if (typeof addFarmCoins === 'function') {
               addFarmCoins(amount);
             }
+            
+            // Emit coinsEarned event for React component when coins are gained
+            if (amount > 0) {
+              const onGameEvent = this.registry.get('onGameEvent');
+              if (typeof onGameEvent === 'function') {
+                onGameEvent('coinsEarned', { amount: amount, total: newCoins });
+              }
+            }
 
             console.log("Farm coins updated:", newCoins);
 
@@ -2329,6 +2337,9 @@ if (isBrowser) {
               return;
             }
     
+            // Check for expired defenses at wave start
+            this.checkDefenseExpirations(this.gameState.wave);
+            
             // Reset wave-specific state
             this.waveInProgress = true;
             this.isSpawningEnemies = true;
@@ -3171,14 +3182,199 @@ if (isBrowser) {
 
 
             // Set initial tool to attack mode
-            this.setToolMode('attack');
+        this.setToolMode('attack');
 
-            // Initialize advanced defense button visibility
-            this.updateAdvancedDefenseButtons();
-          } catch (error) {
-            console.error("Error creating toolbar:", error);
-          }
+        // Initialize advanced defense button visibility
+        this.updateAdvancedDefenseButtons();
+        
+        // Initialize tooltip system
+        this.initializeTooltipSystem();
+        
+        // Add hover handlers to defense buttons
+        this.addDefenseTooltipHandlers();
+      } catch (error) {
+        console.error("Error creating toolbar:", error);
+      }
+    }
+
+    // Initialize the tooltip system
+    initializeTooltipSystem() {
+      // Create tooltip container
+      this.tooltip = {
+        background: null,
+        nameText: null,
+        lifetimeText: null,
+        damageText: null,
+        abilityText: null,
+        visible: false
+      };
+      
+      // Create tooltip background
+      this.tooltip.background = this.add.rectangle(0, 0, 200, 120, 0x000000, 0.9)
+        .setDepth(3000)
+        .setVisible(false)
+        .setStrokeStyle(2, 0x444444);
+      
+      // Create tooltip texts
+      this.tooltip.nameText = this.add.text(0, 0, '', {
+        fontFamily: 'Arial',
+        fontSize: '14px',
+        color: '#FFFFFF',
+        fontStyle: 'bold'
+      }).setDepth(3001).setVisible(false);
+      
+      this.tooltip.lifetimeText = this.add.text(0, 0, '', {
+        fontFamily: 'Arial',
+        fontSize: '12px',
+        color: '#FFFF00'
+      }).setDepth(3001).setVisible(false);
+      
+      this.tooltip.damageText = this.add.text(0, 0, '', {
+        fontFamily: 'Arial',
+        fontSize: '12px',
+        color: '#FF6666'
+      }).setDepth(3001).setVisible(false);
+      
+      this.tooltip.abilityText = this.add.text(0, 0, '', {
+        fontFamily: 'Arial',
+        fontSize: '12px',
+        color: '#66CCFF',
+        wordWrap: { width: 180 }
+      }).setDepth(3001).setVisible(false);
+    }
+    
+    // Show tooltip for defense type
+    showDefenseTooltip(x, y, defenseType) {
+      if (!this.tooltip || this.tooltip.visible) return;
+      
+      const stats = this.getDefenseStats(defenseType);
+      if (!stats) return;
+      
+      // Update tooltip content
+      this.tooltip.nameText.setText(stats.name);
+      this.tooltip.lifetimeText.setText(`Lifetime: ${stats.lifetime} waves`);
+      this.tooltip.damageText.setText(`Damage: ${stats.damage}`);
+      this.tooltip.abilityText.setText(`Ability: ${stats.ability}`);
+      
+      // Position tooltip elements
+      const tooltipX = Math.min(x + 10, this.cameras.main.width - 210);
+      const tooltipY = Math.max(y - 60, 10);
+      
+      this.tooltip.background.setPosition(tooltipX + 100, tooltipY + 60);
+      this.tooltip.nameText.setPosition(tooltipX + 10, tooltipY + 20);
+      this.tooltip.lifetimeText.setPosition(tooltipX + 10, tooltipY + 40);
+      this.tooltip.damageText.setPosition(tooltipX + 10, tooltipY + 60);
+      this.tooltip.abilityText.setPosition(tooltipX + 10, tooltipY + 80);
+      
+      // Show tooltip with smooth fade-in
+      this.tooltip.background.setVisible(true).setAlpha(0);
+      this.tooltip.nameText.setVisible(true).setAlpha(0);
+      this.tooltip.lifetimeText.setVisible(true).setAlpha(0);
+      this.tooltip.damageText.setVisible(true).setAlpha(0);
+      this.tooltip.abilityText.setVisible(true).setAlpha(0);
+      
+      this.tweens.add({
+        targets: [this.tooltip.background, this.tooltip.nameText, this.tooltip.lifetimeText, this.tooltip.damageText, this.tooltip.abilityText],
+        alpha: 1,
+        duration: 150,
+        ease: 'Power2'
+      });
+      
+      this.tooltip.visible = true;
+    }
+    
+    // Hide tooltip with smooth fade-out
+    hideDefenseTooltip() {
+      if (!this.tooltip || !this.tooltip.visible) return;
+      
+      this.tweens.add({
+        targets: [this.tooltip.background, this.tooltip.nameText, this.tooltip.lifetimeText, this.tooltip.damageText, this.tooltip.abilityText],
+        alpha: 0,
+        duration: 100,
+        ease: 'Power2',
+        onComplete: () => {
+          this.tooltip.background.setVisible(false);
+          this.tooltip.nameText.setVisible(false);
+          this.tooltip.lifetimeText.setVisible(false);
+          this.tooltip.damageText.setVisible(false);
+          this.tooltip.abilityText.setVisible(false);
+          this.tooltip.visible = false;
         }
+      });
+    }
+    
+    // Get defense stats for tooltip
+    getDefenseStats(defenseType) {
+      const baseStats = {
+        chog: {
+          name: 'CHOG Defender',
+          lifetime: 8,
+          damage: 35,
+          ability: 'Nature magic with healing aura'
+        },
+        molandak: {
+          name: 'MOLANDAK Guardian', 
+          lifetime: 6,
+          damage: 50,
+          ability: 'Ice magic with freeze effects'
+        },
+        moyaki: {
+          name: 'MOYAKI Warrior',
+          lifetime: 4,
+          damage: 80,
+          ability: 'Fire magic with area damage'
+        },
+        keon: {
+          name: 'KEON Champion',
+          lifetime: 10,
+          damage: 60,
+          ability: 'Divine magic with special attacks'
+        }
+      };
+      
+      let stats = baseStats[defenseType];
+      if (!stats) return null;
+      
+      // Apply upgrade multipliers if available
+      if (this.upgradeSystem) {
+        try {
+          const powerMultiplier = this.upgradeSystem.getUpgradeValue(`${defenseType}Power`) || 1;
+          stats = {
+            ...stats,
+            damage: Math.round(stats.damage * powerMultiplier)
+          };
+        } catch (error) {
+          console.warn('Could not apply upgrade multipliers to tooltip:', error);
+        }
+      }
+      
+      return stats;
+    }
+    
+    // Add hover handlers to defense buttons
+    addDefenseTooltipHandlers() {
+      const defenseButtons = [
+        { button: this.toolbarButtons.chog, image: this.toolbarButtons.chogImage, type: 'chog' },
+        { button: this.toolbarButtons.molandak, image: this.toolbarButtons.molandakImage, type: 'molandak' },
+        { button: this.toolbarButtons.keon, image: this.toolbarButtons.keonImage, type: 'keon' },
+        { button: this.toolbarButtons.moyaki, image: this.toolbarButtons.moyakiImage, type: 'moyaki' }
+      ];
+      
+      defenseButtons.forEach(({ button, image, type }) => {
+        if (button && image) {
+          // Add hover handlers to both button and image
+          [button, image].forEach(element => {
+            element.on('pointerover', () => {
+              this.showDefenseTooltip(element.x, element.y, type);
+            });
+            
+            element.on('pointerout', () => {
+              this.hideDefenseTooltip();
+            });
+          });
+        }
+      });
+    }
 
         addHelperFunctions() {
           // Add the missing isPointInFarmArea function
@@ -3552,6 +3748,12 @@ if (isBrowser) {
               
               // Show wave completion notification with animation
               this.showWaveCompletionMessage();
+              
+              // Emit waveComplete event for React component
+              const onGameEvent = this.registry.get('onGameEvent');
+              if (typeof onGameEvent === 'function') {
+                onGameEvent('waveComplete', { wave: this.gameState.wave, score: this.gameState.score });
+              }
               
               // Prevent calling forceNextWave multiple times rapidly
               this.waveChangeInProgress = true;
@@ -5668,6 +5870,46 @@ if (isBrowser) {
             });
         }
 
+        // --- Defense Lifetime Management ---
+        checkDefenseExpirations(currentWave) {
+          if (!this.defenses || !Array.isArray(this.defenses)) {
+            return;
+          }
+          
+          console.log(`Checking defense expirations for wave ${currentWave}`);
+          
+          // Check each defense for expiration
+          const expiredDefenses = [];
+          
+          for (let i = this.defenses.length - 1; i >= 0; i--) {
+            const defense = this.defenses[i];
+            
+            if (defense && typeof defense.checkWaveExpiration === 'function') {
+              const isExpired = defense.checkWaveExpiration(currentWave);
+              
+              if (isExpired) {
+                console.log(`Defense ${defense.type} placed in wave ${defense.placementWave} expired at wave ${currentWave}`);
+                expiredDefenses.push(defense);
+                
+                // Remove from defenses array
+                this.defenses.splice(i, 1);
+              }
+            } else if (defense && defense.isExpired) {
+              // Fallback for defenses that don't have the method but are marked expired
+              console.log(`Removing expired defense ${defense.type}`);
+              expiredDefenses.push(defense);
+              this.defenses.splice(i, 1);
+            }
+          }
+          
+          if (expiredDefenses.length > 0) {
+            console.log(`Removed ${expiredDefenses.length} expired defenses`);
+            
+            // Show notification if defenses expired
+            this.showFloatingText(400, 100, `${expiredDefenses.length} defense(s) expired!`, 0xFF6600);
+          }
+        }
+        
         // --- NEW: Create Flying Coin Effect --- 
         createFlyingCoinEffect(startX, startY, amount) {
             if (!this.textures.exists('coin') || !this.farmCoinsTargetPos) {
