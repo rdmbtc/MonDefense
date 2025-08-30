@@ -48,6 +48,8 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const { farmCoins, addFarmCoins } = useGameContext();
   const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
   const soundEffectRef = useRef<HTMLAudioElement | null>(null);
+  const backgroundMusicPlayPromise = useRef<Promise<void> | null>(null);
+  const soundEffectPlayPromise = useRef<Promise<void> | null>(null);
   
   // API integration state
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -122,10 +124,13 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
             await new Promise(resolve => setTimeout(resolve, 100));
             try {
               if (backgroundMusicRef.current) {
-                await backgroundMusicRef.current.play();
+                backgroundMusicPlayPromise.current = backgroundMusicRef.current.play();
+                await backgroundMusicPlayPromise.current;
               }
             } catch (bgMusicError) {
               console.warn('Background music playback failed:', bgMusicError);
+            } finally {
+              backgroundMusicPlayPromise.current = null;
             }
           };
           
@@ -137,6 +142,10 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           // Stop current sound effect safely
           if (soundEffectRef.current) {
             try {
+              // Wait for any ongoing play promise to resolve first
+              if (soundEffectPlayPromise.current) {
+                await soundEffectPlayPromise.current.catch(() => {});
+              }
               soundEffectRef.current.pause();
               soundEffectRef.current.currentTime = 0;
             } catch (e) {
@@ -155,9 +164,12 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               await new Promise(resolve => setTimeout(resolve, 50));
               
               try {
-                await soundEffectRef.current.play();
+                soundEffectPlayPromise.current = soundEffectRef.current.play();
+                await soundEffectPlayPromise.current;
               } catch (playError) {
                 console.warn('Sound effect playback failed:', playError);
+              } finally {
+                soundEffectPlayPromise.current = null;
               }
             }
           };
@@ -175,6 +187,10 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         // End of chapter, start the game
         if (backgroundMusicRef.current) {
           try {
+            // Wait for any ongoing play promise to resolve first
+            if (backgroundMusicPlayPromise.current) {
+              await backgroundMusicPlayPromise.current.catch(() => {});
+            }
             backgroundMusicRef.current.pause();
             backgroundMusicRef.current.currentTime = 0;
           } catch (e) {
@@ -193,6 +209,10 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           // Stop current sound effect safely
           if (soundEffectRef.current) {
             try {
+              // Wait for any ongoing play promise to resolve first
+              if (soundEffectPlayPromise.current) {
+                await soundEffectPlayPromise.current.catch(() => {});
+              }
               soundEffectRef.current.pause();
               soundEffectRef.current.currentTime = 0;
             } catch (e) {
@@ -211,9 +231,12 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               await new Promise(resolve => setTimeout(resolve, 50));
               
               try {
-                await soundEffectRef.current.play();
+                soundEffectPlayPromise.current = soundEffectRef.current.play();
+                await soundEffectPlayPromise.current;
               } catch (playError) {
                 console.warn('Sound effect playback failed:', playError);
+              } finally {
+                soundEffectPlayPromise.current = null;
               }
             }
           };
@@ -406,10 +429,26 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       
       // Clean up audio
       if (backgroundMusicRef.current) {
-        backgroundMusicRef.current.pause();
+        try {
+          // Wait for any ongoing play promise to resolve first
+          if (backgroundMusicPlayPromise.current) {
+            await backgroundMusicPlayPromise.current.catch(() => {});
+          }
+          backgroundMusicRef.current.pause();
+        } catch (e) {
+          // Ignore pause errors
+        }
       }
       if (soundEffectRef.current) {
-        soundEffectRef.current.pause();
+        try {
+          // Wait for any ongoing play promise to resolve first
+          if (soundEffectPlayPromise.current) {
+            await soundEffectPlayPromise.current.catch(() => {});
+          }
+          soundEffectRef.current.pause();
+        } catch (e) {
+          // Ignore pause errors
+        }
       }
     };
   }, [gameMode, walletAddress, sessionToken, sessionId, hasSubmittedScore, isSubmitting, handleScoreSubmission]);
@@ -491,6 +530,10 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               
               if (backgroundMusicRef.current) {
                 try {
+                  // Wait for any ongoing play promise to resolve first
+                  if (backgroundMusicPlayPromise.current) {
+                    await backgroundMusicPlayPromise.current.catch(() => {});
+                  }
                   backgroundMusicRef.current.pause();
                   backgroundMusicRef.current.currentTime = 0;
                 } catch (e) {
