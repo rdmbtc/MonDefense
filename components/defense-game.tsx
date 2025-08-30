@@ -133,7 +133,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               }
             } catch (bgMusicError) {
               console.warn('Background music playback failed:', bgMusicError);
-                if (bgMusicError.name === 'NotAllowedError') {
+                if (bgMusicError instanceof Error && bgMusicError.name === 'NotAllowedError') {
                   setAudioBlocked(true);
                   toast.error('Audio blocked by browser. Click "Enable Audio" to play sounds.');
                 }
@@ -177,7 +177,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                 console.log(`Sound effect started successfully: ${soundPath}`);
               } catch (playError) {
                 console.warn('Sound effect playback failed:', playError);
-                if (playError.name === 'NotAllowedError') {
+                if (playError instanceof Error && playError.name === 'NotAllowedError') {
                   setAudioBlocked(true);
                   toast.error('Audio blocked by browser. Click "Enable Audio" to play sounds.');
                 }
