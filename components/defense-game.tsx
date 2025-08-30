@@ -82,11 +82,11 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
 
   // Chapter One assets (images 0-7, sounds for 1,3,5,6,7)
   const chapterAssets = [
-    { image: '/Chapter%20One/0.png', sound: null },
+    { image: '/Chapter%20One/0.png', sound: undefined },
     { image: '/Chapter%20One/1.png', sound: '/Chapter One/1.wav' },
-    { image: '/Chapter%20One/2.png', sound: null },
+    { image: '/Chapter%20One/2.png', sound: undefined },
     { image: '/Chapter%20One/3.png', sound: '/Chapter One/3.wav' },
-    { image: '/Chapter%20One/4.png', sound: null },
+    { image: '/Chapter%20One/4.png', sound: undefined },
     { image: '/Chapter%20One/5.png', sound: '/Chapter One/5.wav' },
     { image: '/Chapter%20One/6.png', sound: '/Chapter One/6.wav' },
     { image: '/Chapter%20One/7.png', sound: '/Chapter One/7.wav' }
@@ -115,15 +115,26 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           backgroundMusicRef.current = new Audio('/Chapter One/background_music_chapter_one.mp3');
           backgroundMusicRef.current.loop = true;
           backgroundMusicRef.current.volume = 0.3;
-          try {
-            await backgroundMusicRef.current.play();
-          } catch (bgMusicError) {
-            console.warn('Background music playback failed:', bgMusicError);
-          }
+          
+          // Wait for audio to be ready before playing
+          const playBackgroundMusic = async () => {
+            // Small delay to ensure audio is ready
+            await new Promise(resolve => setTimeout(resolve, 100));
+            try {
+              if (backgroundMusicRef.current) {
+                await backgroundMusicRef.current.play();
+              }
+            } catch (bgMusicError) {
+              console.warn('Background music playback failed:', bgMusicError);
+            }
+          };
+          
+          await playBackgroundMusic();
         }
 
         // Play sound effect for current slide if it exists
         if (chapterAssets[chapterIndex].sound) {
+          // Stop current sound effect safely
           if (soundEffectRef.current) {
             try {
               soundEffectRef.current.pause();
@@ -132,13 +143,26 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               // Ignore pause errors
             }
           }
-          soundEffectRef.current = new Audio(chapterAssets[chapterIndex].sound);
-          soundEffectRef.current.volume = 0.7;
-          try {
-            await soundEffectRef.current.play();
-          } catch (playError) {
-            console.warn('Sound effect playback failed:', playError);
-          }
+          
+          // Create and play new sound effect with proper Promise handling
+          const playSoundEffect = async () => {
+            const soundPath = chapterAssets[chapterIndex].sound;
+            if (soundPath) {
+              soundEffectRef.current = new Audio(soundPath);
+              soundEffectRef.current.volume = 0.7;
+              
+              // Small delay to ensure audio is ready
+              await new Promise(resolve => setTimeout(resolve, 50));
+              
+              try {
+                await soundEffectRef.current.play();
+              } catch (playError) {
+                console.warn('Sound effect playback failed:', playError);
+              }
+            }
+          };
+          
+          await playSoundEffect();
         }
         
         setFirstChapterInteraction(false);
@@ -166,7 +190,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         
         // Play audio for the new slide if it exists
         if (chapterAssets[nextIndex].sound) {
-          // Stop current sound effect if playing
+          // Stop current sound effect safely
           if (soundEffectRef.current) {
             try {
               soundEffectRef.current.pause();
@@ -176,15 +200,25 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
             }
           }
           
-          // Create and play new sound effect
-          soundEffectRef.current = new Audio(chapterAssets[nextIndex].sound);
-          soundEffectRef.current.volume = 0.7;
+          // Create and play new sound effect with proper Promise handling
+          const playNextSoundEffect = async () => {
+            const soundPath = chapterAssets[nextIndex].sound;
+            if (soundPath) {
+              soundEffectRef.current = new Audio(soundPath);
+              soundEffectRef.current.volume = 0.7;
+              
+              // Small delay to ensure audio is ready
+              await new Promise(resolve => setTimeout(resolve, 50));
+              
+              try {
+                await soundEffectRef.current.play();
+              } catch (playError) {
+                console.warn('Sound effect playback failed:', playError);
+              }
+            }
+          };
           
-          try {
-            await soundEffectRef.current.play();
-          } catch (playError) {
-            console.warn('Sound effect playback failed:', playError);
-          }
+          await playNextSoundEffect();
         }
       }
     } catch (error) {
