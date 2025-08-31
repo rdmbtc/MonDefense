@@ -37,6 +37,13 @@ export default class Crop extends Phaser.GameObjects.Container {
       }
     });
     
+    // Add hover tooltip functionality
+    this.on('pointerover', () => this.showTooltip());
+    this.on('pointerout', () => this.hideTooltip());
+    
+    // Initialize tooltip
+    this.tooltip = null;
+    
     // Start growth
     this.startGrowth();
     
@@ -395,6 +402,9 @@ export default class Crop extends Phaser.GameObjects.Container {
   }
   
   destroy() {
+    // Hide tooltip before destroying
+    this.hideTooltip();
+    
     // Clean up timers
     if (this.growthTimer) {
       this.growthTimer.remove();
@@ -474,4 +484,53 @@ export default class Crop extends Phaser.GameObjects.Container {
       console.log(`Crop growth multiplier updated to ${multiplier.toFixed(2)}`);
     }
   }
-} 
+  
+  showTooltip() {
+    if (this.tooltip) return; // Already showing
+    
+    // Calculate expected yield
+    const expectedYield = this.calculateYield();
+    
+    // Create tooltip background
+    const tooltipBg = this.scene.add.rectangle(this.x, this.y - 80, 160, 80, 0x000000, 0.8);
+    tooltipBg.setStrokeStyle(2, 0x00FF00);
+    tooltipBg.setDepth(1000);
+    
+    // Create tooltip text
+    const tooltipText = this.scene.add.text(this.x, this.y - 80, 
+      `${this.cropType.toUpperCase()}\n` +
+      `State: ${this.growthState}\n` +
+      `Growth: ${Math.floor(this.growthProgress)}%\n` +
+      `Expected Yield: ${expectedYield} coins\n` +
+      `Health: ${Math.floor(this.health)}/${this.maxHealth}`,
+      {
+        fontSize: '12px',
+        fill: '#FFFFFF',
+        align: 'center',
+        fontFamily: 'Arial'
+      }
+    );
+    tooltipText.setOrigin(0.5);
+    tooltipText.setDepth(1001);
+    
+    // Store tooltip elements
+    this.tooltip = {
+      background: tooltipBg,
+      text: tooltipText
+    };
+  }
+  
+  hideTooltip() {
+    if (!this.tooltip) return;
+    
+    // Destroy tooltip elements
+    if (this.tooltip.background) {
+      this.tooltip.background.destroy();
+    }
+    if (this.tooltip.text) {
+      this.tooltip.text.destroy();
+    }
+    
+    this.tooltip = null;
+  }
+}

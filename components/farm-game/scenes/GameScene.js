@@ -1413,7 +1413,7 @@ if (isBrowser) {
             this.setToolMode('attack');
             
             // Start first wave - IMPORTANT: must be after setting gameState and resetting flags
-            this.startWave();
+            this.startWave(false); // Don't clear existing enemies during game restart
             
             // Next Wave button handling removed - waves progress automatically
             
@@ -2165,7 +2165,7 @@ if (isBrowser) {
             this.setToolMode('attack');
             
             // Start first wave - IMPORTANT: must be after setting gameState and resetting flags
-            this.startWave();
+            this.startWave(false); // Don't clear existing enemies during game restart
             
             // Next Wave button handling removed - waves progress automatically
             
@@ -2300,7 +2300,7 @@ if (isBrowser) {
         // updateLivesText function removed - Lives text no longer displayed
         
         // Start a new wave of enemies - make waves more difficult over time
-        startWave() {
+        startWave(clearExistingEnemies = true) {
           try {
             console.log(`Starting wave ${this.gameState.wave}`);
             
@@ -2338,11 +2338,13 @@ if (isBrowser) {
             this.enemiesSpawned = 0;
             this.enemies = this.enemies || [];
     
-            // Reset enemy target counts and clear existing enemies if any remain (shouldn't happen ideally)
-            if (this.enemies.length > 0) {
+            // Reset enemy target counts and clear existing enemies if requested
+            if (clearExistingEnemies && this.enemies.length > 0) {
               console.warn(`Starting wave ${this.gameState.wave} with ${this.enemies.length} enemies still present. Clearing them.`);
               this.enemies.forEach(enemy => enemy?.destroy());
               this.enemies = [];
+            } else if (this.enemies.length > 0) {
+              console.log(`Starting wave ${this.gameState.wave} with ${this.enemies.length} enemies preserved from previous game.`);
             }
     
             // Determine enemy composition and count for the wave
@@ -5615,8 +5617,8 @@ if (isBrowser) {
               }
             }
             
-            // Clean up all enemies
-            if (this.enemies && this.enemies.length) {
+            // Only clean up enemies on full cleanup (game over), preserve them on restart
+            if (fullCleanup && this.enemies && this.enemies.length) {
               this.enemies.forEach(enemy => {
                 if (enemy && typeof enemy.destroy === 'function') {
                   try {
@@ -5626,6 +5628,10 @@ if (isBrowser) {
               });
               this.enemies = []; // Clear the array
               console.log("Enemies cleaned up.");
+            } else if (this.enemies) {
+              console.log("Enemies preserved for game restart.");
+            } else {
+              this.enemies = []; // Ensure the array is initialized
             }
             
             // Only clean up crops on full cleanup (game over), preserve them on restart
