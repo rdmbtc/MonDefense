@@ -1353,8 +1353,8 @@ if (isBrowser) {
               this.startText = null; // Clear reference
             }
             
-            // --- Call cleanup FIRST to ensure a clean slate ---
-            this.cleanupCurrentGame();
+            // --- Call cleanup FIRST to ensure a clean slate (preserve crops on restart) ---
+            this.cleanupCurrentGame(false);
             // --- End cleanup ---
 
             // --- Add log ---
@@ -2105,8 +2105,8 @@ if (isBrowser) {
               this.startText = null; // Clear reference
             }
             
-            // --- Call cleanup FIRST to ensure a clean slate ---
-            this.cleanupCurrentGame();
+            // --- Call cleanup FIRST to ensure a clean slate (preserve crops on restart) ---
+            this.cleanupCurrentGame(false);
             // --- End cleanup ---
 
             // --- Add log ---
@@ -5185,8 +5185,8 @@ if (isBrowser) {
               }
             }
 
-            // IMPORTANT: Immediately clean up all game objects
-            this.cleanupCurrentGame();
+            // IMPORTANT: Immediately clean up all game objects (full cleanup on game end)
+            this.cleanupCurrentGame(true);
 
             // Add screen shake on game end - more intense for game over
             this.cameras.main.shake(victory ? 400 : 600, victory ? 0.006 : 0.012);
@@ -5596,12 +5596,24 @@ if (isBrowser) {
         }
 
         // Add helper method to clean up game objects
-        cleanupCurrentGame() {
+        cleanupCurrentGame(fullCleanup = false) {
           try {
-            console.log("Cleaning up current game...");
+            console.log("Cleaning up current game...", fullCleanup ? "(Full cleanup)" : "(Preserving crops)");
             
-            // Stop any active timers (spawning, wave completion, etc.)
-            this.time.removeAllEvents();
+            // Stop enemy spawning and wave timers, but preserve crop timers unless full cleanup
+            if (fullCleanup) {
+              this.time.removeAllEvents();
+            } else {
+              // Only remove specific timers, preserve crop growth timers
+              if (this.spawnTimer) {
+                this.spawnTimer.remove();
+                this.spawnTimer = null;
+              }
+              if (this.waveTimer) {
+                this.waveTimer.remove();
+                this.waveTimer = null;
+              }
+            }
             
             // Clean up all enemies
             if (this.enemies && this.enemies.length) {
@@ -5616,8 +5628,8 @@ if (isBrowser) {
               console.log("Enemies cleaned up.");
             }
             
-            // Clean up all crops
-            if (this.crops) {
+            // Only clean up crops on full cleanup (game over), preserve them on restart
+            if (fullCleanup && this.crops) {
               Object.keys(this.crops).forEach(key => {
                 const crop = this.crops[key];
                 if (crop && typeof crop.destroy === 'function') {
@@ -5628,6 +5640,8 @@ if (isBrowser) {
               });
               this.crops = {}; // Clear the object
               console.log("Crops cleaned up.");
+            } else if (this.crops) {
+              console.log("Crops preserved for game restart.");
             }
             
             // Clean up all defenses THOROUGHLY
