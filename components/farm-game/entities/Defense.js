@@ -38,7 +38,7 @@ export default class Defense {
     this.placementWave = currentWave; // Track when this defense was placed
     this.waveLifetime = this.getWaveLifetime(type); // How many waves this defense survives
     this.expirationWave = this.placementWave + this.waveLifetime; // When this defense expires
-    this.isExpired = false;
+    this.isExhausted = false;
     
     // Set properties based on defense type
     if (type === 'chog') {
@@ -128,24 +128,24 @@ export default class Defense {
   
   // Check if defense should expire based on current wave
   checkWaveExpiration(currentWave) {
-    if (this.isExpired) return true;
+    if (this.isExhausted) return true;
     
     if (currentWave >= this.expirationWave) {
-      this.expireDefense();
+      this.exhaustDefense();
       return true;
     }
     return false;
   }
   
-  // Handle defense expiration
-  expireDefense() {
-    if (this.isExpired) return;
+  // Handle defense exhaustion
+  exhaustDefense() {
+    if (this.isExhausted) return;
     
-    this.isExpired = true;
+    this.isExhausted = true;
     this.active = false;
     
-    // Show expiration animation
-    this.addExpirationAnimation();
+    // Show exhaustion animation
+    this.addExhaustionAnimation();
     
     // Schedule destruction after animation
     this.scene.time.delayedCall(1500, () => {
@@ -153,11 +153,11 @@ export default class Defense {
     });
   }
   
-  // Add expiration animation
-  addExpirationAnimation() {
+  // Add exhaustion animation
+  addExhaustionAnimation() {
     if (!this.sprite || !this.scene) return;
     
-    // Flash red to indicate expiration
+    // Flash red to indicate exhaustion
     this.scene.tweens.add({
       targets: this.sprite,
       tint: 0xFF0000,
@@ -176,8 +176,8 @@ export default class Defense {
       ease: 'Power2.easeIn'
     });
     
-    // Show expiration text
-    const expirationText = this.scene.add.text(this.x, this.y - 30, 'EXPIRED', {
+    // Show exhaustion text
+    const exhaustionText = this.scene.add.text(this.x, this.y - 30, 'EXHAUSTED', {
       fontSize: '16px',
       fontFamily: 'Arial',
       color: '#FF0000',
@@ -185,15 +185,15 @@ export default class Defense {
       strokeThickness: 2
     }).setOrigin(0.5);
     
-    expirationText.setDepth(200);
+    exhaustionText.setDepth(200);
     
     this.scene.tweens.add({
-      targets: expirationText,
+      targets: exhaustionText,
       y: this.y - 60,
       alpha: 0,
       duration: 1500,
       ease: 'Power2.easeOut',
-      onComplete: () => expirationText.destroy()
+      onComplete: () => exhaustionText.destroy()
     });
   }
   
@@ -2257,7 +2257,10 @@ export default class Defense {
         this.label = null;
       }
 
-      // Remove from scene's defenses array - Handled by GameScene.cleanupCurrentGame
+      // Remove from scene's defenses array
+      if (this.scene && typeof this.scene.removeDefenseFromArray === 'function') {
+        this.scene.removeDefenseFromArray(this);
+      }
 
       // Final log after attempting cleanup
       // console.log(`Defense ${this.type} destroy process completed.`);

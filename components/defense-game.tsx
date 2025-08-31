@@ -97,7 +97,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     { image: '/ChapterOne/7.png', sound: '/ChapterOne/7.mp3' }
   ];
 
-  // Handle chapter progression
+  // Handle chapter progression (simplified like trailer implementation)
   const nextChapterSlide = useCallback(async () => {
     // Check authentication before allowing game progression
     if (!authenticated || !walletAddress) {
@@ -120,74 +120,20 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           backgroundMusicRef.current = new Audio('/ChapterOne/background_music_chapter_one.mp3');
           backgroundMusicRef.current.loop = true;
           backgroundMusicRef.current.volume = 0.3;
-          
-          // Wait for audio to be ready before playing
-          const playBackgroundMusic = async () => {
-            // Small delay to ensure audio is ready
-            await new Promise(resolve => setTimeout(resolve, 100));
-            try {
-              if (backgroundMusicRef.current) {
-                backgroundMusicPlayPromise.current = backgroundMusicRef.current.play();
-                await backgroundMusicPlayPromise.current;
-                console.log('Background music started successfully');
-              }
-            } catch (bgMusicError) {
-              console.warn('Background music playback failed:', bgMusicError);
-                if (bgMusicError instanceof Error && bgMusicError.name === 'NotAllowedError') {
-                  setAudioBlocked(true);
-                  toast.error('Audio blocked by browser. Click "Enable Audio" to play sounds.');
-                }
-            } finally {
-              backgroundMusicPlayPromise.current = null;
-            }
-          };
-          
-          await playBackgroundMusic();
+          backgroundMusicPlayPromise.current = backgroundMusicRef.current.play();
+          await backgroundMusicPlayPromise.current;
         }
 
         // Play sound effect for current slide if it exists
         if (chapterAssets[chapterIndex].sound) {
-          // Stop current sound effect safely
           if (soundEffectRef.current) {
-            try {
-              // Wait for any ongoing play promise to resolve first
-              if (soundEffectPlayPromise.current) {
-                await soundEffectPlayPromise.current.catch(() => {});
-              }
-              soundEffectRef.current.pause();
-              soundEffectRef.current.currentTime = 0;
-            } catch (e) {
-              // Ignore pause errors
-            }
+            soundEffectRef.current.pause();
+            soundEffectRef.current.currentTime = 0;
           }
-          
-          // Create and play new sound effect with proper Promise handling
-          const playSoundEffect = async () => {
-            const soundPath = chapterAssets[chapterIndex].sound;
-            if (soundPath) {
-              soundEffectRef.current = new Audio(soundPath);
-              soundEffectRef.current.volume = 0.7;
-              
-              // Small delay to ensure audio is ready
-              await new Promise(resolve => setTimeout(resolve, 50));
-              
-              try {
-                soundEffectPlayPromise.current = soundEffectRef.current.play();
-                await soundEffectPlayPromise.current;
-                console.log(`Sound effect started successfully: ${soundPath}`);
-              } catch (playError) {
-                console.warn('Sound effect playback failed:', playError);
-                if (playError instanceof Error && playError.name === 'NotAllowedError') {
-                  setAudioBlocked(true);
-                  toast.error('Audio blocked by browser. Click "Enable Audio" to play sounds.');
-                }
-              } finally {
-                soundEffectPlayPromise.current = null;
-              }
-            }
-          };
-          
-          await playSoundEffect();
+          soundEffectRef.current = new Audio(chapterAssets[chapterIndex].sound);
+          soundEffectRef.current.volume = 0.7;
+          soundEffectPlayPromise.current = soundEffectRef.current.play();
+          await soundEffectPlayPromise.current;
         }
         
         setFirstChapterInteraction(false);
@@ -199,16 +145,8 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       if (chapterIndex >= chapterAssets.length - 1) {
         // End of chapter, start the game
         if (backgroundMusicRef.current) {
-          try {
-            // Wait for any ongoing play promise to resolve first
-            if (backgroundMusicPlayPromise.current) {
-              await backgroundMusicPlayPromise.current.catch(() => {});
-            }
-            backgroundMusicRef.current.pause();
-            backgroundMusicRef.current.currentTime = 0;
-          } catch (e) {
-            // Ignore pause errors
-          }
+          backgroundMusicRef.current.pause();
+          backgroundMusicRef.current.currentTime = 0;
         }
         setGameMode('game');
         setGameStarted(true);
@@ -219,46 +157,22 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         
         // Play audio for the new slide if it exists
         if (chapterAssets[nextIndex].sound) {
-          // Stop current sound effect safely
           if (soundEffectRef.current) {
-            try {
-              // Wait for any ongoing play promise to resolve first
-              if (soundEffectPlayPromise.current) {
-                await soundEffectPlayPromise.current.catch(() => {});
-              }
-              soundEffectRef.current.pause();
-              soundEffectRef.current.currentTime = 0;
-            } catch (e) {
-              // Ignore pause errors
-            }
+            soundEffectRef.current.pause();
+            soundEffectRef.current.currentTime = 0;
           }
-          
-          // Create and play new sound effect with proper Promise handling
-          const playNextSoundEffect = async () => {
-            const soundPath = chapterAssets[nextIndex].sound;
-            if (soundPath) {
-              soundEffectRef.current = new Audio(soundPath);
-              soundEffectRef.current.volume = 0.7;
-              
-              // Small delay to ensure audio is ready
-              await new Promise(resolve => setTimeout(resolve, 50));
-              
-              try {
-                soundEffectPlayPromise.current = soundEffectRef.current.play();
-                await soundEffectPlayPromise.current;
-              } catch (playError) {
-                console.warn('Sound effect playback failed:', playError);
-              } finally {
-                soundEffectPlayPromise.current = null;
-              }
-            }
-          };
-          
-          await playNextSoundEffect();
+          soundEffectRef.current = new Audio(chapterAssets[nextIndex].sound);
+          soundEffectRef.current.volume = 0.7;
+          soundEffectPlayPromise.current = soundEffectRef.current.play();
+          await soundEffectPlayPromise.current;
         }
       }
     } catch (error) {
       console.warn('Audio playback failed:', error);
+      if (error instanceof Error && error.name === 'NotAllowedError') {
+        setAudioBlocked(true);
+        toast.error('Audio blocked by browser. Click "Enable Audio" to play sounds.');
+      }
       if (firstChapterInteraction) {
         setFirstChapterInteraction(false);
       }
@@ -449,9 +363,11 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               if (backgroundMusicRef.current) {
                 backgroundMusicRef.current.pause();
               }
+              backgroundMusicPlayPromise.current = null;
             });
           } else {
             backgroundMusicRef.current.pause();
+            backgroundMusicPlayPromise.current = null;
           }
         } catch (e) {
           // Ignore pause errors
@@ -465,9 +381,11 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               if (soundEffectRef.current) {
                 soundEffectRef.current.pause();
               }
+              soundEffectPlayPromise.current = null;
             });
           } else {
             soundEffectRef.current.pause();
+            soundEffectPlayPromise.current = null;
           }
         } catch (e) {
           // Ignore pause errors
@@ -560,12 +478,14 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                          backgroundMusicRef.current.pause();
                          backgroundMusicRef.current.currentTime = 0;
                        }
+                       backgroundMusicPlayPromise.current = null;
                        setGameMode('game');
                        setGameStarted(true);
                      });
                    } else {
                      backgroundMusicRef.current.pause();
                      backgroundMusicRef.current.currentTime = 0;
+                     backgroundMusicPlayPromise.current = null;
                      setGameMode('game');
                      setGameStarted(true);
                    }
@@ -598,7 +518,8 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                     backgroundMusicRef.current.volume = 0.3;
                   }
                   
-                  await backgroundMusicRef.current.play();
+                  backgroundMusicPlayPromise.current = backgroundMusicRef.current.play();
+                  await backgroundMusicPlayPromise.current;
                   
                   // If successful, also try to play current slide sound
                   if (chapterAssets[chapterIndex].sound) {
@@ -608,7 +529,8 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                     }
                     soundEffectRef.current = new Audio(chapterAssets[chapterIndex].sound);
                     soundEffectRef.current.volume = 0.7;
-                    await soundEffectRef.current.play();
+                    soundEffectPlayPromise.current = soundEffectRef.current.play();
+                    await soundEffectPlayPromise.current;
                   }
                   
                   setAudioBlocked(false);

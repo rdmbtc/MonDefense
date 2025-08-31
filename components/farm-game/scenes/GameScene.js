@@ -3064,6 +3064,7 @@ if (isBrowser) {
               absImage.setInteractive({ useHandCursor: true });
               absImage.on('pointerdown', () => { chogButton.emit('pointerdown'); });
             }
+            this.toolbarButtons.chogImage = absImage; // Store reference
 
 
             // Add molandak button (MON mage)
@@ -3094,6 +3095,7 @@ if (isBrowser) {
               monImage.setInteractive({ useHandCursor: true });
               monImage.on('pointerdown', () => { molandakButton.emit('pointerdown'); });
             }
+            this.toolbarButtons.molandakImage = monImage; // Store reference
 
 
             // --- Advanced defenses ---
@@ -5881,35 +5883,39 @@ if (isBrowser) {
           // Check each defense for expiration
           const expiredDefenses = [];
           
-          for (let i = this.defenses.length - 1; i >= 0; i--) {
+          for (let i = 0; i < this.defenses.length; i++) {
             const defense = this.defenses[i];
             
             if (defense && typeof defense.checkWaveExpiration === 'function') {
               const isExpired = defense.checkWaveExpiration(currentWave);
               
               if (isExpired) {
-                console.log(`Defense ${defense.type} placed in wave ${defense.placementWave} expired at wave ${currentWave}`);
+                console.log(`Defense ${defense.type} placed in wave ${defense.placementWave} exhausted at wave ${currentWave}`);
                 expiredDefenses.push(defense);
-                
-                // Remove from defenses array
-                this.defenses.splice(i, 1);
+                // Don't remove from array here - let Defense.destroy() handle it after animation
               }
-            } else if (defense && defense.isExpired) {
-              // Fallback for defenses that don't have the method but are marked expired
-              console.log(`Removing expired defense ${defense.type}`);
-              expiredDefenses.push(defense);
-              this.defenses.splice(i, 1);
             }
           }
           
           if (expiredDefenses.length > 0) {
-            console.log(`Removed ${expiredDefenses.length} expired defenses`);
+            console.log(`${expiredDefenses.length} defenses exhausted`);
             
             // Show notification if defenses expired
-            this.showFloatingText(400, 100, `${expiredDefenses.length} defense(s) expired!`, 0xFF6600);
+            this.showFloatingText(400, 100, `${expiredDefenses.length} defense(s) exhausted!`, 0xFF6600);
           }
         }
         
+        // Method for defenses to remove themselves from the array after destruction
+        removeDefenseFromArray(defense) {
+          if (this.defenses && defense) {
+            const index = this.defenses.indexOf(defense);
+            if (index !== -1) {
+              this.defenses.splice(index, 1);
+              console.log(`Defense ${defense.type} removed from defenses array`);
+            }
+          }
+        }
+
         // --- NEW: Create Flying Coin Effect --- 
         createFlyingCoinEffect(startX, startY, amount) {
             if (!this.textures.exists('coin') || !this.farmCoinsTargetPos) {
