@@ -3039,6 +3039,12 @@ if (isBrowser) {
              this.addUIAnimations(chogButton); // Add UI animations - this will handle setInteractive
              this.toolbarButtons.chog = chogButton; // Store reference
 
+            // Create larger invisible hover area for better tooltip interaction
+            const chogHoverArea = this.add.rectangle(180, 550, buttonWidth + 20, buttonHeight + 20, 0x000000, 0).setDepth(1998);
+            chogHoverArea.setInteractive({ useHandCursor: true });
+            chogHoverArea.on('pointerdown', () => { chogButton.emit('pointerdown'); });
+            this.toolbarButtons.chogHover = chogHoverArea;
+
             // Use ABS image instead of emoji
             const absImageKey = 'ABS_idle';
             let absImage;
@@ -3069,6 +3075,11 @@ if (isBrowser) {
             this.addUIAnimations(molandakButton); // Add UI animations - this will handle setInteractive
             this.toolbarButtons.molandak = molandakButton; // Store reference
 
+            // Create larger invisible hover area for better tooltip interaction
+            const molandakHoverArea = this.add.rectangle(250, 550, buttonWidth + 20, buttonHeight + 20, 0x000000, 0).setDepth(1998);
+            molandakHoverArea.setInteractive({ useHandCursor: true });
+            molandakHoverArea.on('pointerdown', () => { molandakButton.emit('pointerdown'); });
+            this.toolbarButtons.molandakHover = molandakHoverArea;
 
             // Use MON image instead of emoji
             const monImageKey = 'MON_idle';
@@ -3105,6 +3116,12 @@ if (isBrowser) {
             this.addUIAnimations(keonButton); // Add UI animations - this will handle setInteractive
             this.toolbarButtons.keon = keonButton; // Store reference
 
+            // Create larger invisible hover area for better tooltip interaction
+            const keonHoverArea = this.add.rectangle(320, 550, buttonWidth + 20, buttonHeight + 20, 0x000000, 0).setDepth(1998);
+            keonHoverArea.setInteractive({ useHandCursor: true });
+            keonHoverArea.on('pointerdown', () => { keonButton.emit('pointerdown'); });
+            this.toolbarButtons.keonHover = keonHoverArea;
+
             if (this.textures.exists('keon_idle')) {
               keonImage = this.add.image(320, 550, 'keon_idle').setDepth(2001);
               keonImage.setDisplaySize(iconSize, iconSize);
@@ -3130,6 +3147,12 @@ if (isBrowser) {
             addBounceEffect(moyakiButton); // Add bounce effect
             this.addUIAnimations(moyakiButton); // Add UI animations - this will handle setInteractive
             this.toolbarButtons.moyaki = moyakiButton; // Store reference
+
+            // Create larger invisible hover area for better tooltip interaction
+            const moyakiHoverArea = this.add.rectangle(390, 550, buttonWidth + 20, buttonHeight + 20, 0x000000, 0).setDepth(1998);
+            moyakiHoverArea.setInteractive({ useHandCursor: true });
+            moyakiHoverArea.on('pointerdown', () => { moyakiButton.emit('pointerdown'); });
+            this.toolbarButtons.moyakiHover = moyakiHoverArea;
 
 
             if (this.textures.exists('moyaki_idle')) {
@@ -3300,26 +3323,26 @@ if (isBrowser) {
       const baseStats = {
         chog: {
           name: 'CHOG Defender',
-          lifetime: 8,
-          damage: 35,
+          lifetime: 2,
+          damage: 0.4,
           ability: 'Nature magic with healing aura'
         },
         molandak: {
           name: 'MOLANDAK Guardian', 
-          lifetime: 6,
-          damage: 50,
+          lifetime: 3,
+          damage: 0.8,
           ability: 'Ice magic with freeze effects'
         },
         moyaki: {
           name: 'MOYAKI Warrior',
-          lifetime: 4,
-          damage: 80,
+          lifetime: 3,
+          damage: 0.9,
           ability: 'Fire magic with area damage'
         },
         keon: {
           name: 'KEON Champion',
-          lifetime: 10,
-          damage: 60,
+          lifetime: 4,
+          damage: 2.5,
           ability: 'Divine magic with special attacks'
         }
       };
@@ -3346,16 +3369,16 @@ if (isBrowser) {
     // Add hover handlers to defense buttons
     addDefenseTooltipHandlers() {
       const defenseButtons = [
-        { button: this.toolbarButtons.chog, image: this.toolbarButtons.chogImage, type: 'chog' },
-        { button: this.toolbarButtons.molandak, image: this.toolbarButtons.molandakImage, type: 'molandak' },
-        { button: this.toolbarButtons.keon, image: this.toolbarButtons.keonImage, type: 'keon' },
-        { button: this.toolbarButtons.moyaki, image: this.toolbarButtons.moyakiImage, type: 'moyaki' }
+        { button: this.toolbarButtons.chog, image: this.toolbarButtons.chogImage, hover: this.toolbarButtons.chogHover, type: 'chog' },
+        { button: this.toolbarButtons.molandak, image: this.toolbarButtons.molandakImage, hover: this.toolbarButtons.molandakHover, type: 'molandak' },
+        { button: this.toolbarButtons.keon, image: this.toolbarButtons.keonImage, hover: this.toolbarButtons.keonHover, type: 'keon' },
+        { button: this.toolbarButtons.moyaki, image: this.toolbarButtons.moyakiImage, hover: this.toolbarButtons.moyakiHover, type: 'moyaki' }
       ];
       
-      defenseButtons.forEach(({ button, image, type }) => {
-        if (button && image) {
-          // Add hover handlers to both button and image
-          [button, image].forEach(element => {
+      defenseButtons.forEach(({ button, image, hover, type }) => {
+        if (button && image && hover) {
+          // Add hover handlers to button, image, and larger hover area for better usability
+          [button, image, hover].forEach(element => {
             element.on('pointerover', () => {
               this.showDefenseTooltip(element.x, element.y, type);
             });

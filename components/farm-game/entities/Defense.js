@@ -166,14 +166,20 @@ export default class Defense {
       repeat: 3
     });
     
-    // Fade out
+    // Fade out and completely hide the sprite
     this.scene.tweens.add({
       targets: this.sprite,
       alpha: 0,
-      scale: 0.5,
+      scale: 0,
       duration: 1000,
       delay: 600,
-      ease: 'Power2.easeIn'
+      ease: 'Power2.easeIn',
+      onComplete: () => {
+        // Ensure sprite is completely hidden
+        if (this.sprite) {
+          this.sprite.setVisible(false);
+        }
+      }
     });
     
     // Show exhaustion text
