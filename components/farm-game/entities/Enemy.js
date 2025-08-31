@@ -1078,6 +1078,30 @@ export default class Enemy {
     this.healthBar.fill.setOrigin(0, 0.5); // Center vertically, left align horizontally  
     this.healthBar.fill.setX(this.x - (barWidth / 2)); // Align left side with background
   }
+
+  // Hide health bar without destroying the enemy (for game restart)
+  hideHealthBar() {
+    if (this.healthBar) {
+      if (this.healthBar.background) {
+        this.healthBar.background.setVisible(false);
+      }
+      if (this.healthBar.fill) {
+        this.healthBar.fill.setVisible(false);
+      }
+    }
+  }
+
+  // Show health bar (for when game resumes)
+  showHealthBar() {
+    if (this.healthBar) {
+      if (this.healthBar.background) {
+        this.healthBar.background.setVisible(true);
+      }
+      if (this.healthBar.fill) {
+        this.healthBar.fill.setVisible(true);
+      }
+    }
+  }
   
   // Add a method to show damage text
   showDamageText(amount) {

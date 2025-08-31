@@ -1377,7 +1377,19 @@ if (isBrowser) {
             this.registry.set('farmCoins', this.gameState.farmCoins);
             
             // Re-initialize arrays and flags
-            this.enemies = [];
+            // Don't reset enemies array - preserve existing enemies and show their health bars
+            if (this.enemies && this.enemies.length) {
+              this.enemies.forEach(enemy => {
+                if (enemy && typeof enemy.showHealthBar === 'function') {
+                  try {
+                    enemy.showHealthBar();
+                  } catch (e) { console.error("Error showing enemy health bar:", e); }
+                }
+              });
+              console.log("Enemy health bars restored after game restart.");
+            } else {
+              this.enemies = []; // Initialize if not exists
+            }
             this.crops = {};
             this.defenses = []; // Ensure defenses array is empty
             this.isSpawningEnemies = false;
@@ -5628,8 +5640,16 @@ if (isBrowser) {
               });
               this.enemies = []; // Clear the array
               console.log("Enemies cleaned up.");
-            } else if (this.enemies) {
-              console.log("Enemies preserved for game restart.");
+            } else if (this.enemies && this.enemies.length) {
+              // Hide enemy health bars during game restart
+              this.enemies.forEach(enemy => {
+                if (enemy && typeof enemy.hideHealthBar === 'function') {
+                  try {
+                    enemy.hideHealthBar();
+                  } catch (e) { console.error("Error hiding enemy health bar:", e); }
+                }
+              });
+              console.log("Enemies preserved for game restart, health bars hidden.");
             } else {
               this.enemies = []; // Ensure the array is initialized
             }
@@ -5684,6 +5704,13 @@ if (isBrowser) {
               this.projectiles.destroy(true); // Destroy group and children
               this.projectiles = null; // Reset reference
               console.log("Projectiles cleaned up.");
+            }
+            
+            // Clean up global defense range indicator
+            if (this.defenseRangeIndicator && typeof this.defenseRangeIndicator.destroy === 'function') {
+              this.defenseRangeIndicator.destroy();
+              this.defenseRangeIndicator = null;
+              console.log("Global defense range indicator cleaned up.");
             }
             
             // Reset game state
