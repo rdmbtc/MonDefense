@@ -5644,16 +5644,12 @@ if (isBrowser) {
               console.log("Crops preserved for game restart.");
             }
             
-            // Clean up all defenses THOROUGHLY
-            if (this.defenses && this.defenses.length) {
-              // --- Add log ---
+            // Only clean up defenses on full cleanup (game over), preserve them on restart
+            if (fullCleanup && this.defenses && this.defenses.length) {
               console.log(`cleanupCurrentGame: Found ${this.defenses.length} defenses to clean up.`);
-              // --- End log ---
-              this.defenses.forEach((defense, index) => { // Add index for logging
+              this.defenses.forEach((defense, index) => {
                 if (defense) {
-                  // --- Add log ---
                   console.log(`cleanupCurrentGame: Attempting to destroy defense #${index} (Type: ${defense.type || 'unknown'})`);
-                  // --- End log ---
                   // Call the defense's own destroy method if it exists
                   if (typeof defense.destroy === 'function') {
                     try {
@@ -5663,22 +5659,18 @@ if (isBrowser) {
                     // Manual cleanup if no destroy method (less ideal)
                     if (defense.sprite && typeof defense.sprite.destroy === 'function') defense.sprite.destroy();
                     if (defense.rangeIndicator && typeof defense.rangeIndicator.destroy === 'function') defense.rangeIndicator.destroy();
-                    if (defense.manaText && typeof defense.manaText.destroy === 'function') defense.manaText.destroy(); // Explicitly destroy mana text
-                    if (defense.cooldownIndicator && typeof defense.cooldownIndicator.destroy === 'function') defense.cooldownIndicator.destroy(); // Explicitly destroy cooldown indicator
-                    // Add cleanup for other potential defense elements like labels if the fallback was used
+                    if (defense.manaText && typeof defense.manaText.destroy === 'function') defense.manaText.destroy();
+                    if (defense.cooldownIndicator && typeof defense.cooldownIndicator.destroy === 'function') defense.cooldownIndicator.destroy();
                     if (defense.label && typeof defense.label.destroy === 'function') defense.label.destroy();
                   }
                 }
               });
-              this.defenses = []; // Force clear the array AFTER iterating and destroying
-              // --- Add log ---
+              this.defenses = [];
               console.log("cleanupCurrentGame: Defenses array cleared.");
-              // --- End log ---
+            } else if (this.defenses) {
+              console.log("cleanupCurrentGame: Defenses preserved for game restart.");
             } else {
-                 // --- Add log ---
-                 console.log("cleanupCurrentGame: No defenses found in the array to clean up.");
-                 // --- End log ---
-                 this.defenses = []; // Ensure the array is empty even if it was null/undefined initially
+              this.defenses = []; // Ensure the array is initialized
             }
             
             // Clean up projectiles if they exist as a separate group

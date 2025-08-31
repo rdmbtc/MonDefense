@@ -157,6 +157,11 @@ export default class Defense {
   addExhaustionAnimation() {
     if (!this.sprite || !this.scene) return;
     
+    // Immediately hide range indicator if visible
+    if (this.rangeIndicator) {
+      this.rangeIndicator.setVisible(false);
+    }
+    
     // Flash red to indicate exhaustion
     this.scene.tweens.add({
       targets: this.sprite,
@@ -197,7 +202,7 @@ export default class Defense {
       targets: exhaustionText,
       y: this.y - 60,
       alpha: 0,
-      duration: 1500,
+      duration: 1600, // Exactly 1.6 seconds as mentioned by user
       ease: 'Power2.easeOut',
       onComplete: () => exhaustionText.destroy()
     });
