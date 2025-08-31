@@ -997,11 +997,7 @@ if (isBrowser) {
               color: '#FFFFFF'
             });
             
-            this.livesText = this.add.text(10, 70, "Lives: 3", {
-              fontFamily: 'Arial',
-              fontSize: '18px',
-              color: '#FF0000'
-            });
+            // Lives text removed - no longer displayed in UI
             
             // Weather UI
             this.weatherSystem.weatherText = this.add.text(10, 90, "Weather: Sunny", {
@@ -1397,7 +1393,7 @@ if (isBrowser) {
             // Update UI text elements
             this.updateWaveText(); // Should show Wave: 1
             this.updateScoreText(); // Should show Score: 0
-            this.updateLivesText(); // Should show Lives: 3
+            // Lives text removed - no longer needed
             this.updateFarmCoins(0); // Should show Coins: 75 (updated value)
             
             // Re-create or reset the upgrade system if needed
@@ -2149,7 +2145,7 @@ if (isBrowser) {
             // Update UI text elements
             this.updateWaveText(); // Should show Wave: 1
             this.updateScoreText(); // Should show Score: 0
-            this.updateLivesText(); // Should show Lives: 3
+            // Lives text removed - no longer needed
             this.updateFarmCoins(0); // Should show Coins: 75 (updated value)
             
             // Re-create or reset the upgrade system if needed
@@ -2301,11 +2297,7 @@ if (isBrowser) {
         }
         
         // Update lives text
-        updateLivesText() {
-          if (this.livesText) {
-            this.livesText.setText(`Lives: ${this.gameState.lives}`);
-          }
-        }
+        // updateLivesText function removed - Lives text no longer displayed
         
         // Start a new wave of enemies - make waves more difficult over time
         startWave() {
@@ -2758,9 +2750,7 @@ if (isBrowser) {
             reachedEnd: function() {
               if (this.scene.gameState) {
                 this.scene.gameState.lives--;
-                if (this.scene.updateLivesText) {
-                  this.scene.updateLivesText();
-                }
+                // Lives text update removed - no longer needed
                 
                 if (this.scene.showFloatingText) {
                   this.scene.showFloatingText(50, 300, 'Farm Invaded! -1 Life', 0xFF0000);
@@ -3258,9 +3248,9 @@ if (isBrowser) {
       this.tooltip.damageText.setText(`Damage: ${stats.damage}`);
       this.tooltip.abilityText.setText(`Ability: ${stats.ability}`);
       
-      // Position tooltip elements
+      // Position tooltip elements - adjusted for better visibility above toolbar
       const tooltipX = Math.min(x + 10, this.cameras.main.width - 210);
-      const tooltipY = Math.max(y - 60, 10);
+      const tooltipY = Math.max(y - 120, 10);
       
       this.tooltip.background.setPosition(tooltipX + 100, tooltipY + 60);
       this.tooltip.nameText.setPosition(tooltipX + 10, tooltipY + 20);
@@ -5111,9 +5101,7 @@ if (isBrowser) {
 
           // Reduce lives
           this.gameState.lives--;
-          if (typeof this.updateLivesText === 'function') {
-            this.updateLivesText();
-          }
+          // Lives text update removed - no longer needed
 
           // Show warning text
           if (typeof this.showFloatingText === 'function') {
@@ -5692,7 +5680,7 @@ if (isBrowser) {
             if (this.scoreText) this.scoreText.setText("Score: 0");
             if (this.farmCoinsText) this.farmCoinsText.setText(`Coins: ${this.gameState.farmCoins}`);
             if (this.waveText) this.waveText.setText("Wave: 1");
-            if (this.livesText) this.livesText.setText("Lives: 3");
+            // Lives text removed - no longer displayed
             // Next Wave button cleanup removed - button no longer exists
             
             // Reset upgrade system UI if necessary
