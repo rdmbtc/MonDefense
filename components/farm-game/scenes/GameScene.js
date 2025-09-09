@@ -4583,7 +4583,16 @@ if (isBrowser) {
                   type === 'chog' ? 0x0088FF : 
                   type === 'molandak' ? 0xFF4400 : 
                   type === 'keon' ? 0xFF00FF : 
-                  type === 'moyaki' ? 0xFF0000 : 0x666666)
+                  type === 'moyaki' ? 0xFF0000 : 0x666666),
+                // Add forceDestroy method for fallback defenses
+                forceDestroy() {
+                  this.active = false;
+                  if (this.sprite && typeof this.sprite.destroy === 'function') this.sprite.destroy();
+                  if (this.label && typeof this.label.destroy === 'function') this.label.destroy();
+                },
+                destroy() {
+                  this.forceDestroy();
+                }
               };
               
               // Add defense type text
