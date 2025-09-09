@@ -64,12 +64,9 @@ let GameScene = PlaceholderScene;
 
 if (isBrowser) {
   // We're on the client side, so we can safely use Phaser
-  console.log("Browser detected, loading Phaser...");
   import('phaser').then(module => {
     try {
-      console.log("Phaser module loaded:", !!module);
       const Phaser = module.default;
-      console.log("Phaser loaded:", !!Phaser);
       
       // Now define the real GameScene that extends Phaser.Scene
       class GameSceneClient extends Phaser.Scene {
@@ -117,7 +114,7 @@ if (isBrowser) {
         }
         
         init(data) {
-          console.log("GameScene init started");
+          // GameScene init started
           try {
             // Initialize game state with safe values
             this.gameState = {
@@ -144,7 +141,7 @@ if (isBrowser) {
               this.gameState.canPlant = false;
             }
             
-            console.log("GameScene initialized with state:", this.gameState);
+            // GameScene initialized
           } catch (error) {
             console.error("Error in GameScene init:", error);
             throw error;
@@ -153,7 +150,7 @@ if (isBrowser) {
         
         preload() {
           try {
-            console.log("GameScene preload started");
+            // GameScene preload started
             
             // Initialize the sound manager AND PRELOAD ITS ASSETS
             this.soundManager = new SoundManager(this);
@@ -297,7 +294,7 @@ if (isBrowser) {
                   graphics.fillStyle(color, 1);
                   graphics.fillCircle(16, 16, 16);
                   graphics.generateTexture(fileObj.key, 32, 32);
-                  console.log(`Created fallback texture for ${fileObj.key}`);
+                  // Created fallback texture
                 }
                 
                 // Create placeholders for missing defense character assets
@@ -307,7 +304,7 @@ if (isBrowser) {
                     fileObj.key === 'keon_idle' || fileObj.key === 'keon_attack' ||
                     fileObj.key === 'ABS_idle' || fileObj.key === 'ABS_attack' ||
                     fileObj.key === 'MON_idle' || fileObj.key === 'MON_attack') {
-                  console.log(`Creating placeholder for missing asset: ${fileObj.key}`);
+                  // Creating placeholder for missing asset
 
                   // We'll create the fallbacks in the complete handler
                 }
@@ -331,7 +328,7 @@ if (isBrowser) {
                 blueGraphics.fillStyle(0x66BBFF, 0.4);
                 blueGraphics.fillCircle(16, 16, 20);
                 blueGraphics.generateTexture('fireball_blue', 40, 40);
-                console.log('Created fallback texture for fireball_blue on load complete');
+                // Created fallback texture for fireball_blue
               }
               
               if (!this.textures.exists('fireball_red')) {
@@ -342,7 +339,7 @@ if (isBrowser) {
                 redGraphics.fillStyle(0xFF8866, 0.4);
                 redGraphics.fillCircle(16, 16, 20);
                 redGraphics.generateTexture('fireball_red', 40, 40);
-                console.log('Created fallback texture for fireball_red on load complete');
+                // Created fallback texture for fireball_red
               }
               
               // Create fallback textures for defense characters if they fail to load
@@ -353,7 +350,7 @@ if (isBrowser) {
                 chogGraphics.fillStyle(0x006600, 1);
                 chogGraphics.fillRect(15, 10, 10, 8); // Shield
                 chogGraphics.generateTexture('chog_idle', 40, 40);
-                console.log('Created fallback texture for chog_idle');
+                // Created fallback texture for chog_idle
               }
 
               if (!this.textures.exists('molandak_idle')) {
@@ -365,7 +362,7 @@ if (isBrowser) {
                 molandakGraphics.fillTriangle(20, 10, 15, 20, 25, 20); // Top triangle
                 molandakGraphics.fillTriangle(20, 30, 15, 20, 25, 20); // Bottom triangle
                 molandakGraphics.generateTexture('molandak_idle', 40, 40);
-                console.log('Created fallback texture for molandak_idle');
+                // Created fallback texture for molandak_idle
               }
 
               if (!this.textures.exists('moyaki_idle')) {
@@ -375,7 +372,7 @@ if (isBrowser) {
                 moyakiGraphics.fillStyle(0xFF8844, 1);
                 moyakiGraphics.fillTriangle(15, 25, 25, 25, 20, 15); // Fire
                 moyakiGraphics.generateTexture('moyaki_idle', 40, 40);
-                console.log('Created fallback texture for moyaki_idle');
+                // Created fallback texture for moyaki_idle
               }
 
               if (!this.textures.exists('keon_idle')) {
@@ -385,7 +382,7 @@ if (isBrowser) {
                 keonGraphics.fillStyle(0xFFFF00, 1);
                 keonGraphics.fillRect(15, 8, 10, 6); // Crown
                 keonGraphics.generateTexture('keon_idle', 40, 40);
-                console.log('Created fallback texture for keon_idle');
+                // Created fallback texture for keon_idle
               }
 
               // Create attack textures by copying idle textures
@@ -414,7 +411,7 @@ if (isBrowser) {
                 absGraphics.fillStyle(0x66CCFF, 1);
                 absGraphics.fillTriangle(20, 10, 15, 20, 25, 20); // Ice crystal
                 absGraphics.generateTexture('ABS_idle', 40, 40);
-                console.log('Created fallback texture for ABS_idle');
+                // Created fallback texture for ABS_idle
               }
 
               if (!this.textures.exists('MON_idle')) {
@@ -424,7 +421,7 @@ if (isBrowser) {
                 monGraphics.fillStyle(0xFF8844, 1);
                 monGraphics.fillTriangle(15, 25, 25, 25, 20, 15); // Fire
                 monGraphics.generateTexture('MON_idle', 40, 40);
-                console.log('Created fallback texture for MON_idle');
+                // Created fallback texture for MON_idle
               }
 
             });
@@ -437,24 +434,15 @@ if (isBrowser) {
         create() {
           try {
             // --- Force unlock Web Audio context ---
-            console.log("Audio context state:", this.sound?.context?.state);
+            // Initialize audio context
             if (this.sound && this.sound.unlock) {
               this.sound.unlock();
-              console.log("Attempted to unlock Web Audio context.");
-            } else {
-              console.warn("this.sound.unlock not available at start of create.");
-            }
-
-            // Additional audio context debugging
-            if (this.sound && this.sound.context) {
-              console.log("Audio context after unlock:", this.sound.context.state);
-              console.log("Audio context sample rate:", this.sound.context.sampleRate);
             }
             // --- End unlock attempt ---
             
             // Initialize SoundManager FIRST (Instance already created in preload, but confirm it exists)
             if (!this.soundManager) {
-              console.warn("SoundManager not initialized in preload, creating now.");
+              // SoundManager not initialized in preload, creating now
               this.soundManager = new SoundManager(this);
               // Note: Preload should have happened already, but can add safety preload call if needed
             }
@@ -468,7 +456,7 @@ if (isBrowser) {
 
             // Register the Defense class in the scene registry
             this.registry.set('DefenseClass', Defense);
-            console.log("Defense class registered in scene registry");
+            // Defense class registered in scene registry
 
             // console.log("GameScene create start"); // Removed duplicate log
             
@@ -535,7 +523,7 @@ if (isBrowser) {
               ]
             };
             
-            console.log("Created enemy path with", this.gameState.path.points.length, "waypoints");
+            // Created enemy path
             
             // Visualize the path for debugging
             this.visualizePath();
@@ -543,7 +531,7 @@ if (isBrowser) {
             // Create dynamic textures for fireballs if they don't exist
             if (!this.textures.exists('fireball_red')) {
               try {
-                console.log('Using loaded red fireball texture');
+                // Using loaded red fireball texture
                 // Skipping dynamic creation since we're loading the texture directly
               } catch (error) {
                 console.error("Error creating red fireball texture:", error);
@@ -552,7 +540,7 @@ if (isBrowser) {
             
             if (!this.textures.exists('fireball_blue')) {
               try {
-                console.log('Using loaded blue fireball texture');
+                // Using loaded blue fireball texture
                 // Skipping dynamic creation since we're loading the texture directly
               } catch (error) {
                 console.error("Error creating blue fireball texture:", error);
@@ -562,7 +550,7 @@ if (isBrowser) {
             // Initialize global flag for update loop
             isUpdating = false;
             
-            console.log("GameScene create started");
+            // GameScene create started
             
             // Setup particle animations
             this.createParticleAnimations();
@@ -647,7 +635,7 @@ if (isBrowser) {
               // Skip if game not active
               if (!this.gameState.isActive) return;
               
-              console.log("Game area clicked at", pointer.x, pointer.y, "tool mode:", this.toolMode);
+              // Game area clicked
               
               // ATTACK MODE - Check for enemies
               if (this.toolMode === 'attack') {
@@ -820,7 +808,7 @@ if (isBrowser) {
             // });
             // console.log("Redundant wave check interval REMOVED.");
 
-            console.log("GameScene created successfully");
+            // GameScene created successfully
           } catch (error) {
             console.error("Error in GameScene create:", error);
             throw error;
@@ -829,7 +817,7 @@ if (isBrowser) {
         
         createBackground() {
           try {
-            console.log("Creating background...");
+            // Creating background
             
             // Define grid cell size for the game
             this.gridCellSize = 32;
@@ -967,7 +955,7 @@ if (isBrowser) {
             // Add game title with pixel art style - moved to top of screen and made smaller
           
             
-            console.log("Background created successfully");
+            // Background created successfully
           } catch (error) {
             console.error("Error creating background:", error);
             throw error;
@@ -1008,7 +996,7 @@ if (isBrowser) {
             
             // Next Wave button removed - waves now progress automatically
             
-            console.log("UI created");
+            // UI created
           } catch (error) {
             console.error("Error creating UI:", error);
           }
@@ -1091,7 +1079,7 @@ if (isBrowser) {
         updateWeather(newWeather) {
            if (this.weatherSystem.currentWeather === newWeather) return;
            
-           console.log(`Weather changing from ${this.weatherSystem.currentWeather} to ${newWeather}`);
+           // Weather changing
            
            // Clean up ColorMatrix effects
            if (this.weatherSystem.colorMatrix && this.cameras.main.postFX) {
@@ -1329,19 +1317,19 @@ if (isBrowser) {
             this.isSubmittingScore = false;
             
             // --- Add log ---
-            console.log("startGame: Initiated. Preparing to clean up previous game...");
+            // Starting game
             // --- End log ---
 
             // --- Force unlock Web Audio context on user interaction ---
             if (this.sound && this.sound.unlock) {
               this.sound.unlock();
-              console.log("Attempted to unlock Web Audio context on startGame.");
+              // Attempted to unlock Web Audio context
             } else {
               console.warn("this.sound.unlock not available at start of startGame.");
             }
             // --- End unlock attempt ---
             
-            console.log("Start button clicked - starting game");
+            // Start button clicked
             
             // Remove start button if it exists
             if (this.startButton) {
@@ -1358,7 +1346,7 @@ if (isBrowser) {
             // --- End cleanup ---
 
             // --- Add log ---
-            console.log(`startGame: Cleanup complete. Defenses array length: ${this.defenses?.length || 0}`);
+            // Cleanup complete
             // --- End log ---
 
             // Re-initialize game state (partially redundant with cleanup, but ensures defaults)
@@ -1386,7 +1374,7 @@ if (isBrowser) {
                   } catch (e) { console.error("Error showing enemy health bar:", e); }
                 }
               });
-              console.log("Enemy health bars restored after game restart.");
+              // Enemy health bars restored
             } else {
               this.enemies = []; // Initialize if not exists
             }
@@ -1438,7 +1426,7 @@ if (isBrowser) {
               this.soundManager.play('click');
             }
             
-            console.log("Game started successfully");
+            // Game started successfully
           } catch (error) {
             console.error("Error starting game:", error);
             // Attempt to recover or show error message
@@ -1449,7 +1437,7 @@ if (isBrowser) {
         
         setupInputHandlers() {
           try {
-            console.log("Setting up input handlers");
+            // Setting up input handlers
             
             // Create a global click handler for the main game area with expanded hit area
             const gameArea = this.add.rectangle(400, 300, 800, 500, 0, 0);
@@ -1463,7 +1451,7 @@ if (isBrowser) {
               // Skip if game not active
               if (!this.gameState.isActive) return;
               
-              console.log("Game area clicked at", pointer.x, pointer.y, "tool mode:", this.toolMode);
+              // Game area clicked
               
               // ATTACK MODE - Check for enemies with expanded hit area
               if (this.toolMode === 'attack') {
@@ -2579,11 +2567,6 @@ if (isBrowser) {
               this.gameState.wave // Pass current wave for difficulty scaling
             );
             
-            // Initialize the hasReachedEnd flag to prevent multiple life decrements
-            enemy.hasReachedEnd = false;
-            enemy.id = `enemy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            console.log(`Created enemy with ID: ${enemy.id}, hasReachedEnd: ${enemy.hasReachedEnd}`);
-            
             // Add to enemies array
             if (!this.enemies) {
               console.warn("Enemies array not initialized, creating now");
@@ -2709,11 +2692,6 @@ if (isBrowser) {
             // Create enemy instance
             const enemy = new EnemyClass(this, type, x, y);
             
-            // Initialize the hasReachedEnd flag to prevent multiple life decrements
-            enemy.hasReachedEnd = false;
-            enemy.id = `enemy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            console.log(`Created enemy with ID: ${enemy.id}, hasReachedEnd: ${enemy.hasReachedEnd}`);
-            
             // Initialize enemies array if needed
             if (!this.enemies) {
               this.enemies = [];
@@ -2734,9 +2712,6 @@ if (isBrowser) {
         createFallbackEnemy(type, x, y) {
           console.log("Creating fallback emergency enemy");
           
-          // Debug log for emergency enemy creation
-          console.log(`=== EMERGENCY ENEMY CREATED - Type: ${type}, Position: (${x}, ${y})`);
-          
           // Create a simplified enemy object
           const emergencyEnemy = {
             scene: this,
@@ -2750,8 +2725,6 @@ if (isBrowser) {
             visible: true,
             value: 10,
             container: null,
-            hasReachedEnd: false,
-            id: `emergency_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             update: function(delta) {
               // Move towards left
               this.x -= this.speed;
@@ -2763,9 +2736,7 @@ if (isBrowser) {
               }
               
               // Check if reached the farm
-              if (this.x < 0 && !this.hasReachedEnd) {
-                console.log(`Enemy reaching end - ID: ${this.id || 'unknown'}, hasReachedEnd: ${this.hasReachedEnd}, lives before: ${this.scene.gameState.lives}`);
-                this.hasReachedEnd = true;
+              if (this.x < 0) {
                 this.reachedEnd();
                 return true;
               }
@@ -2779,12 +2750,8 @@ if (isBrowser) {
               }
             },
             reachedEnd: function() {
-              console.log(`=== ENEMY ${this.id || 'unknown'} REACHED END! Lives before:`, this.scene.gameState?.lives);
-              console.log(`=== Enemy hasReachedEnd flag:`, this.hasReachedEnd);
-              console.log(`=== Total enemies in scene:`, this.scene.enemies ? this.scene.enemies.length : 'undefined');
               if (this.scene.gameState) {
                 this.scene.gameState.lives--;
-                console.log('=== Lives after decrement:', this.scene.gameState.lives);
                 // Lives text update removed - no longer needed
                 
                 if (this.scene.showFloatingText) {
@@ -2798,7 +2765,6 @@ if (isBrowser) {
               this.destroy();
             },
             destroy: function() {
-              console.log(`=== DESTROYING ENEMY ${this.id || 'unknown'} - hasReachedEnd: ${this.hasReachedEnd}`);
               if (this.container) {
                 this.container.destroy();
               }
@@ -2806,7 +2772,6 @@ if (isBrowser) {
                 const index = this.scene.enemies.indexOf(this);
                 if (index !== -1) {
                   this.scene.enemies.splice(index, 1);
-                  console.log(`=== Enemy removed from array. Remaining enemies: ${this.scene.enemies.length}`);
                 }
               }
             }
@@ -3067,11 +3032,6 @@ if (isBrowser) {
             // Add chog button (ABS mage)
             const chogButton = this.add.rectangle(180, 550, buttonWidth, buttonHeight, 0x000066).setDepth(2000);
             chogButton.on('pointerdown', () => {
-              // Prevent defense selection if game is not active
-              if (!this.gameState.isActive) {
-                console.log("Defense selection blocked - game not active");
-                return;
-              }
               this.pendingDefenseType = 'chog';
               this.pendingDefensePlacement = true;
               this.setToolMode('chog');
@@ -3108,11 +3068,6 @@ if (isBrowser) {
             // Add molandak button (MON mage)
             const molandakButton = this.add.rectangle(250, 550, buttonWidth, buttonHeight, 0x660000).setDepth(2000);
             molandakButton.on('pointerdown', () => {
-              // Prevent defense selection if game is not active
-              if (!this.gameState.isActive) {
-                console.log("Defense selection blocked - game not active");
-                return;
-              }
               this.pendingDefenseType = 'molandak';
               this.pendingDefensePlacement = true;
               this.setToolMode('molandak');
@@ -3154,11 +3109,6 @@ if (isBrowser) {
             // keon Button
             keonButton = this.add.rectangle(320, 550, buttonWidth, buttonHeight, 0x990099).setDepth(2000);
             keonButton.on('pointerdown', () => {
-              // Prevent defense selection if game is not active
-              if (!this.gameState.isActive) {
-                console.log("Defense selection blocked - game not active");
-                return;
-              }
               this.pendingDefenseType = 'keon';
               this.pendingDefensePlacement = true;
               this.setToolMode('keon');
@@ -3191,11 +3141,6 @@ if (isBrowser) {
             // moyaki Button
             moyakiButton = this.add.rectangle(390, 550, buttonWidth, buttonHeight, 0x990000).setDepth(2000);
             moyakiButton.on('pointerdown', () => {
-              // Prevent defense selection if game is not active
-              if (!this.gameState.isActive) {
-                console.log("Defense selection blocked - game not active");
-                return;
-              }
               this.pendingDefenseType = 'moyaki';
               this.pendingDefensePlacement = true;
               this.setToolMode('moyaki');
@@ -3656,11 +3601,6 @@ if (isBrowser) {
               1 // wave
             );
             
-            // Initialize the hasReachedEnd flag to prevent multiple life decrements
-            enemy.hasReachedEnd = false;
-            enemy.id = `enemy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            console.log(`Created test enemy with ID: ${enemy.id}, hasReachedEnd: ${enemy.hasReachedEnd}`);
-            
             // Initialize enemies array if needed
             if (!this.enemies) {
               this.enemies = [];
@@ -3773,7 +3713,6 @@ if (isBrowser) {
             }
             
             // ADDED: Update individual enemies
-            console.log(`Main update loop - enemies count: ${this.enemies ? this.enemies.length : 'undefined'}`);
             if (this.enemies && this.enemies.length > 0) {
               // Iterate backwards to allow safe removal during iteration (still useful for other logic)
               for (let i = this.enemies.length - 1; i >= 0; i--) {
@@ -3781,7 +3720,6 @@ if (isBrowser) {
                 if (enemy && enemy.active && !enemy.destroyed) { // Also check !enemy.destroyed here
                   // Check if update method exists before calling
                   if (typeof enemy.update === 'function') {
-                    console.log(`Updating enemy ${enemy.id || i} at position (${enemy.x}, ${enemy.y})`);
                     enemy.update(delta);
                   } else {
                     // If no update method, maybe remove it?
@@ -4414,12 +4352,6 @@ if (isBrowser) {
           try {
             console.log(`Setting tool mode to: ${mode}`);
             
-            // Prevent tool mode changes if game is not active (except for attack mode reset)
-            if (!this.gameState.isActive && mode !== 'attack') {
-              console.log("Tool mode change blocked - game not active");
-              return;
-            }
-            
             // Update tool mode
             this.toolMode = mode;
             
@@ -4604,12 +4536,6 @@ if (isBrowser) {
         placeDefense(x, y, type) {
           try {
             console.log(`Placing defense: ${type} at ${x}, ${y}`);
-            
-            // Prevent defense placement if game is not active
-            if (!this.gameState.isActive) {
-              console.log("Defense placement blocked - game not active");
-              return false;
-            }
             
             // Only allow placement on right side
             if (x < 200) {
@@ -5084,9 +5010,6 @@ if (isBrowser) {
           try {
             console.log("GameScene shutting down, cleaning up resources");
             
-            // Clean up all game objects first to prevent visual persistence
-            this.cleanupCurrentGame(true);
-            
             // Clean up wave check interval
             if (this.waveCheckInterval) {
               this.waveCheckInterval.remove();
@@ -5197,15 +5120,18 @@ if (isBrowser) {
 
         // Add this method to handle enemies that reach the end of the path
         enemyReachedEnd(enemy) {
-          if (!enemy || !this.gameState) return;
+          if (!enemy || !this.gameState || !this.gameState.isActive) return;
+          
+          // Prevent multiple life losses from the same enemy
+          if (enemy.hasReachedEnd) {
+            return;
+          }
+          enemy.hasReachedEnd = true;
 
-          console.log(`Enemy ${enemy.id} reached the end of the path`);
-          console.log('=== ENEMY REACHED END METHOD! Lives before:', this.gameState.lives);
+          console.log(`Enemy ${enemy.id} reached the farm - lives: ${this.gameState.lives} -> ${this.gameState.lives - 1}`);
 
-          // Lives are decremented in enemy's reachedEnd function, not here
-          // this.gameState.lives--;
-          console.log('=== Lives after (no decrement in method):', this.gameState.lives);
-          // Lives text update removed - no longer needed
+          // Reduce lives
+          this.gameState.lives--;
 
           // Show warning text
           if (typeof this.showFloatingText === 'function') {
@@ -5213,40 +5139,39 @@ if (isBrowser) {
           }
 
           // Add screen shake when a life is lost
-          this.cameras.main.shake(250, 0.008); // Longer duration, slightly higher intensity
+          this.cameras.main.shake(250, 0.008);
 
-          // Check for game over
-          if (this.gameState.lives <= 0) {
-            console.log("Game over! No lives remaining.");
-            if (typeof this.endGame === 'function') {
-              this.endGame(false);
-            } else {
-              // Basic game over implementation
-              this.gameState.isActive = false;
-              const gameOverText = this.add.text(400, 300, 'GAME OVER', {
-                fontSize: '48px',
-                fontFamily: 'Arial',
-                color: '#FF0000'
-              }).setOrigin(0.5);
-            }
+          // Remove enemy from enemies array immediately
+          const enemyIndex = this.enemies.indexOf(enemy);
+          if (enemyIndex > -1) {
+            this.enemies.splice(enemyIndex, 1);
           }
 
-          // Destroy the enemy - using the internal destroy method
+          // Destroy the enemy
           if (typeof enemy.destroy === 'function') {
             enemy.destroy();
           }
 
-          // Play enemy escaped sound - make it more alarming
+          // Play enemy escaped sound
           if (this.soundManager) {
-             // Use a more impactful sound - ensure this key exists
             this.soundManager.play('enemy_escaped_alarm', { volume: 0.8 });
+          }
+
+          // Check for game over AFTER enemy cleanup
+          if (this.gameState.lives <= 0) {
+            console.log("Game over! No lives remaining.");
+            // Delay game over slightly to allow visual feedback
+            this.time.delayedCall(500, () => {
+              if (typeof this.endGame === 'function') {
+                this.endGame(false);
+              }
+            });
           }
         }
 
         // Add endGame function to handle game over state
         endGame(victory = false) {
           try {
-            console.log('=== ENDGAME METHOD CALLED ===');
             console.log(`Game ended with ${victory ? 'victory' : 'defeat'}`);
 
             // --- CAPTURE STATS BEFORE CLEANUP ---
@@ -5400,7 +5325,6 @@ if (isBrowser) {
             submitText.setScale(0.8);
 
             // Create restart button with proper styling and entrance animation
-            console.log('=== CREATING RESTART BUTTON ===');
             const restartButton = this.add.rectangle(400, 530, buttonWidth, buttonHeight, 0x4CAF50, 1);
             restartButton.setStrokeStyle(4, 0x45A049);
             restartButton.setDepth(1001);
@@ -5492,7 +5416,6 @@ if (isBrowser) {
                 this.input.setDefaultCursor('default');
               })
               .on('pointerdown', () => {
-                console.log('RESTART BUTTON CLICKED!');
                 // Play click sound if available
                 if (this.soundManager) {
                     // Use a confirmation sound - ensure this key exists
@@ -5520,16 +5443,8 @@ if (isBrowser) {
                       // Reset cursor
                       this.input.setDefaultCursor('default');
 
-                      console.log('About to call cleanupCurrentGame...');
-                      // Force immediate cleanup before starting new game
-                      this.cleanupCurrentGame(false);
-                      console.log('cleanupCurrentGame call completed.');
-                      
-                      // Add small delay to ensure cleanup completes
-                      this.time.delayedCall(100, () => {
-                        // Start a new game after cleanup
-                        this.startGame();
-                      });
+                      // Start a new game - cleanup will happen inside startGame
+                      this.startGame();
                   }
                 });
               });
@@ -5692,12 +5607,6 @@ if (isBrowser) {
           try {
             console.log("Cleaning up current game...", fullCleanup ? "(Full cleanup)" : "(Preserving crops)");
             
-            // Clear all JavaScript timeouts that might add elements after cleanup
-            if (this._waveChangeTimeout) {
-              clearTimeout(this._waveChangeTimeout);
-              this._waveChangeTimeout = null;
-            }
-            
             // Stop enemy spawning and wave timers, but preserve crop timers unless full cleanup
             if (fullCleanup) {
               this.time.removeAllEvents();
@@ -5711,44 +5620,22 @@ if (isBrowser) {
                 this.waveTimer.remove();
                 this.waveTimer = null;
               }
-              // Don't remove all events on restart to preserve crop timers
             }
             
-            // Always clean up enemies on restart to prevent visual persistence
+            // Clean up enemies - always clear them when game ends
             if (this.enemies && this.enemies.length) {
-              this.enemies.forEach((enemy, index) => {
+              console.log(`Cleaning up ${this.enemies.length} enemies`);
+              this.enemies.forEach(enemy => {
                 if (enemy && typeof enemy.destroy === 'function') {
                   try {
-                    console.log(`cleanupCurrentGame: Destroying enemy #${index} (${enemy.type || 'unknown'})`);
                     enemy.destroy();
                   } catch (e) { console.error("Error destroying enemy:", e); }
                 }
               });
               this.enemies = []; // Clear the array
-              console.log("cleanupCurrentGame: Enemies array cleared.");
+              console.log("All enemies cleaned up.");
             } else {
-              console.log("cleanupCurrentGame: No enemies found to clean up.");
               this.enemies = []; // Ensure the array is initialized
-            }
-            
-            // Additional cleanup: Search for any remaining enemy sprites and health bars
-            if (this.children && this.children.list) {
-              const remainingEnemySprites = this.children.list.filter(child => 
-                child.texture && 
-                (child.texture.key && (child.texture.key.includes('enemy') || 
-                 child.texture.key.includes('nooter') || child.texture.key.includes('monad')))
-              );
-              
-              if (remainingEnemySprites.length > 0) {
-                console.log(`cleanupCurrentGame: Found ${remainingEnemySprites.length} orphaned enemy sprites, cleaning up...`);
-                remainingEnemySprites.forEach((sprite, index) => {
-                  console.log(`cleanupCurrentGame: Destroying orphaned enemy sprite #${index} (${sprite.texture.key})`);
-                  if (sprite.parent) {
-                    sprite.parent.remove(sprite);
-                  }
-                  sprite.destroy();
-                });
-              }
             }
             
             // Only clean up crops on full cleanup (game over), preserve them on restart
@@ -5767,21 +5654,18 @@ if (isBrowser) {
               console.log("Crops preserved for game restart.");
             }
             
-            // Always clean up defenses on restart to prevent visual persistence
+            // Clean up defenses - always clear them when game ends
             if (this.defenses && this.defenses.length) {
-              console.log(`cleanupCurrentGame: Found ${this.defenses.length} defenses to clean up.`);
+              console.log(`Cleaning up ${this.defenses.length} defenses`);
               this.defenses.forEach((defense, index) => {
                 if (defense) {
-                  console.log(`cleanupCurrentGame: Attempting to destroy defense #${index} (Type: ${defense.type || 'unknown'}, Active: ${defense.active})`);
                   // Call the defense's own destroy method if it exists
                   if (typeof defense.destroy === 'function') {
                     try {
                       defense.destroy();
-                      console.log(`cleanupCurrentGame: Successfully destroyed defense #${index} (${defense.type})`);
                     } catch (e) { console.error("Error destroying defense:", e); }
                   } else {
-                    // Manual cleanup if no destroy method (less ideal)
-                    console.log(`cleanupCurrentGame: Manual cleanup for defense #${index} (${defense.type})`);
+                    // Manual cleanup if no destroy method
                     if (defense.sprite && typeof defense.sprite.destroy === 'function') defense.sprite.destroy();
                     if (defense.rangeIndicator && typeof defense.rangeIndicator.destroy === 'function') defense.rangeIndicator.destroy();
                     if (defense.manaText && typeof defense.manaText.destroy === 'function') defense.manaText.destroy();
@@ -5791,47 +5675,9 @@ if (isBrowser) {
                 }
               });
               this.defenses = [];
-              console.log("cleanupCurrentGame: Defenses array cleared.");
+              console.log("All defenses cleaned up.");
             } else {
-              console.log("cleanupCurrentGame: No defenses found to clean up.");
               this.defenses = []; // Ensure the array is initialized
-            }
-            
-            // Additional cleanup: Search for any remaining defense sprites in the scene
-            if (this.children && this.children.list) {
-              const remainingDefenseSprites = this.children.list.filter(child => 
-                child.texture && 
-                (child.texture.key === 'chog' || child.texture.key === 'molandak' || 
-                 child.texture.key === 'moyaki' || child.texture.key === 'keon')
-              );
-              
-              if (remainingDefenseSprites.length > 0) {
-                console.log(`cleanupCurrentGame: Found ${remainingDefenseSprites.length} orphaned defense sprites, cleaning up...`);
-                remainingDefenseSprites.forEach((sprite, index) => {
-                  console.log(`cleanupCurrentGame: Destroying orphaned sprite #${index} (${sprite.texture.key})`);
-                  if (sprite.parent) {
-                    sprite.parent.remove(sprite);
-                  }
-                  sprite.destroy();
-                });
-              }
-              
-              // Also clean up any remaining health bars, range indicators, and text elements
-              const remainingUIElements = this.children.list.filter(child => 
-                (child.texture && (child.texture.key === 'healthbar' || child.texture.key === 'range_indicator')) ||
-                (child.type === 'Text' && (child.text?.includes('HP') || child.text?.includes('Cooldown')))
-              );
-              
-              if (remainingUIElements.length > 0) {
-                console.log(`cleanupCurrentGame: Found ${remainingUIElements.length} orphaned UI elements, cleaning up...`);
-                remainingUIElements.forEach((element, index) => {
-                  console.log(`cleanupCurrentGame: Destroying orphaned UI element #${index}`);
-                  if (element.parent) {
-                    element.parent.remove(element);
-                  }
-                  element.destroy();
-                });
-              }
             }
             
             // Clean up projectiles if they exist as a separate group
@@ -5872,17 +5718,6 @@ if (isBrowser) {
             this.toolMode = 'attack'; // Reset tool mode
             this.pendingDefensePlacement = false; // Reset placement flag
             this.pendingDefenseType = null;
-            
-            // Reset defense selection state to prevent post-game placement
-            console.log("cleanupCurrentGame: Resetting defense selection state");
-            if (this.pendingDefensePlacement) {
-              this.pendingDefensePlacement = false;
-              console.log("cleanupCurrentGame: Cleared pending defense placement");
-            }
-            if (this.pendingDefenseType) {
-              this.pendingDefenseType = null;
-              console.log("cleanupCurrentGame: Cleared pending defense type");
-            }
             
             // Reset UI elements if they exist
             if (this.scoreText) this.scoreText.setText("Score: 0");

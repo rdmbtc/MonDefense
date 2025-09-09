@@ -447,9 +447,6 @@ export default class Enemy {
   reachedEnd() {
     // Enemy reached the farm - call enemyReachedEnd on the scene if available
     try {
-      // ADDED: Log before calling scene method
-      console.log(`Enemy ${this.id} calling scene.enemyReachedEnd`);
-      
       // Add attack animation before dealing damage
       this.addFarmAttackAnimation();
       
@@ -459,32 +456,9 @@ export default class Enemy {
           // Call the scene's enemyReachedEnd method to handle damage to player
           this.scene.enemyReachedEnd(this);
         } else {
-          // Fallback if the scene doesn't have the method
-          if (this.scene.gameState) {
-            this.scene.gameState.lives--;
-            
-            if (typeof this.scene.updateLivesText === 'function') {
-              this.scene.updateLivesText();
-            }
-            
-            console.log("Enemy reached farm! Lives remaining:", this.scene.gameState.lives);
-            
-            // Show warning text if possible
-            if (typeof this.scene.showFloatingText === 'function') {
-              this.scene.showFloatingText(50, 300, 'Farm Invaded! -1 Life', 0xFF0000);
-            }
-            
-            // Check for game over
-            if (this.scene.gameState.lives <= 0) {
-              console.log("Game over! No lives remaining.");
-              if (typeof this.scene.endGame === 'function') {
-                this.scene.endGame();
-              }
-            }
-            
-            // Remove the enemy
-            this.destroy();
-          }
+          // Fallback - just destroy the enemy without affecting lives
+          console.log("Enemy reached end but no enemyReachedEnd method found");
+          this.destroy();
         }
       });
     } catch (error) {
