@@ -5666,7 +5666,9 @@ if (isBrowser) {
             // Clean up defenses - always clear them when game ends
             if (this.defenses && this.defenses.length) {
               console.log(`Cleaning up ${this.defenses.length} defenses`);
-              this.defenses.forEach((defense, index) => {
+              // Create a copy of the array to avoid issues with array modification during iteration
+              const defensesToClean = [...this.defenses];
+              defensesToClean.forEach((defense, index) => {
                 if (defense) {
                   console.log(`Cleaning defense ${index}: type=${defense.type}, hasForceDestroy=${typeof defense.forceDestroy === 'function'}, hasDestroy=${typeof defense.destroy === 'function'}`);
                   // Use forceDestroy to bypass wave lifecycle, fallback to destroy
