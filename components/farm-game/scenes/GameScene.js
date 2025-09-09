@@ -5642,17 +5642,39 @@ if (isBrowser) {
             
             // Always clean up enemies on restart to prevent visual persistence
             if (this.enemies && this.enemies.length) {
-              this.enemies.forEach(enemy => {
+              this.enemies.forEach((enemy, index) => {
                 if (enemy && typeof enemy.destroy === 'function') {
                   try {
+                    console.log(`cleanupCurrentGame: Destroying enemy #${index} (${enemy.type || 'unknown'})`);
                     enemy.destroy();
                   } catch (e) { console.error("Error destroying enemy:", e); }
                 }
               });
               this.enemies = []; // Clear the array
-              console.log("Enemies cleaned up.");
+              console.log("cleanupCurrentGame: Enemies array cleared.");
             } else {
+              console.log("cleanupCurrentGame: No enemies found to clean up.");
               this.enemies = []; // Ensure the array is initialized
+            }
+            
+            // Additional cleanup: Search for any remaining enemy sprites and health bars
+            if (this.children && this.children.list) {
+              const remainingEnemySprites = this.children.list.filter(child => 
+                child.texture && 
+                (child.texture.key && (child.texture.key.includes('enemy') || 
+                 child.texture.key.includes('nooter') || child.texture.key.includes('monad')))
+              );
+              
+              if (remainingEnemySprites.length > 0) {
+                console.log(`cleanupCurrentGame: Found ${remainingEnemySprites.length} orphaned enemy sprites, cleaning up...`);
+                remainingEnemySprites.forEach((sprite, index) => {
+                  console.log(`cleanupCurrentGame: Destroying orphaned enemy sprite #${index} (${sprite.texture.key})`);
+                  if (sprite.parent) {
+                    sprite.parent.remove(sprite);
+                  }
+                  sprite.destroy();
+                });
+              }
             }
             
             // Only clean up crops on full cleanup (game over), preserve them on restart
@@ -5713,7 +5735,27 @@ if (isBrowser) {
                 console.log(`cleanupCurrentGame: Found ${remainingDefenseSprites.length} orphaned defense sprites, cleaning up...`);
                 remainingDefenseSprites.forEach((sprite, index) => {
                   console.log(`cleanupCurrentGame: Destroying orphaned sprite #${index} (${sprite.texture.key})`);
+                  if (sprite.parent) {
+                    sprite.parent.remove(sprite);
+                  }
                   sprite.destroy();
+                });
+              }
+              
+              // Also clean up any remaining health bars, range indicators, and text elements
+              const remainingUIElements = this.children.list.filter(child => 
+                (child.texture && (child.texture.key === 'healthbar' || child.texture.key === 'range_indicator')) ||
+                (child.type === 'Text' && (child.text?.includes('HP') || child.text?.includes('Cooldown')))
+              );
+              
+              if (remainingUIElements.length > 0) {
+                console.log(`cleanupCurrentGame: Found ${remainingUIElements.length} orphaned UI elements, cleaning up...`);
+                remainingUIElements.forEach((element, index) => {
+                  console.log(`cleanupCurrentGame: Destroying orphaned UI element #${index}`);
+                  if (element.parent) {
+                    element.parent.remove(element);
+                  }
+                  element.destroy();
                 });
               }
             }
