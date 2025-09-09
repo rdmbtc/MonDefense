@@ -2748,7 +2748,8 @@ if (isBrowser) {
               }
               
               // Check if reached the farm
-              if (this.x < 0) {
+              if (this.x < 0 && !this.hasReachedEnd) {
+                this.hasReachedEnd = true;
                 this.reachedEnd();
                 return true;
               }
@@ -2762,8 +2763,10 @@ if (isBrowser) {
               }
             },
             reachedEnd: function() {
+              console.log('=== ENEMY REACHED END! Lives before:', this.scene.gameState?.lives);
               if (this.scene.gameState) {
                 this.scene.gameState.lives--;
+                console.log('=== Lives after decrement:', this.scene.gameState.lives);
                 // Lives text update removed - no longer needed
                 
                 if (this.scene.showFloatingText) {
@@ -5170,9 +5173,11 @@ if (isBrowser) {
           if (!enemy || !this.gameState) return;
 
           console.log(`Enemy ${enemy.id} reached the end of the path`);
+          console.log('=== ENEMY REACHED END METHOD! Lives before:', this.gameState.lives);
 
           // Reduce lives
           this.gameState.lives--;
+          console.log('=== Lives after decrement in method:', this.gameState.lives);
           // Lives text update removed - no longer needed
 
           // Show warning text
