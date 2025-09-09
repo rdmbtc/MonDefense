@@ -2581,6 +2581,8 @@ if (isBrowser) {
             
             // Initialize the hasReachedEnd flag to prevent multiple life decrements
             enemy.hasReachedEnd = false;
+            enemy.id = `enemy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            console.log(`Created enemy with ID: ${enemy.id}, hasReachedEnd: ${enemy.hasReachedEnd}`);
             
             // Add to enemies array
             if (!this.enemies) {
@@ -2709,6 +2711,8 @@ if (isBrowser) {
             
             // Initialize the hasReachedEnd flag to prevent multiple life decrements
             enemy.hasReachedEnd = false;
+            enemy.id = `enemy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            console.log(`Created enemy with ID: ${enemy.id}, hasReachedEnd: ${enemy.hasReachedEnd}`);
             
             // Initialize enemies array if needed
             if (!this.enemies) {
@@ -2755,6 +2759,7 @@ if (isBrowser) {
               
               // Check if reached the farm
               if (this.x < 0 && !this.hasReachedEnd) {
+                console.log(`Enemy reaching end - ID: ${this.id || 'unknown'}, hasReachedEnd: ${this.hasReachedEnd}, lives before: ${this.scene.gameState.lives}`);
                 this.hasReachedEnd = true;
                 this.reachedEnd();
                 return true;
@@ -2769,7 +2774,7 @@ if (isBrowser) {
               }
             },
             reachedEnd: function() {
-              console.log('=== ENEMY REACHED END! Lives before:', this.scene.gameState?.lives);
+              console.log(`=== ENEMY ${this.id || 'unknown'} REACHED END! Lives before:`, this.scene.gameState?.lives);
               if (this.scene.gameState) {
                 this.scene.gameState.lives--;
                 console.log('=== Lives after decrement:', this.scene.gameState.lives);
@@ -3644,6 +3649,8 @@ if (isBrowser) {
             
             // Initialize the hasReachedEnd flag to prevent multiple life decrements
             enemy.hasReachedEnd = false;
+            enemy.id = `enemy_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            console.log(`Created test enemy with ID: ${enemy.id}, hasReachedEnd: ${enemy.hasReachedEnd}`);
             
             // Initialize enemies array if needed
             if (!this.enemies) {
