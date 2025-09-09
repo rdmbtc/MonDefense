@@ -2579,6 +2579,9 @@ if (isBrowser) {
               this.gameState.wave // Pass current wave for difficulty scaling
             );
             
+            // Initialize the hasReachedEnd flag to prevent multiple life decrements
+            enemy.hasReachedEnd = false;
+            
             // Add to enemies array
             if (!this.enemies) {
               console.warn("Enemies array not initialized, creating now");
@@ -2703,6 +2706,9 @@ if (isBrowser) {
           try {
             // Create enemy instance
             const enemy = new EnemyClass(this, type, x, y);
+            
+            // Initialize the hasReachedEnd flag to prevent multiple life decrements
+            enemy.hasReachedEnd = false;
             
             // Initialize enemies array if needed
             if (!this.enemies) {
@@ -3635,6 +3641,9 @@ if (isBrowser) {
               300, // y - middle of screen
               1 // wave
             );
+            
+            // Initialize the hasReachedEnd flag to prevent multiple life decrements
+            enemy.hasReachedEnd = false;
             
             // Initialize enemies array if needed
             if (!this.enemies) {
@@ -5175,9 +5184,9 @@ if (isBrowser) {
           console.log(`Enemy ${enemy.id} reached the end of the path`);
           console.log('=== ENEMY REACHED END METHOD! Lives before:', this.gameState.lives);
 
-          // Reduce lives
-          this.gameState.lives--;
-          console.log('=== Lives after decrement in method:', this.gameState.lives);
+          // Lives are decremented in enemy's reachedEnd function, not here
+          // this.gameState.lives--;
+          console.log('=== Lives after (no decrement in method):', this.gameState.lives);
           // Lives text update removed - no longer needed
 
           // Show warning text
