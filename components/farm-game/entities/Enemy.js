@@ -763,6 +763,8 @@ export default class Enemy {
     
     restartButton.setInteractive();
     restartButton.on('pointerdown', () => {
+      // Proper cleanup before restart to prevent visual persistence
+      this.scene.cleanupCurrentGame(true);
       this.scene.scene.restart();
     });
   }

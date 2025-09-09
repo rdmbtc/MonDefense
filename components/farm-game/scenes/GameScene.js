@@ -5668,14 +5668,16 @@ if (isBrowser) {
               console.log(`cleanupCurrentGame: Found ${this.defenses.length} defenses to clean up.`);
               this.defenses.forEach((defense, index) => {
                 if (defense) {
-                  console.log(`cleanupCurrentGame: Attempting to destroy defense #${index} (Type: ${defense.type || 'unknown'})`);
+                  console.log(`cleanupCurrentGame: Attempting to destroy defense #${index} (Type: ${defense.type || 'unknown'}, Active: ${defense.active})`);
                   // Call the defense's own destroy method if it exists
                   if (typeof defense.destroy === 'function') {
                     try {
                       defense.destroy();
+                      console.log(`cleanupCurrentGame: Successfully destroyed defense #${index} (${defense.type})`);
                     } catch (e) { console.error("Error destroying defense:", e); }
                   } else {
                     // Manual cleanup if no destroy method (less ideal)
+                    console.log(`cleanupCurrentGame: Manual cleanup for defense #${index} (${defense.type})`);
                     if (defense.sprite && typeof defense.sprite.destroy === 'function') defense.sprite.destroy();
                     if (defense.rangeIndicator && typeof defense.rangeIndicator.destroy === 'function') defense.rangeIndicator.destroy();
                     if (defense.manaText && typeof defense.manaText.destroy === 'function') defense.manaText.destroy();
@@ -5687,7 +5689,25 @@ if (isBrowser) {
               this.defenses = [];
               console.log("cleanupCurrentGame: Defenses array cleared.");
             } else {
+              console.log("cleanupCurrentGame: No defenses found to clean up.");
               this.defenses = []; // Ensure the array is initialized
+            }
+            
+            // Additional cleanup: Search for any remaining defense sprites in the scene
+            if (this.children && this.children.list) {
+              const remainingDefenseSprites = this.children.list.filter(child => 
+                child.texture && 
+                (child.texture.key === 'chog' || child.texture.key === 'molandak' || 
+                 child.texture.key === 'moyaki' || child.texture.key === 'keon')
+              );
+              
+              if (remainingDefenseSprites.length > 0) {
+                console.log(`cleanupCurrentGame: Found ${remainingDefenseSprites.length} orphaned defense sprites, cleaning up...`);
+                remainingDefenseSprites.forEach((sprite, index) => {
+                  console.log(`cleanupCurrentGame: Destroying orphaned sprite #${index} (${sprite.texture.key})`);
+                  sprite.destroy();
+                });
+              }
             }
             
             // Clean up projectiles if they exist as a separate group

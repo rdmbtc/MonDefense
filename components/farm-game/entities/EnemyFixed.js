@@ -170,6 +170,8 @@ export default class Enemy {
       
       restartButton.setInteractive();
       restartButton.on('pointerdown', () => {
+        // Proper cleanup before restart to prevent visual persistence
+        this.scene.cleanupCurrentGame(true);
         // Reset game state
         this.scene.scene.restart();
       });
@@ -207,4 +209,4 @@ export default class Enemy {
       console.error("Error destroying enemy:", error);
     }
   }
-} 
+}
