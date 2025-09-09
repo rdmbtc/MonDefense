@@ -5022,6 +5022,9 @@ if (isBrowser) {
           try {
             console.log("GameScene shutting down, cleaning up resources");
             
+            // Clean up all game objects first to prevent visual persistence
+            this.cleanupCurrentGame(true);
+            
             // Clean up wave check interval
             if (this.waveCheckInterval) {
               this.waveCheckInterval.remove();
@@ -5629,8 +5632,8 @@ if (isBrowser) {
               }
             }
             
-            // Only clean up enemies on full cleanup (game over), preserve them on restart
-            if (fullCleanup && this.enemies && this.enemies.length) {
+            // Always clean up enemies on restart to prevent visual persistence
+            if (this.enemies && this.enemies.length) {
               this.enemies.forEach(enemy => {
                 if (enemy && typeof enemy.destroy === 'function') {
                   try {
@@ -5640,16 +5643,6 @@ if (isBrowser) {
               });
               this.enemies = []; // Clear the array
               console.log("Enemies cleaned up.");
-            } else if (this.enemies && this.enemies.length) {
-              // Hide enemy health bars during game restart
-              this.enemies.forEach(enemy => {
-                if (enemy && typeof enemy.hideHealthBar === 'function') {
-                  try {
-                    enemy.hideHealthBar();
-                  } catch (e) { console.error("Error hiding enemy health bar:", e); }
-                }
-              });
-              console.log("Enemies preserved for game restart, health bars hidden.");
             } else {
               this.enemies = []; // Ensure the array is initialized
             }
@@ -5670,8 +5663,8 @@ if (isBrowser) {
               console.log("Crops preserved for game restart.");
             }
             
-            // Only clean up defenses on full cleanup (game over), preserve them on restart
-            if (fullCleanup && this.defenses && this.defenses.length) {
+            // Always clean up defenses on restart to prevent visual persistence
+            if (this.defenses && this.defenses.length) {
               console.log(`cleanupCurrentGame: Found ${this.defenses.length} defenses to clean up.`);
               this.defenses.forEach((defense, index) => {
                 if (defense) {
@@ -5693,8 +5686,6 @@ if (isBrowser) {
               });
               this.defenses = [];
               console.log("cleanupCurrentGame: Defenses array cleared.");
-            } else if (this.defenses) {
-              console.log("cleanupCurrentGame: Defenses preserved for game restart.");
             } else {
               this.defenses = []; // Ensure the array is initialized
             }
