@@ -1341,8 +1341,8 @@ if (isBrowser) {
               this.startText = null; // Clear reference
             }
             
-            // --- Call cleanup FIRST to ensure a clean slate (preserve crops on restart) ---
-            this.cleanupCurrentGame(false);
+            // --- Call cleanup FIRST to ensure a clean slate (full cleanup on restart) ---
+            this.cleanupCurrentGame(true);
             // --- End cleanup ---
 
             // --- Add log ---
@@ -2105,8 +2105,8 @@ if (isBrowser) {
               this.startText = null; // Clear reference
             }
             
-            // --- Call cleanup FIRST to ensure a clean slate (preserve crops on restart) ---
-            this.cleanupCurrentGame(false);
+            // --- Call cleanup FIRST to ensure a clean slate (full cleanup on restart) ---
+            this.cleanupCurrentGame(true);
             // --- End cleanup ---
 
             // --- Add log ---
