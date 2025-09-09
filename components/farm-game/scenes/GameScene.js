@@ -5617,6 +5617,12 @@ if (isBrowser) {
           try {
             console.log("Cleaning up current game...", fullCleanup ? "(Full cleanup)" : "(Preserving crops)");
             
+            // Clear all JavaScript timeouts that might add elements after cleanup
+            if (this._waveChangeTimeout) {
+              clearTimeout(this._waveChangeTimeout);
+              this._waveChangeTimeout = null;
+            }
+            
             // Stop enemy spawning and wave timers, but preserve crop timers unless full cleanup
             if (fullCleanup) {
               this.time.removeAllEvents();
@@ -5630,6 +5636,8 @@ if (isBrowser) {
                 this.waveTimer.remove();
                 this.waveTimer = null;
               }
+              // Clear all Phaser delayed calls that might spawn enemies/defenses
+              this.time.removeAllEvents();
             }
             
             // Always clean up enemies on restart to prevent visual persistence
