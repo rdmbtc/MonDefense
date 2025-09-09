@@ -2170,6 +2170,12 @@ export default class Defense {
 }
 
   
+  // Force immediate destruction, bypassing wave lifecycle
+  forceDestroy() {
+    this.isExhausted = true; // Mark as exhausted to bypass wave checks
+    this.destroy();
+  }
+
   destroy() {
     try {
       // console.log(`Attempting destroy on Defense ${this.type} at (${this.x?.toFixed(0)}, ${this.y?.toFixed(0)}) - Active: ${this.active}`);

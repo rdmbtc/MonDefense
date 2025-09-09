@@ -5659,8 +5659,12 @@ if (isBrowser) {
               console.log(`Cleaning up ${this.defenses.length} defenses`);
               this.defenses.forEach((defense, index) => {
                 if (defense) {
-                  // Call the defense's own destroy method if it exists
-                  if (typeof defense.destroy === 'function') {
+                  // Use forceDestroy to bypass wave lifecycle, fallback to destroy
+                  if (typeof defense.forceDestroy === 'function') {
+                    try {
+                      defense.forceDestroy();
+                    } catch (e) { console.error("Error force destroying defense:", e); }
+                  } else if (typeof defense.destroy === 'function') {
                     try {
                       defense.destroy();
                     } catch (e) { console.error("Error destroying defense:", e); }
