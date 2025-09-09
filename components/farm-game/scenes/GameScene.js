@@ -3044,6 +3044,11 @@ if (isBrowser) {
             // Add chog button (ABS mage)
             const chogButton = this.add.rectangle(180, 550, buttonWidth, buttonHeight, 0x000066).setDepth(2000);
             chogButton.on('pointerdown', () => {
+              // Prevent defense selection if game is not active
+              if (!this.gameState.isActive) {
+                console.log("Defense selection blocked - game not active");
+                return;
+              }
               this.pendingDefenseType = 'chog';
               this.pendingDefensePlacement = true;
               this.setToolMode('chog');
@@ -3080,6 +3085,11 @@ if (isBrowser) {
             // Add molandak button (MON mage)
             const molandakButton = this.add.rectangle(250, 550, buttonWidth, buttonHeight, 0x660000).setDepth(2000);
             molandakButton.on('pointerdown', () => {
+              // Prevent defense selection if game is not active
+              if (!this.gameState.isActive) {
+                console.log("Defense selection blocked - game not active");
+                return;
+              }
               this.pendingDefenseType = 'molandak';
               this.pendingDefensePlacement = true;
               this.setToolMode('molandak');
@@ -3121,6 +3131,11 @@ if (isBrowser) {
             // keon Button
             keonButton = this.add.rectangle(320, 550, buttonWidth, buttonHeight, 0x990099).setDepth(2000);
             keonButton.on('pointerdown', () => {
+              // Prevent defense selection if game is not active
+              if (!this.gameState.isActive) {
+                console.log("Defense selection blocked - game not active");
+                return;
+              }
               this.pendingDefenseType = 'keon';
               this.pendingDefensePlacement = true;
               this.setToolMode('keon');
@@ -3153,6 +3168,11 @@ if (isBrowser) {
             // moyaki Button
             moyakiButton = this.add.rectangle(390, 550, buttonWidth, buttonHeight, 0x990000).setDepth(2000);
             moyakiButton.on('pointerdown', () => {
+              // Prevent defense selection if game is not active
+              if (!this.gameState.isActive) {
+                console.log("Defense selection blocked - game not active");
+                return;
+              }
               this.pendingDefenseType = 'moyaki';
               this.pendingDefensePlacement = true;
               this.setToolMode('moyaki');
@@ -4364,6 +4384,12 @@ if (isBrowser) {
           try {
             console.log(`Setting tool mode to: ${mode}`);
             
+            // Prevent tool mode changes if game is not active (except for attack mode reset)
+            if (!this.gameState.isActive && mode !== 'attack') {
+              console.log("Tool mode change blocked - game not active");
+              return;
+            }
+            
             // Update tool mode
             this.toolMode = mode;
             
@@ -4548,6 +4574,12 @@ if (isBrowser) {
         placeDefense(x, y, type) {
           try {
             console.log(`Placing defense: ${type} at ${x}, ${y}`);
+            
+            // Prevent defense placement if game is not active
+            if (!this.gameState.isActive) {
+              console.log("Defense placement blocked - game not active");
+              return false;
+            }
             
             // Only allow placement on right side
             if (x < 200) {
@@ -5798,6 +5830,17 @@ if (isBrowser) {
             this.toolMode = 'attack'; // Reset tool mode
             this.pendingDefensePlacement = false; // Reset placement flag
             this.pendingDefenseType = null;
+            
+            // Reset defense selection state to prevent post-game placement
+            console.log("cleanupCurrentGame: Resetting defense selection state");
+            if (this.pendingDefensePlacement) {
+              this.pendingDefensePlacement = false;
+              console.log("cleanupCurrentGame: Cleared pending defense placement");
+            }
+            if (this.pendingDefenseType) {
+              this.pendingDefenseType = null;
+              console.log("cleanupCurrentGame: Cleared pending defense type");
+            }
             
             // Reset UI elements if they exist
             if (this.scoreText) this.scoreText.setText("Score: 0");

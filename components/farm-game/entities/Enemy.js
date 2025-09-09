@@ -734,39 +734,10 @@ export default class Enemy {
     
     console.log("Game over!");
     
-    // Set game to inactive
-    if (this.scene.gameState) {
-      this.scene.gameState.isActive = false;
+    // Call the scene's endGame method which has proper cleanup logic
+    if (typeof this.scene.endGame === 'function') {
+      this.scene.endGame(false);
     }
-    
-    // Show game over text
-    const gameOverText = this.scene.add.text(400, 300, 'GAME OVER', {
-      fontSize: '48px',
-      fontFamily: 'Arial',
-      color: '#FF0000'
-    }).setOrigin(0.5);
-    
-    // Show score
-    const scoreText = this.scene.add.text(400, 350, `Final Score: ${this.scene.gameState.score}`, {
-      fontSize: '24px',
-      fontFamily: 'Arial',
-      color: '#FFFFFF'
-    }).setOrigin(0.5);
-    
-    // Show restart button
-    const restartButton = this.scene.add.rectangle(400, 420, 200, 50, 0xFFFFFF);
-    const restartText = this.scene.add.text(400, 420, 'Restart Game', {
-      fontSize: '18px',
-      fontFamily: 'Arial',
-      color: '#000000'
-    }).setOrigin(0.5);
-    
-    restartButton.setInteractive();
-    restartButton.on('pointerdown', () => {
-      // Proper cleanup before restart to prevent visual persistence
-      this.scene.cleanupCurrentGame(true);
-      this.scene.scene.restart();
-    });
   }
   
   destroy(silent = false) {
