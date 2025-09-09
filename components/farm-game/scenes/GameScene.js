@@ -5214,6 +5214,7 @@ if (isBrowser) {
         // Add endGame function to handle game over state
         endGame(victory = false) {
           try {
+            console.log('=== ENDGAME METHOD CALLED ===');
             console.log(`Game ended with ${victory ? 'victory' : 'defeat'}`);
 
             // --- CAPTURE STATS BEFORE CLEANUP ---
@@ -5367,6 +5368,7 @@ if (isBrowser) {
             submitText.setScale(0.8);
 
             // Create restart button with proper styling and entrance animation
+            console.log('=== CREATING RESTART BUTTON ===');
             const restartButton = this.add.rectangle(400, 530, buttonWidth, buttonHeight, 0x4CAF50, 1);
             restartButton.setStrokeStyle(4, 0x45A049);
             restartButton.setDepth(1001);
