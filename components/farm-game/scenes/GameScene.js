@@ -5458,6 +5458,7 @@ if (isBrowser) {
                 this.input.setDefaultCursor('default');
               })
               .on('pointerdown', () => {
+                console.log('RESTART BUTTON CLICKED!');
                 // Play click sound if available
                 if (this.soundManager) {
                     // Use a confirmation sound - ensure this key exists
@@ -5485,8 +5486,10 @@ if (isBrowser) {
                       // Reset cursor
                       this.input.setDefaultCursor('default');
 
+                      console.log('About to call cleanupCurrentGame...');
                       // Force immediate cleanup before starting new game
                       this.cleanupCurrentGame(false);
+                      console.log('cleanupCurrentGame call completed.');
                       
                       // Add small delay to ensure cleanup completes
                       this.time.delayedCall(100, () => {
