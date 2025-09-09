@@ -5485,8 +5485,14 @@ if (isBrowser) {
                       // Reset cursor
                       this.input.setDefaultCursor('default');
 
-                      // Start a new game - cleanup will happen inside startGame
-                      this.startGame();
+                      // Force immediate cleanup before starting new game
+                      this.cleanupCurrentGame(false);
+                      
+                      // Add small delay to ensure cleanup completes
+                      this.time.delayedCall(100, () => {
+                        // Start a new game after cleanup
+                        this.startGame();
+                      });
                   }
                 });
               });
@@ -5668,8 +5674,7 @@ if (isBrowser) {
                 this.waveTimer.remove();
                 this.waveTimer = null;
               }
-              // Clear all Phaser delayed calls that might spawn enemies/defenses
-              this.time.removeAllEvents();
+              // Don't remove all events on restart to preserve crop timers
             }
             
             // Always clean up enemies on restart to prevent visual persistence
