@@ -2734,6 +2734,9 @@ if (isBrowser) {
         createFallbackEnemy(type, x, y) {
           console.log("Creating fallback emergency enemy");
           
+          // Debug log for emergency enemy creation
+          console.log(`=== EMERGENCY ENEMY CREATED - Type: ${type}, Position: (${x}, ${y})`);
+          
           // Create a simplified enemy object
           const emergencyEnemy = {
             scene: this,
@@ -2747,6 +2750,8 @@ if (isBrowser) {
             visible: true,
             value: 10,
             container: null,
+            hasReachedEnd: false,
+            id: `emergency_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
             update: function(delta) {
               // Move towards left
               this.x -= this.speed;
@@ -2775,6 +2780,8 @@ if (isBrowser) {
             },
             reachedEnd: function() {
               console.log(`=== ENEMY ${this.id || 'unknown'} REACHED END! Lives before:`, this.scene.gameState?.lives);
+              console.log(`=== Enemy hasReachedEnd flag:`, this.hasReachedEnd);
+              console.log(`=== Total enemies in scene:`, this.scene.enemies ? this.scene.enemies.length : 'undefined');
               if (this.scene.gameState) {
                 this.scene.gameState.lives--;
                 console.log('=== Lives after decrement:', this.scene.gameState.lives);
@@ -2791,6 +2798,7 @@ if (isBrowser) {
               this.destroy();
             },
             destroy: function() {
+              console.log(`=== DESTROYING ENEMY ${this.id || 'unknown'} - hasReachedEnd: ${this.hasReachedEnd}`);
               if (this.container) {
                 this.container.destroy();
               }
@@ -2798,6 +2806,7 @@ if (isBrowser) {
                 const index = this.scene.enemies.indexOf(this);
                 if (index !== -1) {
                   this.scene.enemies.splice(index, 1);
+                  console.log(`=== Enemy removed from array. Remaining enemies: ${this.scene.enemies.length}`);
                 }
               }
             }
