@@ -85,9 +85,10 @@ const nextConfig = {
   // Move serverComponentsExternalPackages to root level as per Next.js 15.2.4
   serverExternalPackages: [],
   compiler: {
-    removeConsole: {
-      exclude: ['error', 'warn'],
-    },
+    removeConsole: false, // Disabled to allow debug console.logs
+    // removeConsole: {
+    //   exclude: ['error', 'warn'],
+    // },
   },
   // Remove basePath for Vercel deployment
   // ...(process.env.GITHUB_ACTIONS ? {
