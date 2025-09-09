@@ -3764,6 +3764,7 @@ if (isBrowser) {
             }
             
             // ADDED: Update individual enemies
+            console.log(`Main update loop - enemies count: ${this.enemies ? this.enemies.length : 'undefined'}`);
             if (this.enemies && this.enemies.length > 0) {
               // Iterate backwards to allow safe removal during iteration (still useful for other logic)
               for (let i = this.enemies.length - 1; i >= 0; i--) {
@@ -3771,6 +3772,7 @@ if (isBrowser) {
                 if (enemy && enemy.active && !enemy.destroyed) { // Also check !enemy.destroyed here
                   // Check if update method exists before calling
                   if (typeof enemy.update === 'function') {
+                    console.log(`Updating enemy ${enemy.id || i} at position (${enemy.x}, ${enemy.y})`);
                     enemy.update(delta);
                   } else {
                     // If no update method, maybe remove it?
