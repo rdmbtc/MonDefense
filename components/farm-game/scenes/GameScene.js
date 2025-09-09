@@ -5668,22 +5668,32 @@ if (isBrowser) {
               console.log(`Cleaning up ${this.defenses.length} defenses`);
               this.defenses.forEach((defense, index) => {
                 if (defense) {
+                  console.log(`Cleaning defense ${index}: type=${defense.type}, hasForceDestroy=${typeof defense.forceDestroy === 'function'}, hasDestroy=${typeof defense.destroy === 'function'}`);
                   // Use forceDestroy to bypass wave lifecycle, fallback to destroy
                   if (typeof defense.forceDestroy === 'function') {
                     try {
                       defense.forceDestroy();
+                      console.log(`Defense ${defense.type} force destroyed successfully`);
                     } catch (e) { console.error("Error force destroying defense:", e); }
                   } else if (typeof defense.destroy === 'function') {
                     try {
                       defense.destroy();
+                      console.log(`Defense ${defense.type} destroyed successfully`);
                     } catch (e) { console.error("Error destroying defense:", e); }
                   } else {
                     // Manual cleanup if no destroy method
-                    if (defense.sprite && typeof defense.sprite.destroy === 'function') defense.sprite.destroy();
+                    console.log(`Manual cleanup for defense ${defense.type}`);
+                    if (defense.sprite && typeof defense.sprite.destroy === 'function') {
+                      defense.sprite.destroy();
+                      console.log(`Defense ${defense.type} sprite destroyed`);
+                    }
                     if (defense.rangeIndicator && typeof defense.rangeIndicator.destroy === 'function') defense.rangeIndicator.destroy();
                     if (defense.manaText && typeof defense.manaText.destroy === 'function') defense.manaText.destroy();
                     if (defense.cooldownIndicator && typeof defense.cooldownIndicator.destroy === 'function') defense.cooldownIndicator.destroy();
-                    if (defense.label && typeof defense.label.destroy === 'function') defense.label.destroy();
+                    if (defense.label && typeof defense.label.destroy === 'function') {
+                      defense.label.destroy();
+                      console.log(`Defense ${defense.type} label destroyed`);
+                    }
                   }
                 }
               });
@@ -5956,6 +5966,10 @@ if (isBrowser) {
             if (index !== -1) {
               this.defenses.splice(index, 1);
               console.log(`Defense ${defense.type} removed from defenses array`);
+              console.log(`Remaining defenses: ${this.defenses.length}`);
+              this.defenses.forEach((def, i) => {
+                console.log(`  Defense ${i}: ${def.type || 'unknown'} at (${def.x || 'N/A'}, ${def.y || 'N/A'})`);
+              });
             }
           }
         }
