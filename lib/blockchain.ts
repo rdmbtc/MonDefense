@@ -1,5 +1,4 @@
-import { createPublicClient, createWalletClient, http } from 'viem';
-import { privateKeyToAccount } from 'viem/accounts';
+import { createPublicClient, http } from 'viem';
 import { monadTestnet } from 'viem/chains';
 import { GAME_CONTRACT_ABI } from './contract-abi';
 
@@ -84,56 +83,8 @@ export async function getPlayerDataPerGame(playerAddress: string, gameAddress: s
   }
 }
 
-// Helper function to create signer client
-function createSignerClient() {
-  const privateKey = process.env.SIGNER_PRIVATE_KEY;
-  if (!privateKey) {
-    throw new Error('SIGNER_PRIVATE_KEY environment variable is required');
-  }
+// Note: Server-side signing functions have been moved to the backend
+// This file now only contains client-side read functions
 
-  const account = privateKeyToAccount(privateKey as `0x${string}`);
-  
-  return createWalletClient({
-    account,
-    chain: monadTestnet,
-    transport: http()
-  });
-}
-
-// Function to update player data on-chain
-export async function updatePlayerDataOnChain(
-  playerAddress: string,
-  scoreAmount: number,
-  transactionAmount: number
-) {
-  try {
-    const walletClient = createSignerClient();
-    
-    const hash = await walletClient.writeContract({
-      address: CONTRACT_ADDRESS,
-      abi: CONTRACT_ABI,
-      functionName: 'updatePlayerData',
-      args: [
-        playerAddress as `0x${string}`,
-        BigInt(scoreAmount),
-        BigInt(transactionAmount)
-      ]
-    });
-
-    // Wait for transaction receipt
-    const receipt = await publicClient.waitForTransactionReceipt({ hash });
-    
-    return {
-      success: true,
-      transactionHash: hash,
-      blockNumber: receipt.blockNumber,
-      gasUsed: receipt.gasUsed
-    };
-  } catch (error) {
-    console.error('Error updating player data on-chain:', error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : 'Unknown error'
-    };
-  }
-}
+// Note: updatePlayerDataOnChain function has been moved to the backend
+// Frontend should use API calls to trigger on-chain updates

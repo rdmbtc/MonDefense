@@ -4,7 +4,9 @@ import axios from "axios";
 
 // Create axios instance with base configuration
 export const api = axios.create({
-  baseURL: process.env.NODE_ENV === "production" ? "" : "http://localhost:3000",
+  baseURL: process.env.NODE_ENV === "production" 
+    ? process.env.NEXT_PUBLIC_API_URL || "https://robust-taffy-bademarc-f077df23.koyeb.app"
+    : process.env.NEXT_PUBLIC_DEV_API_URL || "http://localhost:3001",
   timeout: 10000,
   headers: {
     "Content-Type": "application/json",
