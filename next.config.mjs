@@ -85,7 +85,7 @@ const nextConfig = {
   // Move serverComponentsExternalPackages to root level as per Next.js 15.2.4
   serverExternalPackages: [],
   compiler: {
-    removeConsole: false, // Disabled to allow debug console.logs
+    removeConsole: true, // Remove console logs in production
     // removeConsole: {
     //   exclude: ['error', 'warn'],
     // },

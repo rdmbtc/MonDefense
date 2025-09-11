@@ -5,6 +5,7 @@ import { Inter } from "next/font/google"
 import { Providers } from "./providers"
 import { ConfigChecker } from "@/components/config-checker"
 import Script from "next/script"
+import '@/lib/console-override' // Global console log management
 
 const inter = Inter({ subsets: ["latin"] })
 
