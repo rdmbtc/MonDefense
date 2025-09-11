@@ -14,6 +14,7 @@ import { usePlayerTotalScore } from '@/hooks/usePlayerTotalScore';
 import { useCrossAppAccount } from '@/hooks/useCrossAppAccount';
 import { useUsername } from '@/hooks/useUsername';
 import { useOnchainScoreSubmissionWithRetry } from '@/hooks/useOnchainScoreSubmission';
+import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { GAME_CONFIG } from '@/lib/game-config';
 
 // Extend Window interface to include custom properties
@@ -66,8 +67,22 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const { walletAddress } = useCrossAppAccount();
   const { data: usernameData, error: usernameError, isLoading: usernameLoading } = useUsername(walletAddress);
   const { data: playerStats } = usePlayerTotalScore(walletAddress, gameStarted, false);
+  const { data: leaderboardData } = useLeaderboard(1);
   const gameSession = useGameSession(sessionToken);
   const onchainSubmission = useOnchainScoreSubmissionWithRetry();
+
+  // Calculate player's rank from leaderboard data
+  const getPlayerRank = () => {
+    if (!leaderboardData?.data?.data || !walletAddress) return null;
+    
+    const playerIndex = leaderboardData.data.data.findIndex(
+      (player: any) => player.walletAddress.toLowerCase() === walletAddress.toLowerCase()
+    );
+    
+    return playerIndex !== -1 ? playerIndex + 1 : null;
+  };
+
+  const playerRank = getPlayerRank();
   
   // Debug username retrieval
   console.log('Username debug info:', {
@@ -617,7 +632,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           </span>
           {playerStats && (
             <div className="text-xs text-white/80 mt-1">
-              Rank: #{playerStats.bestScore} | Games: {playerStats.gamesPlayed}
+              Rank: #{playerRank || 'Unranked'} | Games: {playerStats.gamesPlayed}
             </div>
           )}
         </div>
