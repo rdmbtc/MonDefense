@@ -613,7 +613,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         {/* Score Display */}
         <div className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2">
           <span className="text-white font-bold" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>
-            Score: {playerStats ? Number(playerStats.totalScore).toLocaleString() : gameScore.toLocaleString()}
+            Score: {gameScore > 0 ? gameScore.toLocaleString() : '0'}
           </span>
           {playerStats && (
             <div className="text-xs text-white/80 mt-1">
