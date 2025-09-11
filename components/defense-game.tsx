@@ -68,6 +68,11 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const { data: usernameData, error: usernameError, isLoading: usernameLoading } = useUsername(walletAddress);
   const { data: playerStats } = usePlayerTotalScore(walletAddress, gameStarted, false);
   const { data: leaderboardData } = useLeaderboard(1);
+  
+  // Get player's rank from leaderboard
+  const playerRank = leaderboardData?.data?.data?.find(
+    (player: any) => player.walletAddress?.toLowerCase() === walletAddress?.toLowerCase()
+  )?.rank || null;
   const gameSession = useGameSession(sessionToken);
   const onchainSubmission = useOnchainScoreSubmissionWithRetry();
   
@@ -614,10 +619,15 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         
         {/* Score Display */}
         <div className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2">
-          <span className="text-white font-bold" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>Score: {gameScore.toLocaleString()}</span>
+          <span className="text-white font-bold" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>
+            Score: {playerStats ? Number(playerStats.totalScore).toLocaleString() : gameScore.toLocaleString()}
+          </span>
           {playerStats && (
             <div className="text-xs text-white/80 mt-1">
-              Best: {parseInt(playerStats.bestScore).toLocaleString()} | Games: {playerStats.gamesPlayed}
+              Best: {Number(playerStats.bestScore).toLocaleString()} | Games: {playerStats.gamesPlayed}
+              {playerRank && (
+                <span className="ml-2 text-yellow-300">Top: #{playerRank.toString()}</span>
+              )}
             </div>
           )}
         </div>
