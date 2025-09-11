@@ -11,7 +11,6 @@ import {
 } from "@privy-io/react-auth";
 import { useGameSession } from '@/hooks/useGameSession';
 import { usePlayerTotalScore } from '@/hooks/usePlayerTotalScore';
-import { useLeaderboard } from '@/hooks/useLeaderboard';
 import { useCrossAppAccount } from '@/hooks/useCrossAppAccount';
 import { useUsername } from '@/hooks/useUsername';
 import { useOnchainScoreSubmissionWithRetry } from '@/hooks/useOnchainScoreSubmission';
@@ -67,12 +66,6 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const { walletAddress } = useCrossAppAccount();
   const { data: usernameData, error: usernameError, isLoading: usernameLoading } = useUsername(walletAddress);
   const { data: playerStats } = usePlayerTotalScore(walletAddress, gameStarted, false);
-  const { data: leaderboardData } = useLeaderboard(1);
-  
-  // Get player's rank from leaderboard
-  const playerRank = leaderboardData?.data?.data?.find(
-    (player: any) => player.walletAddress?.toLowerCase() === walletAddress?.toLowerCase()
-  )?.rank || null;
   const gameSession = useGameSession(sessionToken);
   const onchainSubmission = useOnchainScoreSubmissionWithRetry();
   
@@ -624,10 +617,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           </span>
           {playerStats && (
             <div className="text-xs text-white/80 mt-1">
-              Best: {Number(playerStats.bestScore).toLocaleString()} | Games: {playerStats.gamesPlayed}
-              {playerRank && (
-                <span className="ml-2 text-yellow-300">Top: #{playerRank.toString()}</span>
-              )}
+              Rank: #{playerStats.bestScore} | Games: {playerStats.gamesPlayed}
             </div>
           )}
         </div>
