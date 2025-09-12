@@ -988,7 +988,12 @@ if (isBrowser) {
               color: '#FFFFFF'
             }).setDepth(UI_DEPTH);
             
-            // Lives text removed - no longer displayed in UI
+            // Lives text
+            this.livesText = this.add.text(10, 70, "Lives: 3", {
+              fontFamily: 'Arial',
+              fontSize: '18px',
+              color: '#FF6B6B'
+            }).setDepth(UI_DEPTH);
             
             // Weather UI
             this.weatherSystem.weatherText = this.add.text(10, 90, "Weather: Sunny", {
@@ -1396,7 +1401,7 @@ if (isBrowser) {
             // Update UI text elements
             this.updateWaveText(); // Should show Wave: 1
             this.updateScoreText(); // Should show Score: 0
-            // Lives text removed - no longer needed
+            this.updateLivesText(); // Should show Lives: 3
             this.updateFarmCoins(0); // Should show Coins: 75 (updated value)
             
             // Re-create or reset the upgrade system if needed
@@ -2148,7 +2153,7 @@ if (isBrowser) {
             // Update UI text elements
             this.updateWaveText(); // Should show Wave: 1
             this.updateScoreText(); // Should show Score: 0
-            // Lives text removed - no longer needed
+            this.updateLivesText(); // Should show Lives: 3
             this.updateFarmCoins(0); // Should show Coins: 75 (updated value)
             
             // Re-create or reset the upgrade system if needed
@@ -2300,7 +2305,11 @@ if (isBrowser) {
         }
         
         // Update lives text
-        // updateLivesText function removed - Lives text no longer displayed
+        updateLivesText() {
+          if (this.livesText && this.gameState) {
+            this.livesText.setText(`Lives: ${this.gameState.lives}`);
+          }
+        }
         
         // Start a new wave of enemies - make waves more difficult over time
         startWave(clearExistingEnemies = true) {
@@ -5149,6 +5158,11 @@ if (isBrowser) {
 
           // Reduce lives
           this.gameState.lives--;
+          
+          // Update lives display
+          if (typeof this.updateLivesText === 'function') {
+            this.updateLivesText();
+          }
 
           // Show warning text
           if (typeof this.showFloatingText === 'function') {
