@@ -2193,6 +2193,7 @@ if (isBrowser) {
             const currentCoins = this.gameState.farmCoins || 0;
             const newCoins = Math.max(0, currentCoins + amount); // Ensure coins don't go below 0
             const oldCoins = this.gameState.farmCoins; // Store old value for comparison
+            
             this.gameState.farmCoins = newCoins;
 
             // Update registry
@@ -2232,6 +2233,7 @@ if (isBrowser) {
 
             // Call the callback if it exists
             const addFarmCoins = this.registry.get('addFarmCoins');
+            
             if (typeof addFarmCoins === 'function') {
               addFarmCoins(amount);
             }
@@ -2243,8 +2245,6 @@ if (isBrowser) {
                 onGameEvent('coinsEarned', { amount: amount, total: newCoins });
               }
             }
-
-            console.log("Farm coins updated:", newCoins);
 
             // Play coin sound if gaining coins - maybe a different sound for spending?
             if (amount > 0 && this.soundManager) {

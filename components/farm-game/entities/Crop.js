@@ -53,7 +53,7 @@ export default class Crop extends Phaser.GameObjects.Container {
     // Apply any existing upgrades
     this.applyUpgrades();
     
-    console.log(`Created ${this.cropType} crop at (${x}, ${y})`);
+    // Crop created
   }
   
   createSprites() {
@@ -116,7 +116,7 @@ export default class Crop extends Phaser.GameObjects.Container {
       loop: true
     });
 
-    console.log(`Started growth for ${this.cropType} crop with delay ${growthDelay}ms`);
+    // Growth started
   }
   
   grow() {
@@ -127,8 +127,6 @@ export default class Crop extends Phaser.GameObjects.Container {
     // Increment growth based on growth speed and multiplier
     const effectiveGrowthSpeed = this.growthRate * this.growthMultiplier;
     this.growthProgress += effectiveGrowthSpeed;
-
-    console.log(`Crop growing: ${this.growthProgress.toFixed(1)}/${this.maxGrowth} (${this.growthState})`);
 
     // Cap growth
     if (this.growthProgress >= this.maxGrowth) {
@@ -141,8 +139,6 @@ export default class Crop extends Phaser.GameObjects.Container {
         this.growthTimer.destroy();
         this.growthTimer = null;
       }
-
-      console.log(`Crop fully grown and ready for harvest!`);
     } else if (this.growthProgress >= this.maxGrowth / 2 && this.growthState === 'seedling') {
       this.setGrowthState('growing');
     }
@@ -224,11 +220,8 @@ export default class Crop extends Phaser.GameObjects.Container {
   
   harvest() {
     if (!this.isActive || !this.isHarvestable) {
-      console.log(`Harvest failed: isActive=${this.isActive}, isHarvestable=${this.isHarvestable}`);
       return 0;
     }
-
-    console.log(`🌾 HARVESTING ${this.cropType} crop at ${this.x}, ${this.y}, generating coins`);
 
     // Play harvest sound
     if (this.scene.soundManager) {
@@ -247,12 +240,13 @@ export default class Crop extends Phaser.GameObjects.Container {
     const yieldAmount = this.calculateYield();
 
     // Generate coins
-    if (typeof this.scene.updateFarmCoins === 'function') {
-      console.log(`💰 Giving ${yieldAmount} coins to player!`);
+    if (this.scene.updateFarmCoins) {
       this.scene.updateFarmCoins(yieldAmount);
 
       // Show floating coins with animation
-      this.scene.showFloatingText(this.x, this.y, `+${yieldAmount} coins`, 0xFFFF00);
+      if (this.scene.showFloatingText) {
+        this.scene.showFloatingText(this.x, this.y, `+${yieldAmount} coins`, 0xFFFF00);
+      }
 
       // Show harvest notification message
       this.showHarvestNotification(yieldAmount);
@@ -336,7 +330,7 @@ export default class Crop extends Phaser.GameObjects.Container {
     // Base yield with some randomness, modified by yield multiplier
     const baseYield = this.value + Math.random() * 3; // Increased random bonus
     const finalYield = Math.floor(baseYield * this.yieldMultiplier);
-    console.log(`Calculating yield: base=${this.value}, random bonus=${(baseYield - this.value).toFixed(2)}, multiplier=${this.yieldMultiplier}, final=${finalYield}`);
+    // Yield calculated
     return finalYield;
   }
   
@@ -385,10 +379,7 @@ export default class Crop extends Phaser.GameObjects.Container {
       }
     }
 
-    // Debug: Log crop state periodically
-    if (this.scene.time.now % 2000 < 16) { // Every ~2 seconds
-      console.log(`Crop ${this.cropType}: growth=${this.growthProgress.toFixed(1)}/${this.maxGrowth}, state=${this.growthState}, harvestable=${this.isHarvestable}, growing=${this.isGrowing}`);
-    }
+    // Update crop state (removed debug logging)
   }
   
   adjustForWave() {
@@ -455,7 +446,7 @@ export default class Crop extends Phaser.GameObjects.Container {
         });
       }
       
-      console.log(`Crop yield multiplier updated to ${multiplier.toFixed(2)}`);
+      // Yield multiplier updated
     }
   }
   
@@ -481,7 +472,7 @@ export default class Crop extends Phaser.GameObjects.Container {
         });
       }
       
-      console.log(`Crop growth multiplier updated to ${multiplier.toFixed(2)}`);
+      // Growth multiplier updated
     }
   }
   
