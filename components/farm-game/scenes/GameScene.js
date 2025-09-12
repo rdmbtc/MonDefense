@@ -2349,7 +2349,14 @@ if (isBrowser) {
             // Reset enemy target counts and clear existing enemies if requested
             if (clearExistingEnemies && this.enemies.length > 0) {
               console.warn(`Starting wave ${this.gameState.wave} with ${this.enemies.length} enemies still present. Clearing them.`);
-              this.enemies.forEach(enemy => enemy?.destroy());
+              this.enemies.forEach(enemy => {
+                if (enemy) {
+                  if (typeof enemy.hideHealthBar === 'function') {
+                    enemy.hideHealthBar();
+                  }
+                  enemy.destroy();
+                }
+              });
               this.enemies = [];
             } else if (this.enemies.length > 0) {
               console.log(`Starting wave ${this.gameState.wave} with ${this.enemies.length} enemies preserved from previous game.`);
@@ -2896,8 +2903,13 @@ if (isBrowser) {
               
               // Destroy all remaining enemies
               this.enemies.forEach(enemy => {
-                if (enemy && typeof enemy.destroy === 'function') {
-                  enemy.destroy();
+                if (enemy) {
+                  if (typeof enemy.hideHealthBar === 'function') {
+                    enemy.hideHealthBar();
+                  }
+                  if (typeof enemy.destroy === 'function') {
+                    enemy.destroy();
+                  }
                 }
               });
               
@@ -5172,6 +5184,11 @@ if (isBrowser) {
           // Add screen shake when a life is lost
           this.cameras.main.shake(250, 0.008);
 
+          // Hide health bar immediately before cleanup
+          if (typeof enemy.hideHealthBar === 'function') {
+            enemy.hideHealthBar();
+          }
+
           // Remove enemy from enemies array immediately
           const enemyIndex = this.enemies.indexOf(enemy);
           if (enemyIndex > -1) {
@@ -5657,9 +5674,16 @@ if (isBrowser) {
             if (this.enemies && this.enemies.length) {
               console.log(`Cleaning up ${this.enemies.length} enemies`);
               this.enemies.forEach(enemy => {
-                if (enemy && typeof enemy.destroy === 'function') {
+                if (enemy) {
                   try {
-                    enemy.destroy();
+                    // Hide health bar immediately before destroying
+                    if (typeof enemy.hideHealthBar === 'function') {
+                      enemy.hideHealthBar();
+                    }
+                    // Destroy the enemy
+                    if (typeof enemy.destroy === 'function') {
+                      enemy.destroy();
+                    }
                   } catch (e) { console.error("Error destroying enemy:", e); }
                 }
               });
