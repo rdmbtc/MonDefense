@@ -1204,30 +1204,30 @@ if (isBrowser) {
           this.weatherSystem.weatherParticles = this.add.particles(0, 0, 'pixel', {
             x: { min: -50, max: 850 }, // Wider spawn area for better coverage
             y: -20,
-            speedY: { min: 600, max: 900 }, // Much faster falling speed
-            speedX: { min: -50, max: -20 }, // More diagonal rain effect
-            scale: { min: 2, max: 6 }, // Larger, more visible raindrops
-            alpha: { min: 0.8, max: 1.0 }, // More opaque for better visibility
-            tint: 0x6BB6FF, // Brighter blue for better visibility
-            lifespan: 1500, // Shorter lifespan for faster refresh
-            frequency: 15, // Much denser rain (lower frequency = more particles)
-            gravityY: 200 // Stronger gravity for realistic fall
+            speedY: { min: 800, max: 1200 }, // Much faster falling speed for fast raindrops
+            speedX: { min: -80, max: -30 }, // More diagonal rain effect
+            scale: { min: 3, max: 8 }, // Larger, more visible raindrops
+            alpha: { min: 0.9, max: 1.0 }, // More opaque for better visibility
+            tint: 0xFFFFFF, // White raindrops for visibility
+            lifespan: 1200, // Shorter lifespan for faster refresh
+            frequency: 10, // Much denser rain (lower frequency = more particles)
+            gravityY: 300 // Stronger gravity for realistic fast fall
           });
           
           // Set higher depth to ensure visibility
           this.weatherSystem.weatherParticles.setDepth(1000);
           
-          // Apply rainy mood ColorMatrix effects to the camera
+          // Apply black and white LUT ColorMatrix effects to the camera
           if (this.cameras.main.postFX) {
             // Clear any existing color matrix effects
             this.cameras.main.postFX.clear();
             
-            // Add ColorMatrix for rainy mood - darker, more saturated blues
+            // Add ColorMatrix for black and white rainy mood
             const colorMatrix = this.cameras.main.postFX.addColorMatrix();
-            colorMatrix.brightness(-0.2);    // Darker
-            colorMatrix.contrast(0.1);       // Slight contrast increase
-            colorMatrix.saturate(0.2);       // More saturated
-            colorMatrix.hue(240);            // Shift towards blue hues
+            colorMatrix.brightness(-0.3);    // Darker for dramatic effect
+            colorMatrix.contrast(0.4);       // High contrast for black and white
+            colorMatrix.saturate(-1.0);      // Complete desaturation for black and white
+            colorMatrix.hue(0);              // Reset hue
             
             // Store reference for cleanup
             this.weatherSystem.colorMatrix = colorMatrix;
@@ -4926,6 +4926,7 @@ if (isBrowser) {
               // Use stored references
               if (this.toolbarButtons.keonImage) this.toolbarButtons.keonImage.visible = keonVisible;
               if (this.toolbarButtons.keonCostText) this.toolbarButtons.keonCostText.visible = keonVisible;
+              if (this.toolbarButtons.keonHover) this.toolbarButtons.keonHover.visible = keonVisible;
               
               // Show notification when first unlocked
               if (keonVisible && !this.keonUnlockNotified) {
@@ -4942,6 +4943,7 @@ if (isBrowser) {
               // Use stored references
               if (this.toolbarButtons.moyakiImage) this.toolbarButtons.moyakiImage.visible = moyakiVisible;
               if (this.toolbarButtons.moyakiCostText) this.toolbarButtons.moyakiCostText.visible = moyakiVisible;
+              if (this.toolbarButtons.moyakiHover) this.toolbarButtons.moyakiHover.visible = moyakiVisible;
               
               // Show notification when first unlocked
               if (moyakiVisible && !this.moyakiUnlockNotified) {
