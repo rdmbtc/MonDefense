@@ -99,9 +99,16 @@ export default class Defense {
     this.lastAttackTime = 0;
     this.cooldownRemaining = 0;
     
+    // Track intervals and timers for proper cleanup
+    this.activeIntervals = new Set();
+    this.activeTimers = new Set();
+    
     // Add visual range indicator that's visible for a few seconds after placement
     this.showRange();
-    this.scene.time.delayedCall(3000, () => this.hideRange());
+    const rangeHideTimer = this.scene.time.delayedCall(3000, () => this.hideRange());
+    if (this.activeTimers) {
+      this.activeTimers.add(rangeHideTimer);
+    }
     
     // Create cooldown text indicator
     this.createCooldownText();
@@ -148,38 +155,133 @@ export default class Defense {
     this.addExhaustionAnimation();
     
     // Schedule destruction after animation
-    this.scene.time.delayedCall(1500, () => {
+    const destructionTimer = this.scene.time.delayedCall(1500, () => {
       this.destroy();
     });
+    if (this.activeTimers) {
+      this.activeTimers.add(destructionTimer);
+    }
   }
   
   // Add exhaustion animation
   addExhaustionAnimation() {
     if (!this.sprite || !this.scene) return;
     
-    // Immediately hide and destroy UI elements to prevent shadow circles
+    // AGGRESSIVE CLEANUP: Immediately destroy ALL UI elements to prevent shadow circles
+    
+    // Destroy range indicator
     if (this.rangeIndicator) {
       this.rangeIndicator.setVisible(false);
       this.rangeIndicator.destroy();
       this.rangeIndicator = null;
     }
     
-    // Hide other UI elements immediately
+    // Destroy cooldown elements
     if (this.cooldownText) {
       this.cooldownText.setVisible(false);
-    }
-    
-    if (this.noManaText) {
-      this.noManaText.setVisible(false);
+      this.cooldownText.destroy();
+      this.cooldownText = null;
     }
     
     if (this.cooldownIndicator) {
       this.cooldownIndicator.setVisible(false);
+      this.cooldownIndicator.destroy();
+      this.cooldownIndicator = null;
     }
     
+    if (this.cooldownContainer) {
+      this.cooldownContainer.setVisible(false);
+      this.cooldownContainer.destroy();
+      this.cooldownContainer = null;
+    }
+    
+    if (this.cooldownBg) {
+      this.cooldownBg.setVisible(false);
+      this.cooldownBg.destroy();
+      this.cooldownBg = null;
+    }
+    
+    // Destroy mana and ready indicators
+    if (this.noManaText) {
+      this.noManaText.setVisible(false);
+      this.noManaText.destroy();
+      this.noManaText = null;
+    }
+    
+    if (this.readyIndicator) {
+      this.readyIndicator.setVisible(false);
+      this.readyIndicator.destroy();
+      this.readyIndicator = null;
+    }
+    
+    // Destroy special attack indicators
+    if (this.specialAttackIndicator) {
+      this.specialAttackIndicator.setVisible(false);
+      this.specialAttackIndicator.destroy();
+      this.specialAttackIndicator = null;
+    }
+    
+    if (this.specialAttackReadyIndicator) {
+      this.specialAttackReadyIndicator.setVisible(false);
+      this.specialAttackReadyIndicator.destroy();
+      this.specialAttackReadyIndicator = null;
+    }
+    
+    if (this.specialAttackText) {
+      this.specialAttackText.setVisible(false);
+      this.specialAttackText.destroy();
+      this.specialAttackText = null;
+    }
+    
+    // Destroy labels and target lines
     if (this.label) {
       this.label.setVisible(false);
+      if (typeof this.label.destroy === 'function') {
+        this.label.destroy();
+      }
+      this.label = null;
     }
+    
+    if (this.targetLine) {
+      this.targetLine.setVisible(false);
+      this.targetLine.destroy();
+      this.targetLine = null;
+    }
+    
+    // Kill all tweens targeting this defense to prevent lingering animations
+     if (this.scene.tweens) {
+       this.scene.tweens.killTweensOf(this.sprite);
+       this.scene.tweens.killTweensOf(this);
+     }
+     
+     // Clear all tracked intervals and timers to prevent lingering effects
+     if (this.activeIntervals) {
+       this.activeIntervals.forEach(interval => {
+         try {
+           clearInterval(interval);
+         } catch (e) {
+           console.warn('Error clearing interval:', e);
+         }
+       });
+       this.activeIntervals.clear();
+     }
+     
+     if (this.activeTimers) {
+        this.activeTimers.forEach(timer => {
+          try {
+            if (timer.remove && typeof timer.remove === 'function') {
+              // Phaser time event
+              timer.remove();
+            } else {
+              // Regular setTimeout
+              clearTimeout(timer);
+            }
+          } catch (e) {
+            console.warn('Error clearing timer:', e);
+          }
+        });
+        this.activeTimers.clear();
+      }
     
     // Flash red to indicate exhaustion
     this.scene.tweens.add({
@@ -445,7 +547,7 @@ export default class Defense {
     this.auraParticles = particles;
 
     // Make particles follow the sprite
-    this.scene.time.addEvent({
+    const auraTimer = this.scene.time.addEvent({
       delay: 100,
       callback: () => {
         if (this.auraParticles && this.sprite) {
@@ -454,6 +556,9 @@ export default class Defense {
       },
       loop: true
     });
+    if (this.activeTimers) {
+      this.activeTimers.add(auraTimer);
+    }
   }
   
   showRange() {
@@ -942,11 +1047,14 @@ export default class Defense {
     };
     
     // Create frost particles periodically
-    this.scene.time.addEvent({
+    const frostTimer = this.scene.time.addEvent({
       delay: 3000 + Math.random() * 2000,
       callback: createFrostParticle,
       loop: true
     });
+    if (this.activeTimers) {
+      this.activeTimers.add(frostTimer);
+    }
   }
   
   addPeriodicEmberEffect() {
@@ -975,11 +1083,14 @@ export default class Defense {
     };
     
     // Create embers periodically
-    this.scene.time.addEvent({
+    const emberTimer = this.scene.time.addEvent({
       delay: 2000 + Math.random() * 1500,
       callback: createEmber,
       loop: true
     });
+    if (this.activeTimers) {
+      this.activeTimers.add(emberTimer);
+    }
   }
   
   addDivineGlowEffect() {
@@ -1002,11 +1113,14 @@ export default class Defense {
     };
     
     // Create divine glow pulses
-    this.scene.time.addEvent({
+    const glowTimer = this.scene.time.addEvent({
       delay: 4000 + Math.random() * 2000,
       callback: createGlowPulse,
       loop: true
     });
+    if (this.activeTimers) {
+      this.activeTimers.add(glowTimer);
+    }
   }
 
   // Add placement animation
@@ -1797,6 +1911,10 @@ export default class Defense {
       const trailInterval = setInterval(() => {
         if (!fireball.active) {
           clearInterval(trailInterval);
+          // Remove from tracked intervals
+          if (this.activeIntervals) {
+            this.activeIntervals.delete(trailInterval);
+          }
           return;
         }
         
@@ -1819,6 +1937,11 @@ export default class Defense {
           onComplete: () => trailParticle.destroy()
         });
       }, 50); // Create trail particle every 50ms
+      
+      // Track this interval for proper cleanup
+      if (this.activeIntervals) {
+        this.activeIntervals.add(trailInterval);
+      }
       
       // Animate the fireball with tweens (preferred method)
       this.scene.tweens.add({
@@ -2469,9 +2592,12 @@ export default class Defense {
     }
     
     // Hide after short delay
-    this.scene.time.delayedCall(200, () => {
+    const targetLineTimer = this.scene.time.delayedCall(200, () => {
       if (this.targetLine) this.targetLine.setVisible(false);
     });
+    if (this.activeTimers) {
+      this.activeTimers.add(targetLineTimer);
+    }
   }
   
   // Perform a scanning animation when no enemies are in range
