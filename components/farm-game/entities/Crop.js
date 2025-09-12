@@ -57,9 +57,9 @@ export default class Crop extends Phaser.GameObjects.Container {
   }
   
   createSprites() {
-    // Use tree textures for crops instead of plant sprites
-    const treeTypes = ['Fruit_tree3', 'Moss_tree3'];
-    const treeType = treeTypes[Math.floor(Math.random() * treeTypes.length)];
+    // Choose random tree type for variety
+    const treeVariants = ['tree', 'fruitTree'];
+    this.treeType = treeVariants[Math.floor(Math.random() * treeVariants.length)];
     
     // Create shadow sprite
     this.shadowSprite = this.scene.add.image(0, 8, 'shadow1');
@@ -67,9 +67,10 @@ export default class Crop extends Phaser.GameObjects.Container {
     this.shadowSprite.setAlpha(0.4);
     this.add(this.shadowSprite);
     
-    // Create plant sprite using tree textures
-    this.plantSprite = this.scene.add.image(0, 0, treeType);
-    this.plantSprite.setScale(0.4); // Trees are larger, so use smaller scale
+    // Create plant sprite starting with smallest tree (Tree3)
+    const initialTexture = this.treeType === 'fruitTree' ? 'fruitTree2' : 'tree3';
+    this.plantSprite = this.scene.add.image(0, 0, initialTexture);
+    this.plantSprite.setScale(0.2); // Start very small
     this.add(this.plantSprite);
     
     // Add a small indicator that the plant is harvestable (initially hidden)
@@ -146,17 +147,26 @@ export default class Crop extends Phaser.GameObjects.Container {
     // Update state
     this.growthState = state;
     
-    // Update visual appearance
+    // Update visual appearance with texture and scale changes
     if (state === 'seedling') {
-      this.plantSprite.setScale(0.4);
+      // Start with smallest tree (Tree3 or fruitTree2)
+      const texture = this.treeType === 'fruitTree' ? 'fruitTree2' : 'tree3';
+      this.plantSprite.setTexture(texture);
+      this.plantSprite.setScale(0.2); // Very small
       this.isHarvestable = false;
       this.harvestIndicator.setVisible(false);
     } else if (state === 'growing') {
-      this.plantSprite.setScale(0.7);
+      // Medium tree (Tree2 or fruitTree1)
+      const texture = this.treeType === 'fruitTree' ? 'fruitTree1' : 'tree2';
+      this.plantSprite.setTexture(texture);
+      this.plantSprite.setScale(0.4); // Medium size
       this.isHarvestable = false;
       this.harvestIndicator.setVisible(false);
     } else if (state === 'mature') {
-      this.plantSprite.setScale(1.0); // Full size when mature
+      // Largest tree (Tree1 or fruitTree1 - using tree1 for final stage)
+      const texture = this.treeType === 'fruitTree' ? 'fruitTree1' : 'tree1';
+      this.plantSprite.setTexture(texture);
+      this.plantSprite.setScale(0.6); // Full grown size
       this.isHarvestable = true;
       this.harvestIndicator.setVisible(true);
       
@@ -229,7 +239,7 @@ export default class Crop extends Phaser.GameObjects.Container {
     // Reset growth
     this.growthProgress = 0;
     this.isHarvestable = false;
-    this.setGrowthState('seedling');
+    this.setGrowthState('seedling'); // This will reset texture and scale
 
     // Restart growth cycle
     this.startGrowth();
@@ -437,15 +447,17 @@ export default class Crop extends Phaser.GameObjects.Container {
       
       // Show visual feedback
       if (this.plantSprite) {
+        const currentScale = this.plantSprite.scaleX;
         this.scene.tweens.add({
           targets: this.plantSprite,
-          scaleX: 1.2,
-          scaleY: 1.2,
+          scaleX: currentScale * 1.2,
+          scaleY: currentScale * 1.2,
           duration: 200,
           yoyo: true,
           onComplete: () => {
             if (this.plantSprite) {
-              this.plantSprite.setScale(1 + (this.growthProgress / this.maxGrowth) * 0.5);
+              // Restore to current growth state scale
+              this.plantSprite.setScale(currentScale);
             }
           }
         });
