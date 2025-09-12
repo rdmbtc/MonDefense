@@ -2913,6 +2913,11 @@ if (isBrowser) {
               if (typeof this.updateScoreText === 'function') {
                 this.updateScoreText();
               }
+              // Send score update to React component
+              const onGameEvent = this.registry.get('onGameEvent');
+              if (typeof onGameEvent === 'function') {
+                onGameEvent('scoreUpdate', this.gameState.score);
+              }
             }
             
             // Debug log the wave change

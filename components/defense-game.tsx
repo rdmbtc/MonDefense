@@ -690,24 +690,25 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               switch (event) {
                 case 'coinsEarned':
                   if (data && typeof data === 'number') {
-                    // Add to both coins (for game mechanics) and score (for leaderboard)
+                    // Add coins for game mechanics, but score is handled by scoreUpdate event
                     addFarmCoins(data);
-                    setGameScore(prev => prev + data * 10); // Score is 10x coins earned
                   }
                   break;
                 case 'enemyDefeated':
-                  if (data && typeof data === 'number') {
-                    setGameScore(prev => prev + data); // Direct score from enemy defeat
-                  }
+                  // Score is now handled by scoreUpdate event for proper synchronization
+                  // This event can be used for other enemy defeat effects if needed
                   break;
                 case 'waveComplete':
+                  if (data && typeof data === 'object' && data.wave && data.score) {
+                    // Sync with the actual Phaser game score instead of calculating separately
+                    setGameScore(data.score);
+                    toast.success(`Wave ${data.wave} completed!`);
+                  }
+                  break;
+                case 'scoreUpdate':
                   if (data && typeof data === 'number') {
-                    const waveBonus = data * 100; // Bonus points per wave
-                    setGameScore(prev => {
-                      const newScore = prev + waveBonus;
-                      toast.success(`Wave ${data} completed! +${waveBonus} bonus points!`);
-                      return newScore;
-                    });
+                    // Sync React score with Phaser game score
+                    setGameScore(data);
                   }
                   break;
                 case 'gameOver':

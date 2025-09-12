@@ -1106,13 +1106,18 @@ export default class Enemy {
         }
       }
       
-      // Update score - 2 points per enemy kill
-      if (typeof this.scene.gameState.score === 'number') {
-        this.scene.gameState.score += 10;
-        if (typeof this.scene.updateScoreText === 'function') {
-          this.scene.updateScoreText();
+      // Update score - 10 points per enemy kill
+        if (typeof this.scene.gameState.score === 'number') {
+          this.scene.gameState.score += 10;
+          if (typeof this.scene.updateScoreText === 'function') {
+            this.scene.updateScoreText();
+          }
+          // Send score update to React component
+          const onGameEvent = this.scene.registry.get('onGameEvent');
+          if (typeof onGameEvent === 'function') {
+            onGameEvent('scoreUpdate', this.scene.gameState.score);
+          }
         }
-      }
 
       // Emit enemyDefeated event
       const onGameEvent = this.scene.registry.get('onGameEvent');
