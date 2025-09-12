@@ -239,27 +239,31 @@ export default class Crop extends Phaser.GameObjects.Container {
     // Calculate yield
     const yieldAmount = this.calculateYield();
 
-    // Generate coins
-    if (this.scene.updateFarmCoins) {
+    // Generate coins with flying coin animation
+    if (this.scene.createFlyingCoinEffect) {
+      // Use the flying coin effect for better visual feedback
+      this.scene.createFlyingCoinEffect(this.x, this.y, yieldAmount);
+    } else if (this.scene.updateFarmCoins) {
+      // Fallback to direct coin update if flying effect not available
       this.scene.updateFarmCoins(yieldAmount);
-
-      // Show floating coins with animation
+      
+      // Show floating text as backup visual feedback
       if (this.scene.showFloatingText) {
         this.scene.showFloatingText(this.x, this.y, `+${yieldAmount} coins`, 0xFFFF00);
       }
-
-      // Show harvest notification message
-      this.showHarvestNotification(yieldAmount);
-
-      // Add visual effect when harvesting
-      this.scene.tweens.add({
-        targets: this,
-        y: this.y - 10,
-        duration: 100,
-        yoyo: true,
-        ease: 'Power1'
-      });
     }
+
+    // Show harvest notification message
+    this.showHarvestNotification(yieldAmount);
+
+    // Add visual effect when harvesting
+    this.scene.tweens.add({
+      targets: this,
+      y: this.y - 10,
+      duration: 100,
+      yoyo: true,
+      ease: 'Power1'
+    });
 
     return yieldAmount;
   }
