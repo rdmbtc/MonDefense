@@ -1824,11 +1824,8 @@ if (isBrowser) {
             
             if (CropClass) {
               try {
-                console.log("Creating new crop instance at", gridX, gridY);
                 const crop = new CropClass(this, gridX, gridY, cropType);
                 this.crops[gridKey] = crop;
-                console.log("Crop planted at:", gridX, gridY);
-                console.log("Crop initial state - Active:", crop.isActive, "Growing:", crop.isGrowing, "Progress:", crop.growthProgress);
                 this.showFloatingText(gridX, gridY, "+", 0x00FF00);
               } catch (cropError) {
                 console.error("Error creating crop instance:", cropError);
@@ -1841,11 +1838,9 @@ if (isBrowser) {
               // Try to load the Crop class directly as a fallback
               import('../entities/Crop').then(module => {
                 if (module && module.default) {
-                  console.log("Loaded Crop class directly");
                   try {
                     const crop = new module.default(this, gridX, gridY, cropType);
                     this.crops[gridKey] = crop;
-                    console.log("Crop planted using direct import");
                   } catch (directError) {
                     console.error("Error creating crop with direct import:", directError);
                   }
@@ -4870,10 +4865,7 @@ if (isBrowser) {
               return;
             }
             
-            // Debug: Log crop count occasionally
-            if (Math.random() < 0.01) { // 1% chance to log
-              console.log(`Updating ${Object.keys(this.crops).length} crops`);
-            }
+
             
             // Process each crop
             Object.values(this.crops).forEach(crop => {
