@@ -23,6 +23,10 @@ export default class Enemy {
     // Generate a unique ID for this enemy
     this.id = `${this.type}-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
     
+    // Track intervals and timers for proper cleanup
+    this.activeIntervals = new Set();
+    this.activeTimers = new Set();
+    
     // Get current wave for scaling difficulty
     const currentWave = this.scene.gameState?.wave || 1;
     // INCREASED SCALING: Higher multiplier
@@ -451,7 +455,7 @@ export default class Enemy {
       this.addFarmAttackAnimation();
       
       // Delay the actual damage to allow animation to play
-      this.scene.time.delayedCall(600, () => {
+      const reachEndTimer = this.scene.time.delayedCall(600, () => {
         if (this.scene && typeof this.scene.enemyReachedEnd === 'function') {
           // Call the scene's enemyReachedEnd method to handle damage to player
           this.scene.enemyReachedEnd(this);
@@ -461,6 +465,9 @@ export default class Enemy {
           this.destroy();
         }
       });
+      if (this.activeTimers) {
+        this.activeTimers.add(reachEndTimer);
+      }
     } catch (error) {
       console.error("Error in reachedEnd:", error);
       // Still try to destroy the enemy
@@ -719,51 +726,90 @@ export default class Enemy {
       return;
     }
     
-    // Mark as destroyed
-    this.active = false;
-    this.dead = true;
-    this.destroyed = true; // Add explicit destroyed flag
-    this.health = 0; // Ensure health is zero
-    
-    // Set a flag for pending removal to prevent targeting while animating
-    this._pendingRemoval = true;
-    
-    // Apply death animation or visual effect
-    this.applyDeathEffect();
-    
-    // Log the destruction with position for debugging
-    if (!silent) {
-      // Make sure position values are numbers before calling toFixed
-      const xDisplay = typeof this.x === 'number' ? this.x.toFixed(2) : String(this.x);
-      const yDisplay = typeof this.y === 'number' ? this.y.toFixed(2) : String(this.y);
+    try {
+      // Mark as destroyed
+      this.active = false;
+      this.dead = true;
+      this.destroyed = true; // Add explicit destroyed flag
+      this.health = 0; // Ensure health is zero
       
-      console.log(`Destroying enemy ${this.id} at (${xDisplay}, ${yDisplay})`);
-    }
-    
-    // REMOVED direct splice - Scene will filter destroyed enemies instead
-    // if (this.scene && this.scene.enemies) {
-    //   const index = this.scene.enemies.indexOf(this);
-    //   if (index !== -1) {
-    //     console.log(`Splicing enemy ${this.id} from scene array at index ${index}`);
-    //     this.scene.enemies.splice(index, 1);
-    //   } else {
-    //     console.warn(`Enemy ${this.id} not found in scene array during destroy.`);
-    //   }
-    // }
-    
-    // Cleanup sprites with delay to allow animations to finish
-    if (this.scene && this.scene.time && typeof this.scene.time.delayedCall === 'function') {
-      this.scene.time.delayedCall(300, () => {
+      // Set a flag for pending removal to prevent targeting while animating
+      this._pendingRemoval = true;
+      
+      // Clear all tracked intervals
+      if (this.activeIntervals) {
+        this.activeIntervals.forEach(interval => {
+          try {
+            clearInterval(interval);
+          } catch (error) {
+            console.warn('Error clearing interval:', error);
+          }
+        });
+        this.activeIntervals.clear();
+      }
+      
+      // Clear all tracked timers
+      if (this.activeTimers) {
+        this.activeTimers.forEach(timer => {
+          try {
+            if (timer && typeof timer.remove === 'function') {
+              timer.remove(); // Phaser timer event
+            } else if (typeof timer === 'number') {
+              clearTimeout(timer); // Regular setTimeout
+            }
+          } catch (error) {
+            console.warn('Error clearing timer:', error);
+          }
+        });
+        this.activeTimers.clear();
+      }
+      
+      // Kill tweens before destroying objects
+      if (this.scene && this.scene.tweens) {
+        if (this.sprite) this.scene.tweens.killTweensOf(this.sprite);
+        if (this.healthBar) this.scene.tweens.killTweensOf(this.healthBar);
+        if (this.healthBarBg) this.scene.tweens.killTweensOf(this.healthBarBg);
+        if (this.waveIndicator) this.scene.tweens.killTweensOf(this.waveIndicator);
+      }
+      
+      // Apply death animation or visual effect
+      this.applyDeathEffect();
+      
+      // Log the destruction with position for debugging
+      if (!silent) {
+        // Make sure position values are numbers before calling toFixed
+        const xDisplay = typeof this.x === 'number' ? this.x.toFixed(2) : String(this.x);
+        const yDisplay = typeof this.y === 'number' ? this.y.toFixed(2) : String(this.y);
+        
+        console.log(`Destroying enemy ${this.id} at (${xDisplay}, ${yDisplay})`);
+      }
+      
+      // Cleanup sprites with delay to allow animations to finish
+      if (this.scene && this.scene.time && typeof this.scene.time.delayedCall === 'function') {
+        const cleanupTimer = this.scene.time.delayedCall(300, () => {
+          this.cleanupSprites();
+        });
+        if (this.activeTimers) {
+          this.activeTimers.add(cleanupTimer);
+        }
+      } else {
+        // If delayed call is not available, clean up immediately
         this.cleanupSprites();
-      });
-    } else {
-      // If delayed call is not available, clean up immediately
-      this.cleanupSprites();
-    }
-    
-    // Stop any sounds being played by this enemy
-    if (this.scene && this.scene.sound) {
-      // No specific sounds to stop for now, but adding this for future sounds
+      }
+      
+      // Stop any sounds being played by this enemy
+      if (this.scene && this.scene.sound) {
+        // No specific sounds to stop for now, but adding this for future sounds
+      }
+    } catch (error) {
+      console.error("Error during Enemy destroy:", error, "Type:", this.type);
+    } finally {
+      // Ensure essential references are nullified even if errors occurred
+      this.sprite = null;
+      this.healthBar = null;
+      this.healthBarBg = null;
+      this.waveIndicator = null;
+      this.scene = null; // Break reference to scene LAST
     }
   }
   
@@ -878,9 +924,12 @@ export default class Enemy {
           particles.explode(particleQuantity);
 
           // Destroy particle emitter after lifespan
-          this.scene.time.delayedCall(particleLifespan + 100, () => {
+          const particleTimer = this.scene.time.delayedCall(particleLifespan + 100, () => {
              if (particles) particles.destroy(); 
           });
+          if (this.activeTimers) {
+            this.activeTimers.add(particleTimer);
+          }
         } catch (particleError) {
           console.warn("Particle system error:", particleError);
         }
@@ -1055,7 +1104,10 @@ export default class Enemy {
     if (!this.scene || !this.active) return;
     
     try {
-      const text = this.scene.add.text(this.x, this.y - 20, `-${amount}`, {
+      // Convert damage to integer for display
+      const displayAmount = Math.round(amount);
+      
+      const text = this.scene.add.text(this.x, this.y - 20, `-${displayAmount}`, {
         fontSize: '20px',
         fontFamily: 'Arial',
         color: '#FF0000',
@@ -1446,7 +1498,7 @@ export default class Enemy {
     
     // Shake effect with decreasing intensity
     for (let i = 0; i < 4; i++) {
-      this.scene.time.delayedCall(i * 40, () => {
+      const shakeTimer = this.scene.time.delayedCall(i * 40, () => {
         if (this.sprite) {
           const intensity = (4 - i) * 2;
           this.scene.tweens.add({
@@ -1458,6 +1510,9 @@ export default class Enemy {
           });
         }
       });
+      if (this.activeTimers) {
+        this.activeTimers.add(shakeTimer);
+      }
     }
     
     // Create damage spark effect
