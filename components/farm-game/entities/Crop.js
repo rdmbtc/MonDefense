@@ -99,6 +99,7 @@ export default class Crop extends Phaser.GameObjects.Container {
   
   startGrowth() {
     if (this.growthTimer) {
+      console.log("Growth timer already exists for crop at", this.x, this.y);
       return; // Already growing
     }
 
@@ -107,6 +108,7 @@ export default class Crop extends Phaser.GameObjects.Container {
 
     // Calculate actual growth delay based on growth speed and multiplier
     const growthDelay = Math.max(500, 1000 / this.growthMultiplier);
+    console.log(`Starting growth for crop at ${this.x},${this.y} with delay ${growthDelay}ms, growthRate: ${this.growthRate}, multiplier: ${this.growthMultiplier}`);
 
     // Create a timer that increments growth
     this.growthTimer = this.scene.time.addEvent({
@@ -116,23 +118,30 @@ export default class Crop extends Phaser.GameObjects.Container {
       loop: true
     });
 
-    // Growth started
+    console.log("Growth timer created:", !!this.growthTimer);
   }
   
   grow() {
+    console.log(`Grow called for crop at ${this.x},${this.y} - Active: ${this.isActive}, Progress: ${this.growthProgress}/${this.maxGrowth}`);
+    
     if (!this.isActive || this.growthProgress >= this.maxGrowth) {
+      console.log(`Growth stopped - Active: ${this.isActive}, Progress: ${this.growthProgress}`);
       return;
     }
 
     // Increment growth based on growth speed and multiplier
     const effectiveGrowthSpeed = this.growthRate * this.growthMultiplier;
+    const oldProgress = this.growthProgress;
     this.growthProgress += effectiveGrowthSpeed;
+    
+    console.log(`Growth progress updated from ${oldProgress} to ${this.growthProgress} (speed: ${effectiveGrowthSpeed})`);
 
     // Cap growth
     if (this.growthProgress >= this.maxGrowth) {
       this.growthProgress = this.maxGrowth;
       this.setGrowthState('mature');
       this.isGrowing = false; // Stop growing when mature
+      console.log(`Crop at ${this.x},${this.y} reached maturity!`);
 
       // Stop the growth timer
       if (this.growthTimer) {
@@ -140,6 +149,7 @@ export default class Crop extends Phaser.GameObjects.Container {
         this.growthTimer = null;
       }
     } else if (this.growthProgress >= this.maxGrowth / 2 && this.growthState === 'seedling') {
+      console.log(`Crop at ${this.x},${this.y} entering growing state`);
       this.setGrowthState('growing');
     }
   }
@@ -419,13 +429,20 @@ export default class Crop extends Phaser.GameObjects.Container {
   
   // Apply existing upgrades when a crop is created
   applyUpgrades() {
+    console.log(`Applying upgrades for crop at ${this.x},${this.y}`);
     // If upgrade system exists, apply current upgrades
     if (this.scene.upgradeSystem) {
+      const yieldUpgrade = this.scene.upgradeSystem.getUpgradeValue('cropYield');
+      const growthUpgrade = this.scene.upgradeSystem.getUpgradeValue('cropGrowth');
+      console.log(`Upgrade values - Yield: ${yieldUpgrade}, Growth: ${growthUpgrade}`);
+      
       // Apply crop yield upgrade
-      this.updateYield(this.scene.upgradeSystem.getUpgradeValue('cropYield'));
+      this.updateYield(yieldUpgrade);
       
       // Apply growth rate upgrade
-      this.updateGrowthRate(this.scene.upgradeSystem.getUpgradeValue('cropGrowth'));
+      this.updateGrowthRate(growthUpgrade);
+    } else {
+      console.log("No upgrade system found");
     }
   }
   
@@ -458,10 +475,14 @@ export default class Crop extends Phaser.GameObjects.Container {
   updateGrowthRate(multiplier) {
     if (typeof multiplier === 'number' && multiplier > 0) {
       this.growthMultiplier = multiplier;
+      console.log(`Updating growth rate for crop at ${this.x},${this.y} - new multiplier: ${multiplier}`);
       
       // Update the growth timer if it exists
       if (this.growthTimer) {
-        this.growthTimer.remove();
+        console.log("Destroying existing growth timer and restarting");
+        this.growthTimer.destroy();
+        this.growthTimer = null;
+        this.isGrowing = false;
         this.startGrowth(); // Restart with new delay
       }
       

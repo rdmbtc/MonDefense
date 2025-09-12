@@ -1828,6 +1828,7 @@ if (isBrowser) {
                 const crop = new CropClass(this, gridX, gridY, cropType);
                 this.crops[gridKey] = crop;
                 console.log("Crop planted at:", gridX, gridY);
+                console.log("Crop initial state - Active:", crop.isActive, "Growing:", crop.isGrowing, "Progress:", crop.growthProgress);
                 this.showFloatingText(gridX, gridY, "+", 0x00FF00);
               } catch (cropError) {
                 console.error("Error creating crop instance:", cropError);
@@ -4867,6 +4868,11 @@ if (isBrowser) {
             // Skip if crops object doesn't exist or is empty
             if (!this.crops || Object.keys(this.crops).length === 0) {
               return;
+            }
+            
+            // Debug: Log crop count occasionally
+            if (Math.random() < 0.01) { // 1% chance to log
+              console.log(`Updating ${Object.keys(this.crops).length} crops`);
             }
             
             // Process each crop
