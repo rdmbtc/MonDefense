@@ -964,18 +964,21 @@ if (isBrowser) {
         
         createUI() {
           try {
+            // Set UI depth to ensure it appears above all game elements
+            const UI_DEPTH = 6000; // High depth to ensure UI stays above all game elements
+            
             // Create text displays
             this.scoreText = this.add.text(10, 10, "Score: 0", {
               fontFamily: 'Arial',
               fontSize: '18px',
               color: '#FFFFFF'
-            });
+            }).setDepth(UI_DEPTH);
             
             this.farmCoinsText = this.add.text(10, 30, "Farm Coins: 0", {
               fontFamily: 'Arial',
               fontSize: '18px',
               color: '#FFFF00'
-            });
+            }).setDepth(UI_DEPTH);
             // Store target position for coin animation
             this.farmCoinsTargetPos = { x: this.farmCoinsText.x + 70, y: this.farmCoinsText.y + 10 }; // Adjust offset as needed
             
@@ -983,7 +986,7 @@ if (isBrowser) {
               fontFamily: 'Arial',
               fontSize: '18px',
               color: '#FFFFFF'
-            });
+            }).setDepth(UI_DEPTH);
             
             // Lives text removed - no longer displayed in UI
             
@@ -992,11 +995,11 @@ if (isBrowser) {
               fontFamily: 'Arial',
               fontSize: '18px',
               color: '#FFD700'
-            });
+            }).setDepth(UI_DEPTH);
             
             // Next Wave button removed - waves now progress automatically
             
-            // UI created
+            // UI created with proper depth layering
           } catch (error) {
             console.error("Error creating UI:", error);
           }
