@@ -157,9 +157,28 @@ export default class Defense {
   addExhaustionAnimation() {
     if (!this.sprite || !this.scene) return;
     
-    // Immediately hide range indicator if visible
+    // Immediately hide and destroy UI elements to prevent shadow circles
     if (this.rangeIndicator) {
       this.rangeIndicator.setVisible(false);
+      this.rangeIndicator.destroy();
+      this.rangeIndicator = null;
+    }
+    
+    // Hide other UI elements immediately
+    if (this.cooldownText) {
+      this.cooldownText.setVisible(false);
+    }
+    
+    if (this.noManaText) {
+      this.noManaText.setVisible(false);
+    }
+    
+    if (this.cooldownIndicator) {
+      this.cooldownIndicator.setVisible(false);
+    }
+    
+    if (this.label) {
+      this.label.setVisible(false);
     }
     
     // Flash red to indicate exhaustion

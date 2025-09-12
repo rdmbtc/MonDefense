@@ -5251,7 +5251,7 @@ if (isBrowser) {
                 blur: 5
               }
             }).setOrigin(0.5);
-            gameOverText.setDepth(1001);
+            gameOverText.setDepth(2001);
             
             // Animate game over text with dramatic entrance
             gameOverText.setScale(0);
@@ -5281,7 +5281,7 @@ if (isBrowser) {
               stroke: '#000000',
               strokeThickness: 3
             }).setOrigin(0.5);
-            scoreText.setDepth(1001);
+            scoreText.setDepth(2001);
             scoreText.setAlpha(0);
             scoreText.setY(scoreText.y + 20);
 
@@ -5292,7 +5292,7 @@ if (isBrowser) {
               stroke: '#000000',
               strokeThickness: 3
             }).setOrigin(0.5);
-            wavesText.setDepth(1001);
+            wavesText.setDepth(2001);
             wavesText.setAlpha(0);
             wavesText.setY(wavesText.y + 20);
 
@@ -5303,7 +5303,7 @@ if (isBrowser) {
               stroke: '#000000',
               strokeThickness: 3
             }).setOrigin(0.5);
-            coinsText.setDepth(1001);
+            coinsText.setDepth(2001);
             coinsText.setAlpha(0);
             coinsText.setY(coinsText.y + 20);
             
@@ -5340,7 +5340,7 @@ if (isBrowser) {
             const buttonHeight = 60;
             const submitButton = this.add.rectangle(400, 450, buttonWidth, buttonHeight, 0x6B46C1, 1);
             submitButton.setStrokeStyle(4, 0x553C9A);
-            submitButton.setDepth(1001);
+            submitButton.setDepth(2001);
             submitButton.setAlpha(0);
             submitButton.setScale(0.8);
 
@@ -5351,14 +5351,14 @@ if (isBrowser) {
               stroke: '#000000',
               strokeThickness: 1
             }).setOrigin(0.5);
-            submitText.setDepth(1002);
+            submitText.setDepth(2002);
             submitText.setAlpha(0);
             submitText.setScale(0.8);
 
             // Create restart button with proper styling and entrance animation
             const restartButton = this.add.rectangle(400, 530, buttonWidth, buttonHeight, 0x4CAF50, 1);
             restartButton.setStrokeStyle(4, 0x45A049);
-            restartButton.setDepth(1001);
+            restartButton.setDepth(2001);
             restartButton.setAlpha(0);
             restartButton.setScale(0.8);
 
@@ -5369,7 +5369,7 @@ if (isBrowser) {
               stroke: '#000000',
               strokeThickness: 1
             }).setOrigin(0.5);
-            restartText.setDepth(1002);
+            restartText.setDepth(2002);
             restartText.setAlpha(0);
             restartText.setScale(0.8);
             
