@@ -74,18 +74,23 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const gameSession = useGameSession(sessionToken);
   const onchainSubmission = useOnchainScoreSubmissionWithRetry();
 
-  // Calculate player's rank from leaderboard data
-  const getPlayerRank = () => {
+  // Get player's rank from leaderboard data
+  const getPlayerRankFromLeaderboard = () => {
     if (!leaderboardData?.data?.data || !walletAddress) return null;
     
+    // Search through all pages to find the player
     const playerIndex = leaderboardData.data.data.findIndex(
-      (player: any) => player.walletAddress.toLowerCase() === walletAddress.toLowerCase()
+      (player: any) => player.walletAddress === walletAddress
     );
     
-    return playerIndex !== -1 ? playerIndex + 1 : null;
+    if (playerIndex !== -1) {
+      return currentPage * 10 + playerIndex + 1;
+    }
+    
+    return null;
   };
-
-  const playerRank = getPlayerRank();
+  
+  const playerRank = getPlayerRankFromLeaderboard();
   
   // Debug username retrieval
   console.log('Username debug info:', {
@@ -632,9 +637,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         <div className="relative">
           {/* Current Player Stats - Always Visible */}
           <div 
-            className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2 cursor-pointer hover:bg-white/20 transition-all duration-200"
-            onMouseEnter={() => !leaderboardPinned && setShowLeaderboard(true)}
-            onMouseLeave={() => !leaderboardPinned && setShowLeaderboard(false)}
+            className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2 cursor-pointer transition-all duration-200"
             onClick={() => {
               setLeaderboardPinned(!leaderboardPinned);
               setShowLeaderboard(!showLeaderboard);
@@ -649,7 +652,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               </div>
             )}
             <div className="text-xs text-white/60 mt-1">
-              Hover or click to view leaderboard
+              Click to view leaderboard
             </div>
           </div>
 
