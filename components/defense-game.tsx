@@ -46,6 +46,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const [gameStarted, setGameStarted] = useState(false);
   const [gameScore, setGameScore] = useState(0);
   const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [leaderboardPinned, setLeaderboardPinned] = useState(false);
   const [currentPage, setCurrentPage] = useState(0);
   const { farmCoins, addFarmCoins } = useGameContext();
   const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
@@ -632,9 +633,12 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           {/* Current Player Stats - Always Visible */}
           <div 
             className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2 cursor-pointer hover:bg-white/20 transition-all duration-200"
-            onMouseEnter={() => setShowLeaderboard(true)}
-            onMouseLeave={() => setShowLeaderboard(false)}
-            onClick={() => setShowLeaderboard(!showLeaderboard)}
+            onMouseEnter={() => !leaderboardPinned && setShowLeaderboard(true)}
+            onMouseLeave={() => !leaderboardPinned && setShowLeaderboard(false)}
+            onClick={() => {
+              setLeaderboardPinned(!leaderboardPinned);
+              setShowLeaderboard(!showLeaderboard);
+            }}
           >
             <span className="text-white font-bold" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>
               Score: {gameScore > 0 ? gameScore.toLocaleString() : '0'}
@@ -653,14 +657,15 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           {showLeaderboard && (
             <div 
               className="absolute top-full right-0 mt-2 bg-white/10 backdrop-blur border-white/20 rounded-lg p-3 sm:p-4 w-80 sm:w-96 max-w-[90vw] z-50 hover:bg-white/20 transition-all duration-200"
-              onMouseEnter={() => setShowLeaderboard(true)}
-              onMouseLeave={() => setShowLeaderboard(false)}
             >
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-white font-bold text-sm">🏆 Leaderboard</h3>
                 <div className="flex items-center gap-2">
                   <button
-                    onClick={() => setShowLeaderboard(false)}
+                    onClick={() => {
+                      setShowLeaderboard(false);
+                      setLeaderboardPinned(false);
+                    }}
                     className="sm:hidden px-2 py-1 text-xs bg-red-500/20 hover:bg-red-500/30 text-white rounded transition-colors"
                     title="Close leaderboard"
                   >
