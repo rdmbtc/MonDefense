@@ -69,7 +69,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const { walletAddress } = useCrossAppAccount();
   const { data: usernameData, error: usernameError, isLoading: usernameLoading } = useUsername(walletAddress);
   const { data: playerStats } = usePlayerTotalScore(walletAddress, gameStarted, false);
-  const { data: leaderboardData } = useLeaderboard(currentPage);
+  const { data: leaderboardData } = useLeaderboard(currentPage + 1);
   const gameSession = useGameSession(sessionToken);
   const onchainSubmission = useOnchainScoreSubmissionWithRetry();
 
