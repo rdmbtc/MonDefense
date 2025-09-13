@@ -45,6 +45,8 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const [chapterIndex, setChapterIndex] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const [gameScore, setGameScore] = useState(0);
+  const [showLeaderboard, setShowLeaderboard] = useState(false);
+  const [currentPage, setCurrentPage] = useState(0);
   const { farmCoins, addFarmCoins } = useGameContext();
   const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
   const soundEffectRef = useRef<HTMLAudioElement | null>(null);
@@ -625,14 +627,129 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           )}
         </div>
         
-        {/* Score Display */}
-        <div className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2">
-          <span className="text-white font-bold" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>
-            Score: {gameScore > 0 ? gameScore.toLocaleString() : '0'}
-          </span>
-          {playerStats && (
-            <div className="text-xs text-white/80 mt-1">
-              Rank: #{playerRank || 'Unranked'} | Games: {playerStats.gamesPlayed}
+        {/* Enhanced Leaderboard Display */}
+        <div className="relative">
+          {/* Current Player Stats - Always Visible */}
+          <div 
+            className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2 cursor-pointer hover:bg-white/20 transition-all duration-200"
+            onMouseEnter={() => setShowLeaderboard(true)}
+            onMouseLeave={() => setShowLeaderboard(false)}
+            onClick={() => setShowLeaderboard(!showLeaderboard)}
+          >
+            <span className="text-white font-bold" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>
+              Score: {gameScore > 0 ? gameScore.toLocaleString() : '0'}
+            </span>
+            {playerStats && (
+              <div className="text-xs text-white/80 mt-1">
+                Rank: #{playerRank || 'Unranked'} | Games: {playerStats.gamesPlayed}
+              </div>
+            )}
+            <div className="text-xs text-white/60 mt-1">
+              Hover or click to view leaderboard
+            </div>
+          </div>
+
+          {/* Leaderboard Dropdown */}
+          {showLeaderboard && (
+            <div 
+              className="absolute top-full right-0 mt-2 bg-black/90 backdrop-blur border border-white/20 rounded-lg p-3 sm:p-4 w-80 sm:w-96 max-w-[90vw] z-50"
+              onMouseEnter={() => setShowLeaderboard(true)}
+              onMouseLeave={() => setShowLeaderboard(false)}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <h3 className="text-white font-bold text-sm">🏆 Leaderboard</h3>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => setShowLeaderboard(false)}
+                    className="sm:hidden px-2 py-1 text-xs bg-red-500/20 hover:bg-red-500/30 text-white rounded transition-colors"
+                    title="Close leaderboard"
+                  >
+                    ✕
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
+                    disabled={currentPage === 0}
+                    className="px-2 py-1 text-xs bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition-colors"
+                  >
+                    Prev
+                  </button>
+                  <button
+                    onClick={() => setCurrentPage(currentPage + 1)}
+                    disabled={!leaderboardData?.data?.data || (currentPage + 1) * 10 >= leaderboardData.data.data.length}
+                    className="px-2 py-1 text-xs bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition-colors"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+              
+              {/* Leaderboard List */}
+              <div className="space-y-1 max-h-64 overflow-y-auto">
+                {leaderboardData?.data?.data && leaderboardData.data.data.length > 0 ? (
+                  leaderboardData.data.data
+                    .slice(currentPage * 10, (currentPage + 1) * 10)
+                    .map((player: any, index: number) => {
+                      const globalRank = currentPage * 10 + index + 1;
+                      const isCurrentPlayer = player.walletAddress === walletAddress;
+                      return (
+                        <div
+                          key={player.walletAddress}
+                          className={`flex items-center justify-between p-2 rounded text-xs transition-colors ${
+                            isCurrentPlayer 
+                              ? 'bg-yellow-500/20 border border-yellow-500/40' 
+                              : 'bg-white/5 hover:bg-white/10'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <span className={`font-bold ${
+                              globalRank === 1 ? 'text-yellow-400' :
+                              globalRank === 2 ? 'text-gray-300' :
+                              globalRank === 3 ? 'text-orange-400' :
+                              'text-white'
+                            }`}>
+                              #{globalRank}
+                            </span>
+                            <span className="text-white truncate">
+                              {player.username || `${player.walletAddress.slice(0, 6)}...${player.walletAddress.slice(-4)}`}
+                            </span>
+                            {isCurrentPlayer && (
+                              <span className="text-yellow-400 text-xs">(You)</span>
+                            )}
+                          </div>
+                          <div className="text-right">
+                            <div className="text-white font-medium">
+                              {player.score.toLocaleString()}
+                            </div>
+                            <div className="text-white/60 text-xs">
+                              Best Score
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })
+                ) : (
+                  <div className="text-white/60 text-center py-4">
+                    No leaderboard data available
+                  </div>
+                )}
+              </div>
+              
+              {/* Current Player Position Indicator */}
+              {playerRank && leaderboardData?.data?.data && leaderboardData.data.data.length > 10 && (
+                <div className="mt-3 pt-3 border-t border-white/20">
+                  <div className="text-xs text-white/80 text-center">
+                    Your position: #{playerRank} of {leaderboardData.data.data.length} players
+                    {currentPage * 10 + 1 > playerRank || (currentPage + 1) * 10 < playerRank ? (
+                      <button
+                        onClick={() => setCurrentPage(Math.floor((playerRank - 1) / 10))}
+                        className="ml-2 text-yellow-400 hover:text-yellow-300 underline"
+                      >
+                        Go to your rank
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
