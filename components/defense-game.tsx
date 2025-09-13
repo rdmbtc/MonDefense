@@ -69,7 +69,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const { walletAddress } = useCrossAppAccount();
   const { data: usernameData, error: usernameError, isLoading: usernameLoading } = useUsername(walletAddress);
   const { data: playerStats } = usePlayerTotalScore(walletAddress, gameStarted, false);
-  const { data: leaderboardData } = useLeaderboard(1);
+  const { data: leaderboardData } = useLeaderboard(currentPage);
   const gameSession = useGameSession(sessionToken);
   const onchainSubmission = useOnchainScoreSubmissionWithRetry();
 
@@ -652,7 +652,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           {/* Leaderboard Dropdown */}
           {showLeaderboard && (
             <div 
-              className="absolute top-full right-0 mt-2 bg-black/90 backdrop-blur border border-white/20 rounded-lg p-3 sm:p-4 w-80 sm:w-96 max-w-[90vw] z-50"
+              className="absolute top-full right-0 mt-2 bg-white/10 backdrop-blur border-white/20 rounded-lg p-3 sm:p-4 w-80 sm:w-96 max-w-[90vw] z-50 hover:bg-white/20 transition-all duration-200"
               onMouseEnter={() => setShowLeaderboard(true)}
               onMouseLeave={() => setShowLeaderboard(false)}
             >
@@ -675,7 +675,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                   </button>
                   <button
                     onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={!leaderboardData?.data?.data || (currentPage + 1) * 10 >= leaderboardData.data.data.length}
+                    disabled={!leaderboardData?.data?.data || leaderboardData.data.data.length < 10}
                     className="px-2 py-1 text-xs bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition-colors"
                   >
                     Next
@@ -684,10 +684,9 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               </div>
               
               {/* Leaderboard List */}
-              <div className="space-y-1 max-h-64 overflow-y-auto">
+              <div className="space-y-1 max-h-64 overflow-hidden">
                 {leaderboardData?.data?.data && leaderboardData.data.data.length > 0 ? (
                   leaderboardData.data.data
-                    .slice(currentPage * 10, (currentPage + 1) * 10)
                     .map((player: any, index: number) => {
                       const globalRank = currentPage * 10 + index + 1;
                       const isCurrentPlayer = player.walletAddress === walletAddress;
@@ -735,10 +734,10 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               </div>
               
               {/* Current Player Position Indicator */}
-              {playerRank && leaderboardData?.data?.data && leaderboardData.data.data.length > 10 && (
+              {playerRank && (
                 <div className="mt-3 pt-3 border-t border-white/20">
                   <div className="text-xs text-white/80 text-center">
-                    Your position: #{playerRank} of {leaderboardData.data.data.length} players
+                    Your position: #{playerRank}
                     {currentPage * 10 + 1 > playerRank || (currentPage + 1) * 10 < playerRank ? (
                       <button
                         onClick={() => setCurrentPage(Math.floor((playerRank - 1) / 10))}
