@@ -387,20 +387,29 @@ export default function HomePage() {
           </Dialog>
         </div>
         
-        {/* Developer Credits */}
+        {/* Community Links */}
         <div className="mt-12 flex flex-col items-center space-y-4">
-          <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-white/30">
-            <img 
-              src="/Credits/DR RDM.png" 
-              alt="Dr RDM" 
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <div className="text-center text-white/80 text-sm">
-            <p className="font-semibold" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>Developer: Dr RDM</p>
-            <p className="text-blue-200" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>x.com/@rdmnad</p>
-            <p className="mt-1" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>Special for Monad Mission 7: Leaderboard</p>
-            <p className="font-bold text-yellow-300" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>Gmonad!</p>
+          <div className="text-center text-white/80 text-sm space-y-2">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <a 
+                href="https://discord.gg/B8hFgQRrq7" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 bg-indigo-600/20 hover:bg-indigo-600/40 px-4 py-2 rounded-lg border border-indigo-400/30 transition-colors"
+              >
+                <span className="text-indigo-300">💬</span>
+                <span className="text-white font-medium" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>Discord Server</span>
+              </a>
+              <a 
+                href="https://x.com/MonDefenseTD" 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 bg-blue-600/20 hover:bg-blue-600/40 px-4 py-2 rounded-lg border border-blue-400/30 transition-colors"
+              >
+                <span className="text-blue-300">🐦</span>
+                <span className="text-white font-medium" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>Official Twitter</span>
+              </a>
+            </div>
           </div>
         </div>
       </div>
