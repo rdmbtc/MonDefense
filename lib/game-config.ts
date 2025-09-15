@@ -3,7 +3,7 @@ export const GAME_CONFIG = {
   // Monad Games ID Smart Contract Integration
   BLOCKCHAIN: {
     // Monad Games ID smart contract address for UpdatePlayerData()
-    MONAD_GAMES_ID_CONTRACT: '0xceCBFF203C8B6044F52CE23D914A1bfD997541A4',
+    MONAD_GAMES_ID_CONTRACT: '0x4b91a6541Cab9B2256EA7E6787c0aa6BE38b39c0',
     
     // Signer wallet address for on-chain transactions
     SIGNER_WALLET: '0xD138925168aD03fEe0Cca73cD949F1077C82c093',

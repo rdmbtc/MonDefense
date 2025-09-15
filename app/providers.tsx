@@ -85,7 +85,7 @@ export function Providers({ children }: { children: ReactNode }) {
               defaultChain: monadTestnet,
               supportedChains: [monadTestnet],
               embeddedWallets: {
-                createOnLogin: 'users-without-wallets',
+                createOnLogin: 'off',
                 requireUserPasswordOnCreate: false,
               },
             }}

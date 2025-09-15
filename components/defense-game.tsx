@@ -777,7 +777,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           <div className="bg-yellow-600/90 backdrop-blur border-yellow-500/50 rounded-lg px-4 py-3 text-center">
             <p className="text-white text-sm font-medium mb-2">No username found for your account</p>
             <Button 
-              onClick={() => window.open('https://monad-games-id-site.vercel.app/', '_blank')}
+              onClick={() => window.open('https://monadclip.fun/', '_blank')}
               variant="outline"
               size="sm"
               className="bg-white/20 hover:bg-white/30 text-white border-white/30"
