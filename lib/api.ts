@@ -1,6 +1,7 @@
 "use client";
 
 import axios from "axios";
+import { addSignatureToHeaders } from "../utils/signature";
 
 // CSRF Token Management
 class CSRFManager {
@@ -67,7 +68,7 @@ export const api = axios.create({
   },
 });
 
-// Request interceptor to add CSRF tokens
+// Request interceptor to add CSRF tokens and signatures
 api.interceptors.request.use(
   async (config) => {
     // Add CSRF token for state-changing operations
@@ -80,6 +81,18 @@ api.interceptors.request.use(
         // Continue without token - let the server handle the error
       }
     }
+    
+    // Add request signature for score submission endpoints
+    if (config.url?.includes('/submit-score') && config.data) {
+      try {
+        const signedHeaders = addSignatureToHeaders(config.data, config.headers as Record<string, string>);
+        config.headers = signedHeaders as any;
+      } catch (error) {
+        console.error('Failed to generate request signature:', error);
+        // Continue without signature - server will handle as optional
+      }
+    }
+    
     return config;
   },
   error => {

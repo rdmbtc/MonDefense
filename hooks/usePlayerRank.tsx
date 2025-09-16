@@ -19,7 +19,7 @@ export function usePlayerRank(walletAddress: string | null, enabled: boolean = t
       }
       
       const { data } = await api.get<PlayerRankResponse>(
-        `${apiEndpoints.playerRank}/${walletAddress}`
+        `${apiEndpoints.leaderBoard}/rank/${walletAddress}?gameId=8`
       );
       return data;
     },

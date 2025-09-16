@@ -6,7 +6,7 @@ export function middleware() {
   res.headers.append("Access-Control-Allow-Credentials", "true");
   res.headers.append(
     "Access-Control-Allow-Origin",
-    "https://monad-games-id-site.vercel.app"
+    "https://www.monadclip.fun/"
   );
   res.headers.append(
     "Access-Control-Allow-Methods",

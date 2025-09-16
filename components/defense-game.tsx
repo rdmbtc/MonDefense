@@ -259,12 +259,14 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       setIsSubmitting(true);
       console.log('Submitting score via API and on-chain:', score);
       
-      // Submit to existing API
+      // Submit to existing API with timestamp
+      const timestamp = Date.now();
       await gameSession.submitScore.mutateAsync({
         player: walletAddress,
         scoreAmount: score,
         transactionAmount: transactionCount,
-        sessionId: sessionId
+        sessionId: sessionId,
+        timestamp: timestamp
       });
 
       // Submit to Monad Games ID smart contract on-chain
@@ -273,7 +275,8 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           walletAddress,
           score,
           transactionCount,
-          2 // max retries
+          2, // max retries
+          timestamp // include timestamp for anti-replay protection
         );
         
         if (onchainResult.success) {

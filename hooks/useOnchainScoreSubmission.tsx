@@ -8,6 +8,7 @@ interface OnchainScoreSubmissionRequest {
   walletAddress: string;
   score: number;
   transactionCount: number;
+  timestamp?: number;
 }
 
 interface OnchainScoreSubmissionResponse {
@@ -57,7 +58,8 @@ export function useOnchainScoreSubmissionWithRetry() {
     walletAddress: string,
     score: number,
     transactionCount: number,
-    maxRetries: number = 3
+    maxRetries: number = 3,
+    timestamp?: number
   ) => {
     let lastError: Error | null = null;
     
@@ -66,7 +68,8 @@ export function useOnchainScoreSubmissionWithRetry() {
         const result = await mutation.mutateAsync({
           walletAddress,
           score,
-          transactionCount
+          transactionCount,
+          timestamp: timestamp || Date.now()
         });
         
         if (result.success) {

@@ -51,6 +51,7 @@ export interface SubmitScoreRequest {
   transactionAmount: number;
   scoreAmount: number;
   sessionId: string;
+  timestamp?: number;
 }
 
 export interface SubmitScoreResponse {
