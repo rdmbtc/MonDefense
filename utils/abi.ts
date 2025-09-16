@@ -1,13 +1,21 @@
-export const CONTRACT_ABI = [
+export const UPDATE_PLAYER_DATA_ABI = [
   {
     inputs: [
-      { name: "player", type: "address" },
-      { name: "scoreAmount", type: "uint256" },
-      { name: "transactionAmount", type: "uint256" },
+      {
+        components: [
+          { name: "player", type: "address" },
+          { name: "score", type: "uint256" },
+          { name: "transactions", type: "uint256" }
+        ],
+        name: "_playerData",
+        type: "tuple"
+      }
     ],
     name: "updatePlayerData",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
-  },
+    type: "function"
+  }
 ] as const;
+
+export const CONTRACT_ABI = UPDATE_PLAYER_DATA_ABI;
