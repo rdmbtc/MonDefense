@@ -860,9 +860,10 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       <div className="absolute bottom-4 left-4 z-50">
         <div className="bg-black/50 backdrop-blur rounded-lg p-3 text-white text-sm max-w-xs">
           <div className="font-bold mb-2" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.8)'}}>Controls:</div>
-          <div style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>• Click to attack enemies</div>
-          <div style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>• Place towers to defend</div>
-          <div style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>• Survive all waves to win!</div>
+          <div style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>👆 Click enemies to attack</div>
+          <div style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>P - Plant crops mode</div>
+          <div style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>1 - CHOG Defender (25 coins)</div>
+          <div style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>2 - MOLANDAK Guardian (50 coins)</div>
         </div>
       </div>
 

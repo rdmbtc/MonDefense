@@ -1484,7 +1484,7 @@ if (isBrowser) {
                 
                 if (closestEnemy) {
                   // Apply damage to the enemy
-                  clickedEnemy.takeDamage(this.gameState.clickDamage || 1);
+                  closestEnemy.takeDamage(this.gameState.clickDamage || 1);
                   
                   // Show attack effect
                   this.showFloatingText(closestEnemy.x, closestEnemy.y - 20, 
@@ -1604,6 +1604,29 @@ if (isBrowser) {
             
             // Add pointer move handler
             this.input.on('pointermove', this.pointerMoveListener);
+            
+            // Add keyboard event handlers for game controls
+            this.input.keyboard.on('keydown-P', () => {
+              if (this.gameState.isActive) {
+                this.setToolMode('plant');
+                this.showFloatingText(400, 50, "Plant Crops Mode Activated!", 0x00FF00);
+              }
+            });
+            
+            this.input.keyboard.on('keydown-ONE', () => {
+              if (this.gameState.isActive) {
+                this.setToolMode('chog');
+                this.showFloatingText(400, 50, "CHOG Defender Selected (25 coins)", 0x0088FF);
+              }
+            });
+            
+            this.input.keyboard.on('keydown-TWO', () => {
+              if (this.gameState.isActive) {
+                this.setToolMode('molandak');
+                this.showFloatingText(400, 50, "MOLANDAK Guardian Selected (50 coins)", 0xFF4400);
+              }
+            });
+            
           } catch (error) {
             console.error("Error setting up input handlers:", error);
           }
