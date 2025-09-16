@@ -128,4 +128,5 @@ export const apiEndpoints = {
   submitScore: "/api/submit-score",
   submitScoreOnchain: "/api/submit-score-onchain",
   leaderBoard: "/api/leaderboard",
+  playerRank: "/api/leaderboard/rank",
 } as const;

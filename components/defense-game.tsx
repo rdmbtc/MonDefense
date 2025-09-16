@@ -15,6 +15,7 @@ import { useCrossAppAccount } from '@/hooks/useCrossAppAccount';
 import { useUsername } from '@/hooks/useUsername';
 import { useOnchainScoreSubmissionWithRetry } from '@/hooks/useOnchainScoreSubmission';
 import { useLeaderboard } from '@/hooks/useLeaderboard';
+import { usePlayerRank } from '@/hooks/usePlayerRank';
 import { GAME_CONFIG } from '@/lib/game-config';
 
 // Extend Window interface to include custom properties
@@ -73,24 +74,9 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const { data: leaderboardData } = useLeaderboard(currentPage + 1);
   const gameSession = useGameSession(sessionToken);
   const onchainSubmission = useOnchainScoreSubmissionWithRetry();
-
-  // Get player's rank from leaderboard data
-  const getPlayerRankFromLeaderboard = () => {
-    if (!leaderboardData?.data?.data || !walletAddress) return null;
-    
-    // Search through all pages to find the player
-    const playerIndex = leaderboardData.data.data.findIndex(
-      (player: any) => player.walletAddress === walletAddress
-    );
-    
-    if (playerIndex !== -1) {
-      return currentPage * 10 + playerIndex + 1;
-    }
-    
-    return null;
-  };
+  const { data: playerRankData } = usePlayerRank(walletAddress, gameStarted);
   
-  const playerRank = getPlayerRankFromLeaderboard();
+  const playerRank = playerRankData?.rank;
   
   // Debug username retrieval
   console.log('Username debug info:', {
