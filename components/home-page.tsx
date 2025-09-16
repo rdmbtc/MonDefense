@@ -202,7 +202,7 @@ export default function HomePage() {
         <div 
           className="md:hidden w-full h-full absolute inset-0"
           style={{
-             backgroundImage: 'url(/Trailer/-0.svg)',
+             backgroundImage: 'url(/Trailer/-0.png)',
             backgroundSize: 'contain',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
@@ -213,7 +213,7 @@ export default function HomePage() {
         <div 
           className="hidden md:block w-full h-full absolute inset-0"
           style={{
-             backgroundImage: 'url(/Trailer/-0.svg)',
+             backgroundImage: 'url(/Trailer/-0.png)',
             backgroundSize: 'cover',
             backgroundPosition: 'center',
             backgroundRepeat: 'no-repeat'
