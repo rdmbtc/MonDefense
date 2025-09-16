@@ -865,6 +865,19 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           <div style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>• Survive all waves to win!</div>
         </div>
       </div>
+
+      {/* Bug Report Button - Bottom Right */}
+      <div className="absolute bottom-4 right-4 z-50">
+        <Button
+          onClick={() => window.open('https://discord.gg/B8hFgQRrq7', '_blank')}
+          variant="outline"
+          size="sm"
+          className="bg-red-600/80 hover:bg-red-500/90 border-red-400/50 text-white backdrop-blur-sm transition-all duration-200 hover:scale-105 shadow-lg"
+          title="Report bugs in our Discord server"
+        >
+          <span className="text-xs font-medium">🐛 Report Bug</span>
+        </Button>
+      </div>
     </div>
   );
 }
