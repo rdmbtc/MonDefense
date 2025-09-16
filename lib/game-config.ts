@@ -6,13 +6,13 @@ export const GAME_CONFIG = {
     MONAD_GAMES_ID_CONTRACT: '0x4b91a6541Cab9B2256EA7E6787c0aa6BE38b39c0',
     
     // Signer wallet address for on-chain transactions
-    SIGNER_WALLET: '0xD138925168aD03fEe0Cca73cD949F1077C82c093',
+    SIGNER_WALLET: '0x74E4E54Ac02C560B3a9C4149cDB8FEeC87457338',
     
     // Game ID for leaderboard integration
-    GAME_ID: '230',
+    GAME_ID: '8',
     
     // Leaderboard URL
-    LEADERBOARD_URL: 'https://monad-games-id-site.vercel.app/leaderboard?page=1&gameId=230'
+  LEADERBOARD_URL: 'https://www.monadclip.fun/leaderboard?page=1&gameId=8'
   },
   
   // Game settings
