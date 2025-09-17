@@ -2374,6 +2374,11 @@ if (isBrowser) {
               console.warn(`Starting wave ${this.gameState.wave} with ${this.enemies.length} enemies still present. Clearing them.`);
               this.enemies.forEach(enemy => {
                 if (enemy) {
+                  // Explicitly destroy wave indicator first
+                  if (enemy.waveIndicator) {
+                    enemy.waveIndicator.destroy();
+                    enemy.waveIndicator = null;
+                  }
                   if (typeof enemy.hideHealthBar === 'function') {
                     enemy.hideHealthBar();
                   }
@@ -2384,6 +2389,9 @@ if (isBrowser) {
             } else if (this.enemies.length > 0) {
               console.log(`Starting wave ${this.gameState.wave} with ${this.enemies.length} enemies preserved from previous game.`);
             }
+            
+            // Clear any orphaned wave indicators from previous waves
+            this.clearOrphanedWaveIndicators();
     
             // Determine enemy composition and count for the wave
             const currentWave = this.gameState.wave;
@@ -2920,13 +2928,18 @@ if (isBrowser) {
               console.log("Cleared wave completion timer during force next wave");
             }
             
-            // Clear any remaining enemies
+            // Clear any remaining enemies and their wave indicators
             if (this.enemies && this.enemies.length > 0) {
               console.log(`Clearing ${this.enemies.length} remaining enemies`);
               
-              // Destroy all remaining enemies
+              // Destroy all remaining enemies and their wave indicators
               this.enemies.forEach(enemy => {
                 if (enemy) {
+                  // Explicitly destroy wave indicator first
+                  if (enemy.waveIndicator) {
+                    enemy.waveIndicator.destroy();
+                    enemy.waveIndicator = null;
+                  }
                   if (typeof enemy.hideHealthBar === 'function') {
                     enemy.hideHealthBar();
                   }
@@ -2939,6 +2952,9 @@ if (isBrowser) {
               // Clear the array completely
               this.enemies = [];
             }
+            
+            // Additional cleanup: Find and destroy any orphaned wave indicator texts
+            this.clearOrphanedWaveIndicators();
             
             // End current wave
             this.waveInProgress = false;
@@ -4785,6 +4801,33 @@ if (isBrowser) {
             console.log("Defense textures verified successfully");
           } catch (error) {
             console.error("Error creating fallback textures:", error);
+          }
+        }
+
+        // Clear any orphaned wave indicator texts that might be stuck on screen
+        clearOrphanedWaveIndicators() {
+          try {
+            // Find all text objects that contain "BOSS W" pattern
+            const allChildren = this.children.list;
+            const orphanedIndicators = allChildren.filter(child => {
+              return child && 
+                     child.type === 'Text' && 
+                     child.text && 
+                     (child.text.includes('BOSS W') || child.text.includes('BOSS'));
+            });
+            
+            if (orphanedIndicators.length > 0) {
+              console.log(`Found ${orphanedIndicators.length} orphaned wave indicators, destroying them`);
+              orphanedIndicators.forEach(indicator => {
+                try {
+                  indicator.destroy();
+                } catch (error) {
+                  console.warn('Error destroying orphaned wave indicator:', error);
+                }
+              });
+            }
+          } catch (error) {
+            console.error('Error clearing orphaned wave indicators:', error);
           }
         }
 
