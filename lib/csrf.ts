@@ -166,7 +166,7 @@ class CSRFManager {
 // Create a singleton instance
 const csrfManager = new CSRFManager(
   process.env.NODE_ENV === 'production' 
-    ? 'https://your-api-domain.com/api' 
+    ? 'https://inland-grete-mondefense-9eee18bb.koyeb.app/api' 
     : '/api'
 );
 

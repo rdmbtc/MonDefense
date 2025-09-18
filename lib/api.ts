@@ -53,7 +53,7 @@ class CSRFManager {
 
 // Create CSRF manager instance
 const baseURL = process.env.NODE_ENV === "production" 
-  ? process.env.NEXT_PUBLIC_API_URL || "inland-grete-mondefense-9eee18bb.koyeb.app/"
+  ? process.env.NEXT_PUBLIC_API_URL || "https://inland-grete-mondefense-9eee18bb.koyeb.app/"
   : process.env.NEXT_PUBLIC_DEV_API_URL || "http://localhost:3001";
 
 const csrfManager = new CSRFManager(baseURL);
