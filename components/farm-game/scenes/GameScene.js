@@ -712,12 +712,10 @@ if (isBrowser) {
                     this.updateFarmCoins(-cost);
                   }
                   
-                  // Reset flags
-                  this.pendingDefensePlacement = false;
-                  this.pendingDefenseType = null;
-                  
-                  // Return to attack mode
-                  this.setToolMode('attack');
+                  // Keep defense placement mode active until explicitly changed by user
+                  // this.pendingDefensePlacement = false;
+                  // this.pendingDefenseType = null;
+                  // this.setToolMode('attack');
                   
                   // Hide placement indicator
                   this.plantingIndicator.visible = false;

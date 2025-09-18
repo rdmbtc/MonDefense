@@ -15,7 +15,9 @@ class CSRFManager {
   private expires: Date | null = null;
   private readonly baseUrl: string;
 
-  constructor(baseUrl: string = '/api') {
+  constructor(baseUrl: string = process.env.NODE_ENV === "production" 
+    ? process.env.NEXT_PUBLIC_API_URL || "https://inland-grete-mondefense-9eee18bb.koyeb.app/"
+    : process.env.NEXT_PUBLIC_DEV_API_URL || "http://localhost:3001") {
     this.baseUrl = baseUrl;
   }
 
