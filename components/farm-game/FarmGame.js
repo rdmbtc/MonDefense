@@ -50,8 +50,28 @@ const FarmGameInner = ({ farmCoins, addFarmCoins, gameMode = 'farm', onGameEvent
     console.log("FarmGame mounted on client side");
     isClient.current = true;
     
-    // Trigger initialization once after mount
-    initializeGame(farmCoins, addFarmCoins, gameMode); 
+    // Trigger initialization once after mount - ensure the container ref is attached
+    const tryInit = async () => {
+      if (gameContainerRef.current) {
+        await initializeGame(farmCoins, addFarmCoins, gameMode);
+        return;
+      }
+
+      // Poll briefly for the container to be available
+      let attempts = 0;
+      const poll = setInterval(() => {
+        attempts += 1;
+        if (gameContainerRef.current) {
+          clearInterval(poll);
+          initializeGame(farmCoins, addFarmCoins, gameMode).catch(err => console.error('initializeGame error after poll:', err));
+        } else if (attempts > 10) {
+          clearInterval(poll);
+          console.warn('Game container not found after polling; skipping initialization');
+        }
+      }, 100);
+    };
+
+    tryInit();
 
     // Cleanup function remains the same
     return () => {
@@ -283,6 +303,13 @@ const FarmGameInner = ({ farmCoins, addFarmCoins, gameMode = 'farm', onGameEvent
       };
 
       console.log("Creating game instance with config:", config);
+      if (!Phaser) {
+        throw new Error('Phaser is not defined at game creation time');
+      }
+      if (!gameContainerRef.current) {
+        throw new Error('Game container ref is missing at game creation time');
+      }
+      console.log('Phaser and container ready — instantiating game');
       const game = new Phaser.Game(config);
       gameInstanceRef.current = game;
       window.game = game;
