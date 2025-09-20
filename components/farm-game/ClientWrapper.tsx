@@ -8,7 +8,7 @@ import Phaser from 'phaser';
 declare global {
   interface Window {
     Phaser: any;
-    game?: any;
+    game: any;
   }
 }
 
@@ -53,7 +53,7 @@ function applyMageFixes() {
     }
   }, 500);
 
-  function applyFixesToGame(game: Window['game']) {
+  function applyFixesToGame(game: any) {
     if (!game || !game.scene) return;
     
     // Try to find Defense class
@@ -511,18 +511,12 @@ export default function ClientWrapper({
   farmCoins, 
   addFarmCoins, 
   gameMode = 'farm', 
-  onGameEvent,
-  onScoreSubmit,
-  isSubmitting,
-  hasSubmittedScore
+  onGameEvent 
 }: { 
   farmCoins: number, 
   addFarmCoins: (amount: number) => void,
   gameMode?: string,
-  onGameEvent?: (event: string, data: any) => void,
-  onScoreSubmit?: (score: number, transactionCount?: number) => Promise<boolean>,
-  isSubmitting?: boolean,
-  hasSubmittedScore?: boolean
+  onGameEvent?: (event: string, data: any) => void
 }) {
   const [isMounted, setIsMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
@@ -563,9 +557,6 @@ export default function ClientWrapper({
         addFarmCoins={addFarmCoins} 
         gameMode={gameMode}
         onGameEvent={onGameEvent}
-        onScoreSubmit={onScoreSubmit}
-        isSubmitting={isSubmitting}
-        hasSubmittedScore={hasSubmittedScore}
       />
     </div>
   );
