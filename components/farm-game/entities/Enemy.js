@@ -177,11 +177,15 @@ export default class Enemy {
         this.sprite.setInteractive({ useHandCursor: true, pixelPerfect: false }); // Make it interactive for clicks with larger hitbox
         this.sprite.flipX = true; // ADDED: Flip the sprite horizontally to face left
         
-        // Add idle animation to the sprite
-        this.addIdleAnimation();
-        
-        // Add entrance animation
-        this.addEntranceAnimation();
+        // Defer animations to prevent initialization issues
+        this.scene.time.delayedCall(100, () => {
+          try {
+            this.addIdleAnimation();
+            this.addEntranceAnimation();
+          } catch (error) {
+            console.warn(`Failed to add animations for enemy ${this.id}:`, error);
+          }
+        });
         
         // Make sprite more interactive
         this.sprite.on('pointerdown', () => {
@@ -197,14 +201,24 @@ export default class Enemy {
         
         // CRITICAL: Make the container physics-enabled for collision detection
         if (scene.physics && scene.physics.world) {
-          scene.physics.world.enable(this.container);
-          this.container.body.setSize(50, 50); // Set collision hitbox size
-          this.container.body.setCollideWorldBounds(false); // Allow movement off screen
-          this.container.body.setImmovable(false); // Allow movement
-          this.container.body.enable = true; // ADDED: Explicitly enable the body
-          
-          // ADDED: Set initial velocity immediately
-          this.setInitialVelocity();
+          try {
+            scene.physics.world.enable(this.container);
+            this.container.body.setSize(50, 50); // Set collision hitbox size
+            this.container.body.setCollideWorldBounds(false); // Allow movement off screen
+            this.container.body.setImmovable(false); // Allow movement
+            this.container.body.enable = true; // ADDED: Explicitly enable the body
+            
+            // ADDED: Set initial velocity with delay to ensure body is ready
+            this.scene.time.delayedCall(50, () => {
+              try {
+                this.setInitialVelocity();
+              } catch (error) {
+                console.warn(`Failed to set initial velocity for enemy ${this.id}:`, error);
+              }
+            });
+          } catch (error) {
+            console.error(`Failed to setup physics for enemy ${this.id}:`, error);
+          }
         }
         
         console.log(`Created enemy sprite with texture: ${this.spriteKey}`);
@@ -246,14 +260,24 @@ export default class Enemy {
         
         // CRITICAL: Make the container physics-enabled for collision detection
         if (scene.physics && scene.physics.world) {
-          scene.physics.world.enable(this.container);
-          this.container.body.setSize(50, 50); // Set collision hitbox size
-          this.container.body.setCollideWorldBounds(false); // Allow movement off screen
-          this.container.body.setImmovable(false); // Allow movement
-          this.container.body.enable = true; // ADDED: Explicitly enable the body
-          
-          // ADDED: Set initial velocity immediately (Fallback)
-          this.setInitialVelocity();
+          try {
+            scene.physics.world.enable(this.container);
+            this.container.body.setSize(50, 50); // Set collision hitbox size
+            this.container.body.setCollideWorldBounds(false); // Allow movement off screen
+            this.container.body.setImmovable(false); // Allow movement
+            this.container.body.enable = true; // ADDED: Explicitly enable the body
+            
+            // ADDED: Set initial velocity with delay to ensure body is ready (Fallback)
+            this.scene.time.delayedCall(50, () => {
+              try {
+                this.setInitialVelocity();
+              } catch (error) {
+                console.warn(`Failed to set initial velocity for fallback enemy ${this.id}:`, error);
+              }
+            });
+          } catch (error) {
+            console.error(`Failed to setup physics for fallback enemy ${this.id}:`, error);
+          }
         }
       }
       
@@ -301,11 +325,22 @@ export default class Enemy {
       
       // CRITICAL: Make the container physics-enabled for collision detection even in fallback
       if (scene.physics && scene.physics.world) {
-        scene.physics.world.enable(this.container);
-        this.container.body.setSize(50, 50); // Set collision hitbox size
-        this.container.body.enable = true; // ADDED: Explicitly enable the body
-        // ADDED: Set initial velocity immediately (Emergency Fallback)
-        this.setInitialVelocity();
+        try {
+          scene.physics.world.enable(this.container);
+          this.container.body.setSize(50, 50); // Set collision hitbox size
+          this.container.body.enable = true; // ADDED: Explicitly enable the body
+          
+          // ADDED: Set initial velocity with delay to ensure body is ready (Emergency Fallback)
+          this.scene.time.delayedCall(50, () => {
+            try {
+              this.setInitialVelocity();
+            } catch (error) {
+              console.warn(`Failed to set initial velocity for emergency fallback enemy ${this.id}:`, error);
+            }
+          });
+        } catch (error) {
+          console.error(`Failed to setup physics for emergency fallback enemy ${this.id}:`, error);
+        }
       }
     }
     
