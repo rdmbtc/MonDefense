@@ -349,39 +349,59 @@ export default class Enemy {
   }
   
   update(delta) {
-    // CRITICAL FIX: If enemy is dead/destroyed/pending removal, ensure it's completely stopped
-    if (!this.active || this.destroyed || this._pendingRemoval || this.dead) {
-      // Force stop any physics movement
-      if (this.container && this.container.body) {
-        this.container.body.setVelocity(0, 0);
-        this.container.body.setAcceleration(0, 0);
-        this.container.body.enable = false;
+    try {
+      // CRITICAL FIX: If enemy is dead/destroyed/pending removal, ensure it's completely stopped
+      if (!this.active || this.destroyed || this._pendingRemoval || this.dead) {
+        // Force stop any physics movement
+        if (this.container && this.container.body) {
+          try {
+            this.container.body.setVelocity(0, 0);
+            this.container.body.setAcceleration(0, 0);
+            this.container.body.enable = false;
+          } catch (bodyError) {
+            console.warn(`Error stopping physics body in update for enemy ${this.id}:`, bodyError);
+          }
+        }
+        return; // Exit early - don't process any movement or updates
       }
-      return; // Exit early - don't process any movement or updates
-    }
-    
-    if (!this.scene || !this.scene.time) {
-      // If inactive or scene missing, ensure physics body is stopped if it exists
-      if (this.container && this.container.body) {
-        this.container.body.setVelocity(0, 0);
+      
+      if (!this.scene || !this.scene.time) {
+        // If inactive or scene missing, ensure physics body is stopped if it exists
+        if (this.container && this.container.body) {
+          try {
+            this.container.body.setVelocity(0, 0);
+          } catch (bodyError) {
+            console.warn(`Error stopping physics body in scene check for enemy ${this.id}:`, bodyError);
+          }
+        }
+        return;
       }
-      return;
-    }
 
-    // Update visuals (like health bar)
-    this.updateVisuals();
+      // Update visuals (like health bar)
+      this.updateVisuals();
 
-    // Update status effects
-    this.updateStatusEffects(delta);
-    
-    // ADDED: Log velocity in update
-    if (this.container && this.container.body && Math.random() < 0.05) { // Log occasionally
-      console.log(`Enemy ${this.id} velocity: vx=${this.container.body.velocity.x.toFixed(1)}, vy=${this.container.body.velocity.y.toFixed(1)}`);
-    }
+      // Update status effects
+      this.updateStatusEffects(delta);
+      
+      // ADDED: Log velocity in update (rarely to avoid spam)
+      if (this.container && this.container.body && Math.random() < 0.02) { // Reduced frequency
+        console.log(`Enemy ${this.id} velocity: vx=${this.container.body.velocity.x.toFixed(1)}, vy=${this.container.body.velocity.y.toFixed(1)}`);
+      }
 
-    // Check if enemy reached the end
-    if (this.x < 50) { // Check if x is near the left edge
-      this.reachedEnd();
+      // Check if enemy reached the end
+      if (this.x < 50) { // Check if x is near the left edge
+        this.reachedEnd();
+      }
+    } catch (error) {
+      console.error(`Error in Enemy.update for ${this.id}:`, error);
+      // If update fails, at least try to stop the enemy
+      if (this.container && this.container.body) {
+        try {
+          this.container.body.setVelocity(0, 0);
+        } catch (bodyError) {
+          console.warn(`Failed to stop enemy after update error:`, bodyError);
+        }
+      }
     }
   }
   
@@ -1022,18 +1042,22 @@ export default class Enemy {
   // Helper method to clean up sprites
   cleanupSprites() {
     try {
-      // CRITICAL FIX: Stop physics body FIRST before destroying visual components
-      if (this.container && this.container.body) {
-        // Stop all movement immediately
-        this.container.body.setVelocity(0, 0);
-        this.container.body.setAcceleration(0, 0);
-        // Disable the physics body to prevent further movement
-        this.container.body.enable = false;
-        console.log(`Enemy ${this.id} physics body stopped and disabled`);
-      }
-      
       // Clean up container
       if (this.container) {
+        // CRITICAL FIX: Stop physics body FIRST before destroying visual components
+        if (this.container.body) {
+          try {
+            // Stop all movement immediately
+            this.container.body.setVelocity(0, 0);
+            this.container.body.setAcceleration(0, 0);
+            // Disable the physics body to prevent further movement
+            this.container.body.enable = false;
+            console.log(`Enemy ${this.id} physics body stopped and disabled`);
+          } catch (bodyError) {
+            console.warn(`Error stopping physics body for enemy ${this.id}:`, bodyError);
+          }
+        }
+        
         this.container.destroy();
         this.container = null;
         
