@@ -8,7 +8,7 @@ import Phaser from 'phaser';
 declare global {
   interface Window {
     Phaser: any;
-    game: any;
+    game?: any;
   }
 }
 
@@ -511,12 +511,18 @@ export default function ClientWrapper({
   farmCoins, 
   addFarmCoins, 
   gameMode = 'farm', 
-  onGameEvent 
+  onGameEvent,
+  onScoreSubmit,
+  isSubmitting,
+  hasSubmittedScore
 }: { 
   farmCoins: number, 
   addFarmCoins: (amount: number) => void,
   gameMode?: string,
-  onGameEvent?: (event: string, data: any) => void
+  onGameEvent?: (event: string, data: any) => void,
+  onScoreSubmit?: (score: number, transactionCount?: number) => Promise<boolean>,
+  isSubmitting?: boolean,
+  hasSubmittedScore?: boolean
 }) {
   const [isMounted, setIsMounted] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
