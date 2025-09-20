@@ -349,7 +349,18 @@ export default class Enemy {
   }
   
   update(delta) {
-    if (!this.active || !this.scene || !this.scene.time) {
+    // CRITICAL FIX: If enemy is dead/destroyed/pending removal, ensure it's completely stopped
+    if (!this.active || this.destroyed || this._pendingRemoval || this.dead) {
+      // Force stop any physics movement
+      if (this.container && this.container.body) {
+        this.container.body.setVelocity(0, 0);
+        this.container.body.setAcceleration(0, 0);
+        this.container.body.enable = false;
+      }
+      return; // Exit early - don't process any movement or updates
+    }
+    
+    if (!this.scene || !this.scene.time) {
       // If inactive or scene missing, ensure physics body is stopped if it exists
       if (this.container && this.container.body) {
         this.container.body.setVelocity(0, 0);
@@ -1011,6 +1022,16 @@ export default class Enemy {
   // Helper method to clean up sprites
   cleanupSprites() {
     try {
+      // CRITICAL FIX: Stop physics body FIRST before destroying visual components
+      if (this.container && this.container.body) {
+        // Stop all movement immediately
+        this.container.body.setVelocity(0, 0);
+        this.container.body.setAcceleration(0, 0);
+        // Disable the physics body to prevent further movement
+        this.container.body.enable = false;
+        console.log(`Enemy ${this.id} physics body stopped and disabled`);
+      }
+      
       // Clean up container
       if (this.container) {
         this.container.destroy();
