@@ -19,8 +19,8 @@ class ConsoleManager {
   };
 
   private config: ConsoleConfig = {
-    enabled: process.env.NEXT_PUBLIC_ENABLE_CONSOLE_LOGS === 'true' || process.env.NODE_ENV === 'development',
-    allowedMethods: ['error', 'warn'], // Always allow errors and warnings
+    enabled: true, // Force enable console logs
+    allowedMethods: ['log', 'warn', 'error', 'info', 'debug'], // Allow all console methods
     prefix: '[MonDefense]'
   };
 
@@ -85,8 +85,8 @@ if (typeof window !== 'undefined') {
                        process.env.NODE_ENV === 'development';
   
   consoleManager.configure({
-    enabled: enableConsole,
-    allowedMethods: enableConsole ? ['log', 'warn', 'error', 'info', 'debug'] : ['error', 'warn']
+    enabled: true, // Force enable console logs
+    allowedMethods: ['log', 'warn', 'error', 'info', 'debug'] // Allow all console methods
   });
 }
 
