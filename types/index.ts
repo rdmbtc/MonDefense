@@ -52,6 +52,8 @@ export interface SubmitScoreRequest {
   scoreAmount: number;
   sessionId: string;
   timestamp?: number;
+  sessionDuration: number;
+  gameStartTime: number;
 }
 
 export interface SubmitScoreResponse {

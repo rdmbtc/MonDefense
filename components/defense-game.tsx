@@ -44,6 +44,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const [chapterIndex, setChapterIndex] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const [gameScore, setGameScore] = useState(0);
+  const [gameStartTime, setGameStartTime] = useState<number | null>(null);
 
   const [currentPage, setCurrentPage] = useState(0);
   const { farmCoins, addFarmCoins } = useGameContext();
@@ -255,12 +256,16 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       
       // Submit to existing API with timestamp
       const timestamp = Date.now();
+      const sessionDuration = gameStartTime ? timestamp - gameStartTime : 0;
+      
       await gameSession.submitScore.mutateAsync({
         player: walletAddress,
         scoreAmount: score,
         transactionAmount: transactionCount,
         sessionId: sessionId,
-        timestamp: timestamp
+        timestamp: timestamp,
+        sessionDuration: sessionDuration,
+        gameStartTime: gameStartTime || timestamp
       });
 
       // Submit to Monad Games ID smart contract on-chain
@@ -309,6 +314,9 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         window._defenseMode = true;
         window._farmMode = false;
       }
+      
+      // Set game start time when switching to game mode
+      setGameStartTime(Date.now());
       
       // Reset submission state for new game
       setHasSubmittedScore(false);
