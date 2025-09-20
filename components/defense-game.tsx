@@ -14,8 +14,6 @@ import { usePlayerTotalScore } from '@/hooks/usePlayerTotalScore';
 import { useCrossAppAccount } from '@/hooks/useCrossAppAccount';
 import { useUsername } from '@/hooks/useUsername';
 import { useOnchainScoreSubmissionWithRetry } from '@/hooks/useOnchainScoreSubmission';
-
-import { usePlayerRank } from '@/hooks/usePlayerRank';
 import { GAME_CONFIG } from '@/lib/game-config';
 
 // Extend Window interface to include custom properties
@@ -73,9 +71,6 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
 
   const gameSession = useGameSession(sessionToken);
   const onchainSubmission = useOnchainScoreSubmissionWithRetry();
-  const { data: playerRankData } = usePlayerRank(walletAddress, gameStarted);
-  
-  const playerRank = playerRankData?.rank;
   
   // Debug username retrieval
   console.log('Username debug info:', {
@@ -637,11 +632,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
             <span className="text-white font-bold" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>
               Score: {gameScore > 0 ? gameScore.toLocaleString() : '0'}
             </span>
-            {playerStats && (
-              <div className="text-xs text-white/80 mt-1">
-                Rank: #{playerRank || 'Unranked'} | Games: {playerStats.gamesPlayed}
-              </div>
-            )}
+            
             <div className="text-xs text-white/60 mt-1">
               {username ? `Click to view ${username}'s profile on MonadClip` : 'Click to view leaderboard on MonadClip'}
             </div>
