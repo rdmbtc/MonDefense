@@ -618,8 +618,8 @@ export default class Enemy {
   }
   
   takeDamage(amount) {
-    // Skip if already inactive
-    if (!this.active) return;
+    // Skip if already inactive or being destroyed
+    if (!this.active || this.destroyed || this._pendingRemoval) return;
     
     // Force active status
     this.active = true;
@@ -676,6 +676,9 @@ export default class Enemy {
     
     // Check if enemy is defeated - STRONGLY ENSURE DEATH
     if (this.health <= 0) {
+      // Set flag to prevent multiple defeat calls
+      this._pendingRemoval = true;
+      
       // Play defeat sound
       if (this.scene && this.scene.soundManager) {
         this.scene.soundManager.play('enemy_defeat', { volume: 0.6 });
@@ -686,6 +689,15 @@ export default class Enemy {
       
       // Debug log
       console.log(`Enemy defeated by takeDamage, health = ${this.health}`);
+      
+      // Remove from enemies array IMMEDIATELY to prevent targeting
+      if (this.scene && this.scene.enemies && Array.isArray(this.scene.enemies)) {
+        const index = this.scene.enemies.indexOf(this);
+        if (index !== -1) {
+          this.scene.enemies.splice(index, 1);
+          console.log(`Enemy removed from array, remaining: ${this.scene.enemies.length}`);
+        }
+      }
       
       // Ensure defeat is called properly by wrapping in try/catch
       try {
@@ -722,19 +734,28 @@ export default class Enemy {
   }
   
   destroy(silent = false) {
-    if (!this.active || this.dead) {
+    if (!this.active || this.dead || this.destroyed) {
       return;
     }
     
     try {
-      // Mark as destroyed
+      // Mark as destroyed FIRST to prevent multiple destroy calls
       this.active = false;
       this.dead = true;
-      this.destroyed = true; // Add explicit destroyed flag
-      this.health = 0; // Ensure health is zero
+      this.destroyed = true;
+      this.health = 0;
       
       // Set a flag for pending removal to prevent targeting while animating
       this._pendingRemoval = true;
+      
+      // Remove from enemies array IMMEDIATELY if not already done
+      if (this.scene && this.scene.enemies && Array.isArray(this.scene.enemies)) {
+        const index = this.scene.enemies.indexOf(this);
+        if (index !== -1) {
+          this.scene.enemies.splice(index, 1);
+          console.log(`Enemy ${this.id} removed from array during destroy`);
+        }
+      }
       
       // Clear all tracked intervals
       if (this.activeIntervals) {
@@ -767,35 +788,24 @@ export default class Enemy {
       // Kill tweens before destroying objects
       if (this.scene && this.scene.tweens) {
         if (this.sprite) this.scene.tweens.killTweensOf(this.sprite);
-        if (this.healthBar) this.scene.tweens.killTweensOf(this.healthBar);
-        if (this.healthBarBg) this.scene.tweens.killTweensOf(this.healthBarBg);
+        if (this.container) this.scene.tweens.killTweensOf(this.container);
+        if (this.healthBar) {
+          if (this.healthBar.background) this.scene.tweens.killTweensOf(this.healthBar.background);
+          if (this.healthBar.fill) this.scene.tweens.killTweensOf(this.healthBar.fill);
+        }
         if (this.waveIndicator) this.scene.tweens.killTweensOf(this.waveIndicator);
       }
       
-      // Apply death animation or visual effect
-      this.applyDeathEffect();
-      
       // Log the destruction with position for debugging
       if (!silent) {
-        // Make sure position values are numbers before calling toFixed
         const xDisplay = typeof this.x === 'number' ? this.x.toFixed(2) : String(this.x);
         const yDisplay = typeof this.y === 'number' ? this.y.toFixed(2) : String(this.y);
         
         console.log(`Destroying enemy ${this.id} at (${xDisplay}, ${yDisplay})`);
       }
       
-      // Cleanup sprites with delay to allow animations to finish
-      if (this.scene && this.scene.time && typeof this.scene.time.delayedCall === 'function') {
-        const cleanupTimer = this.scene.time.delayedCall(300, () => {
-          this.cleanupSprites();
-        });
-        if (this.activeTimers) {
-          this.activeTimers.add(cleanupTimer);
-        }
-      } else {
-        // If delayed call is not available, clean up immediately
-        this.cleanupSprites();
-      }
+      // Clean up sprites immediately instead of with delay
+      this.cleanupSprites();
       
       // Stop any sounds being played by this enemy
       if (this.scene && this.scene.sound) {
@@ -806,8 +816,8 @@ export default class Enemy {
     } finally {
       // Ensure essential references are nullified even if errors occurred
       this.sprite = null;
+      this.container = null;
       this.healthBar = null;
-      this.healthBarBg = null;
       this.waveIndicator = null;
       this.scene = null; // Break reference to scene LAST
     }
@@ -1130,7 +1140,7 @@ export default class Enemy {
   
   // Add this method to handle enemy defeat
   defeat() {
-    if (!this.active) return;
+    if (!this.active || this.destroyed || this._pendingRemoval) return;
     
     try {
       // FIXED: Ensure x and y are numbers before calling toFixed
@@ -1146,6 +1156,16 @@ export default class Enemy {
       this.active = false;
       this.dead = true;
       this.destroyed = true;
+      this._pendingRemoval = true;
+      
+      // Remove from scene array IMMEDIATELY to prevent further targeting
+      if (this.scene && this.scene.enemies && Array.isArray(this.scene.enemies)) {
+        const index = this.scene.enemies.indexOf(this);
+        if (index !== -1) {
+          this.scene.enemies.splice(index, 1);
+          console.log(`Enemy ${this.id} removed from array during defeat`);
+        }
+      }
       
       // Call the flying coin effect instead of directly updating coins here
       if (typeof this.scene.createFlyingCoinEffect === 'function') {
@@ -1187,15 +1207,8 @@ export default class Enemy {
         this.defeatAnimation();
       }
       
-      // Destroy this enemy with a slight delay to allow animations
-      if (this.scene && this.scene.time && typeof this.scene.time.delayedCall === 'function') {
-        this.scene.time.delayedCall(100, () => {
-          this.cleanupSprites();
-        });
-      } else {
-        // Immediate fallback
-        this.cleanupSprites();
-      }
+      // Clean up immediately instead of using delay
+      this.cleanupSprites();
       
     } catch (error) {
       console.error("Error in defeat method:", error);
