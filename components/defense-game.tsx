@@ -14,7 +14,7 @@ import { usePlayerTotalScore } from '@/hooks/usePlayerTotalScore';
 import { useCrossAppAccount } from '@/hooks/useCrossAppAccount';
 import { useUsername } from '@/hooks/useUsername';
 import { useOnchainScoreSubmissionWithRetry } from '@/hooks/useOnchainScoreSubmission';
-import { useLeaderboard } from '@/hooks/useLeaderboard';
+
 import { usePlayerRank } from '@/hooks/usePlayerRank';
 import { GAME_CONFIG } from '@/lib/game-config';
 
@@ -46,8 +46,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const [chapterIndex, setChapterIndex] = useState(0);
   const [gameStarted, setGameStarted] = useState(false);
   const [gameScore, setGameScore] = useState(0);
-  const [showLeaderboard, setShowLeaderboard] = useState(false);
-  const [leaderboardPinned, setLeaderboardPinned] = useState(false);
+
   const [currentPage, setCurrentPage] = useState(0);
   const { farmCoins, addFarmCoins } = useGameContext();
   const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
@@ -71,7 +70,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const { walletAddress } = useCrossAppAccount();
   const { data: usernameData, error: usernameError, isLoading: usernameLoading } = useUsername(walletAddress);
   const { data: playerStats } = usePlayerTotalScore(walletAddress, gameStarted, false);
-  const { data: leaderboardData } = useLeaderboard(currentPage + 1);
+
   const gameSession = useGameSession(sessionToken);
   const onchainSubmission = useOnchainScoreSubmissionWithRetry();
   const { data: playerRankData } = usePlayerRank(walletAddress, gameStarted);
@@ -622,14 +621,17 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           )}
         </div>
         
-        {/* Enhanced Leaderboard Display */}
+        {/* MonadClip Leaderboard Button */}
         <div className="relative">
           {/* Current Player Stats - Always Visible */}
           <div 
-            className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2 cursor-pointer transition-all duration-200"
+            className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2 cursor-pointer transition-all duration-200 hover:bg-white/20"
             onClick={() => {
-              setLeaderboardPinned(!leaderboardPinned);
-              setShowLeaderboard(!showLeaderboard);
+              if (username) {
+                window.open(`https://monadclip.fun/user/${username}`, '_blank');
+              } else {
+                window.open('https://monadclip.fun/', '_blank');
+              }
             }}
           >
             <span className="text-white font-bold" style={{textShadow: '1px 1px 2px rgba(0,0,0,0.7)'}}>
@@ -641,113 +643,9 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
               </div>
             )}
             <div className="text-xs text-white/60 mt-1">
-              Click to view leaderboard
+              {username ? `Click to view ${username}'s profile on MonadClip` : 'Click to view leaderboard on MonadClip'}
             </div>
           </div>
-
-          {/* Leaderboard Dropdown */}
-          {showLeaderboard && (
-            <div 
-              className="absolute top-full right-0 mt-2 bg-white/10 backdrop-blur border-white/20 rounded-lg p-3 sm:p-4 w-80 sm:w-96 max-w-[90vw] z-50 hover:bg-white/20 transition-all duration-200"
-            >
-              <div className="flex items-center justify-between mb-3">
-                <h3 className="text-white font-bold text-sm">🏆 Leaderboard</h3>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => {
-                      setShowLeaderboard(false);
-                      setLeaderboardPinned(false);
-                    }}
-                    className="sm:hidden px-2 py-1 text-xs bg-red-500/20 hover:bg-red-500/30 text-white rounded transition-colors"
-                    title="Close leaderboard"
-                  >
-                    ✕
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(Math.max(0, currentPage - 1))}
-                    disabled={currentPage === 0}
-                    className="px-2 py-1 text-xs bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition-colors"
-                  >
-                    Prev
-                  </button>
-                  <button
-                    onClick={() => setCurrentPage(currentPage + 1)}
-                    disabled={!leaderboardData?.data?.data || leaderboardData.data.data.length < 10}
-                    className="px-2 py-1 text-xs bg-white/10 hover:bg-white/20 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded transition-colors"
-                  >
-                    Next
-                  </button>
-                </div>
-              </div>
-              
-              {/* Leaderboard List */}
-              <div className="space-y-1 max-h-64 overflow-hidden">
-                {leaderboardData?.data?.data && leaderboardData.data.data.length > 0 ? (
-                  leaderboardData.data.data
-                    .map((player: any, index: number) => {
-                      const globalRank = currentPage * 10 + index + 1;
-                      const isCurrentPlayer = player.walletAddress === walletAddress;
-                      return (
-                        <div
-                          key={player.walletAddress}
-                          className={`flex items-center justify-between p-2 rounded text-xs transition-colors ${
-                            isCurrentPlayer 
-                              ? 'bg-yellow-500/20 border border-yellow-500/40' 
-                              : 'bg-white/5 hover:bg-white/10'
-                          }`}
-                        >
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <span className={`font-bold ${
-                              globalRank === 1 ? 'text-yellow-400' :
-                              globalRank === 2 ? 'text-gray-300' :
-                              globalRank === 3 ? 'text-orange-400' :
-                              'text-white'
-                            }`}>
-                              #{globalRank}
-                            </span>
-                            <span className="text-white truncate">
-                              {player.username || `${player.walletAddress.slice(0, 6)}...${player.walletAddress.slice(-4)}`}
-                            </span>
-                            {isCurrentPlayer && (
-                              <span className="text-yellow-400 text-xs">(You)</span>
-                            )}
-                          </div>
-                          <div className="text-right">
-                            <div className="text-white font-medium">
-                              {player.score.toLocaleString()}
-                            </div>
-                            <div className="text-white/60 text-xs">
-                              Best Score
-                            </div>
-                          </div>
-                        </div>
-                      );
-                    })
-                ) : (
-                  <div className="text-white/60 text-center py-4">
-                    No leaderboard data available
-                  </div>
-                )}
-              </div>
-              
-              {/* Current Player Position Indicator */}
-              {playerRank && (
-                <div className="mt-3 pt-3 border-t border-white/20">
-                  <div className="text-xs text-white/80 text-center">
-                    Your position: #{playerRank}
-                    {currentPage * 10 + 1 > playerRank || (currentPage + 1) * 10 < playerRank ? (
-                      <button
-                        onClick={() => setCurrentPage(Math.floor((playerRank - 1) / 10))}
-                        className="ml-2 text-yellow-400 hover:text-yellow-300 underline"
-                      >
-                        Go to your rank
-                      </button>
-                    ) : null}
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
         </div>
         
 

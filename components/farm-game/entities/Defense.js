@@ -82,16 +82,16 @@ export default class Defense {
       this.createMoyakiMage();
     } else if (type === 'keon') {
       this.cost = 150; // Premium defense - more accessible
-      this.range = 280; // Excellent range
-      this.cooldown = 2000; // Balanced cooldown for power
-      this.damage = 2.5; // High damage
+      this.range = 220; // Reduced from 280 - less range
+      this.cooldown = 2800; // Increased from 2000 - slower attacks
+      this.damage = 1.8; // Reduced from 2.5 - less damage
       this.targetTypes = ['bird', 'rabbit', 'fox', 'slime', 'ghost', 'skeleton', 'bat', 'spider', 'wolf', 'snake', 'goblin'];
-      this.aoeRadius = 100; // Large AOE radius
-      this.aoeDamageMultiplier = 0.8; // High AOE damage
-      this.maxMana = 120;
+      this.aoeRadius = 80; // Reduced from 100 - smaller AOE
+      this.aoeDamageMultiplier = 0.6; // Reduced from 0.8 - less AOE damage
+      this.maxMana = 100; // Reduced from 120 - less mana pool
       this.currentMana = this.maxMana;
-      this.manaCostPerShot = 25; // High mana cost for power
-      this.manaRegenRate = 8.0; // Fast mana regen to compensate
+      this.manaCostPerShot = 30; // Increased from 25 - more expensive shots
+      this.manaRegenRate = 6.0; // Reduced from 8.0 - slower mana regen
       this.createKeonMage();
     }
     
