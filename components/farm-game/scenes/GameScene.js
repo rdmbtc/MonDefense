@@ -4805,19 +4805,23 @@ if (isBrowser) {
         // Clear any orphaned wave indicator texts that might be stuck on screen
         clearOrphanedWaveIndicators() {
           try {
-            // Find all text objects that contain "BOSS W" pattern
+            // Find all text objects that contain wave indicator patterns
             const allChildren = this.children.list;
             const orphanedIndicators = allChildren.filter(child => {
               return child && 
                      child.type === 'Text' && 
                      child.text && 
-                     (child.text.includes('BOSS W') || child.text.includes('BOSS'));
+                     (child.text.includes('BOSS W') || 
+                      child.text.includes('BOSS') ||
+                      /^W\d+$/.test(child.text) || // Matches W1, W2, W3, W4, etc.
+                      /^BOSS W\d+$/.test(child.text)); // Matches BOSS W5, BOSS W10, etc.
             });
             
             if (orphanedIndicators.length > 0) {
               console.log(`Found ${orphanedIndicators.length} orphaned wave indicators, destroying them`);
               orphanedIndicators.forEach(indicator => {
                 try {
+                  console.log(`Destroying orphaned wave indicator: "${indicator.text}"`);
                   indicator.destroy();
                 } catch (error) {
                   console.warn('Error destroying orphaned wave indicator:', error);

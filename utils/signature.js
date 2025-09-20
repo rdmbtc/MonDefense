@@ -12,19 +12,14 @@ const SIGNATURE_SECRET = process.env.NEXT_PUBLIC_SIGNATURE_SECRET || 'default-si
  * Generate HMAC signature for request data
  * @param {Object} data - Request data to sign
  * @param {string} secret - Secret key for HMAC
- * @returns {string} - Base64 encoded signature
+ * @returns {string} - Hex encoded signature (to match backend)
  */
 export function generateSignature(data, secret = SIGNATURE_SECRET) {
-  // Sort keys to ensure consistent signature generation
-  const sortedKeys = Object.keys(data).sort();
-  const sortedData = {};
-  sortedKeys.forEach(key => {
-    sortedData[key] = data[key];
-  });
-  
-  const payload = JSON.stringify(sortedData);
+  // Add timestamp to match backend signature generation
+  const timestamp = data.timestamp || Date.now();
+  const payload = JSON.stringify(data) + timestamp.toString();
   const signature = CryptoJS.HmacSHA256(payload, secret);
-  return CryptoJS.enc.Base64.stringify(signature);
+  return CryptoJS.enc.Hex.stringify(signature);
 }
 
 /**
