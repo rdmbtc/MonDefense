@@ -582,6 +582,38 @@ export default function ClientWrapper({
         window.removeEventListener('unhandledrejection', onReject as EventListener);
       };
     }, []);
+
+    // Batch and forward recent logs to server for easier debugging
+    useEffect(() => {
+      if (!window || !navigator) return;
+      let timer: any = null;
+      const sendLogs = async () => {
+        if (!runtimeLogs || runtimeLogs.length === 0) return;
+        const payload = { timestamp: Date.now(), logs: runtimeLogs.slice(-50) };
+        try {
+          // try sendBeacon first for reliability on unload
+          const url = '/api/client-logs';
+          const body = JSON.stringify(payload);
+          if (navigator.sendBeacon) {
+            const blob = new Blob([body], { type: 'application/json' });
+            navigator.sendBeacon(url, blob);
+          } else {
+            await fetch(url, { method: 'POST', body, headers: { 'Content-Type': 'application/json' } });
+          }
+        } catch (e) {
+          // ignore
+        }
+      };
+
+      timer = setInterval(sendLogs, 5000);
+      const onUnload = () => sendLogs();
+      window.addEventListener('beforeunload', onUnload);
+
+      return () => {
+        clearInterval(timer);
+        window.removeEventListener('beforeunload', onUnload);
+      };
+    }, [runtimeLogs]);
     const loadFarmGame = async () => {
       setLoadError(null);
       try {
