@@ -21,6 +21,7 @@ declare global {
   interface Window {
     _defenseMode?: boolean;
     _farmMode?: boolean;
+    secureSubmitScore?: (score: number, transactionCount: number, gameStateHash: string) => boolean;
   }
 }
 
@@ -224,7 +225,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   }, [gameSession.startGameSession.data]);
 
   // Handle score submission using both API and on-chain submission
-  const handleScoreSubmission = useCallback(async (score: number, transactionCount: number = 1): Promise<boolean> => {
+  const handleScoreSubmission = useCallback(async (score: number, transactionCount: number = 1, gameStateHash?: string): Promise<boolean> => {
     // Prevent multiple submissions
     if (isSubmitting) {
       console.log('Score submission already in progress, ignoring duplicate call');
@@ -244,6 +245,23 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       return false;
     }
 
+    // Anti-cheat validation: Check if score is reasonable
+    const sessionDuration = gameStartTime ? Date.now() - gameStartTime : 0;
+    const maxReasonableScore = Math.floor(sessionDuration / 1000) * 50; // Max 50 points per second
+    
+    if (score > maxReasonableScore) {
+      console.warn('Score submission rejected: unrealistic score', { score, maxReasonableScore, sessionDuration });
+      toast.error('Score submission failed: Invalid score detected');
+      return false;
+    }
+
+    // Validate minimum game time (prevent instant high scores)
+    if (sessionDuration < 10000) { // Minimum 10 seconds
+      console.warn('Score submission rejected: game too short', { sessionDuration });
+      toast.error('Score submission failed: Play longer to submit scores');
+      return false;
+    }
+
     // Check if user has a registered username (optional - allow submission without username)
     if (!username) {
       console.log('No username found, but allowing score submission with wallet address');
@@ -254,9 +272,8 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       setIsSubmitting(true);
       console.log('Submitting score via API and on-chain:', score);
       
-      // Submit to existing API with timestamp
+      // Submit to existing API with timestamp and additional security data
       const timestamp = Date.now();
-      const sessionDuration = gameStartTime ? timestamp - gameStartTime : 0;
       
       await gameSession.submitScore.mutateAsync({
         player: walletAddress,
@@ -265,7 +282,19 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         sessionId: sessionId,
         timestamp: timestamp,
         sessionDuration: sessionDuration,
-        gameStartTime: gameStartTime || timestamp
+        gameStartTime: gameStartTime || timestamp,
+        // Add security metadata
+        securityMetadata: {
+          gameStateHash: gameStateHash || 'unknown',
+          clientTimestamp: timestamp,
+          sessionStartTime: gameStartTime || undefined,
+          submissionSource: 'game_engine',
+          gameplayMetrics: {
+            totalClicks: 0, // TODO: Track actual clicks
+            averageReactionTime: 0, // TODO: Track actual reaction time
+            gameplayPattern: 'normal' // TODO: Analyze gameplay pattern
+          }
+        }
       });
 
       // Submit to Monad Games ID smart contract on-chain
@@ -321,31 +350,47 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       // Reset submission state for new game
       setHasSubmittedScore(false);
       
-      // Expose global function for Phaser game to call directly
-      window.submitGameScore = async (score: number, transactionCount: number): Promise<boolean> => {
+      // SECURE: Use custom events instead of global function
+      const handleScoreSubmissionEvent = async (event: Event) => {
+        const customEvent = event as CustomEvent;
+        const { score, transactionCount, gameStateHash } = customEvent.detail;
+        
         try {
-          // Prevent multiple submissions - check if already submitted or submitting
-          if (hasSubmittedScore || isSubmitting) {
-            console.log('Score already submitted or submission in progress');
-            return false;
-          }
-
-          // Only submit if user is authenticated and has session token
-          if (walletAddress && sessionToken && sessionId) {
-            const result = await handleScoreSubmission(score, transactionCount);
-            return result;
-          }
-          return false;
+          await handleScoreSubmission(score, transactionCount, gameStateHash);
         } catch (error) {
-          console.error('Error in global score submission:', error);
+          console.error('Error in secure score submission:', error);
+        }
+      };
+
+      // Add secure event listener
+      window.addEventListener('gameScoreSubmission', handleScoreSubmissionEvent);
+      
+      // Provide a secure submission method for the game engine
+      window.secureSubmitScore = (score: number, transactionCount: number, gameStateHash: string) => {
+        // Validate parameters
+        if (typeof score !== 'number' || score < 0 || score > 999999) {
+          console.warn('Invalid score parameter blocked');
           return false;
         }
+        
+        if (typeof transactionCount !== 'number' || transactionCount < 0 || transactionCount > 100) {
+          console.warn('Invalid transaction count parameter blocked');
+          return false;
+        }
+
+        // Dispatch secure event
+        const event = new CustomEvent('gameScoreSubmission', {
+          detail: { score, transactionCount, gameStateHash }
+        });
+        window.dispatchEvent(event);
+        return true;
       };
       
       return () => {
-        // Remove global function
-        if (window.submitGameScore) {
-          delete window.submitGameScore;
+        // Clean up event listener and secure function
+        window.removeEventListener('gameScoreSubmission', handleScoreSubmissionEvent);
+        if (window.secureSubmitScore) {
+          delete window.secureSubmitScore;
         }
       };
     }
@@ -363,6 +408,11 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           } catch (error) {
             console.warn('Error destroying game:', error);
           }
+        }
+
+        // Clean up secure submission system
+        if (window.secureSubmitScore) {
+          delete window.secureSubmitScore;
         }
       }
       

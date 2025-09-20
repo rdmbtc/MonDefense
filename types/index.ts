@@ -54,6 +54,17 @@ export interface SubmitScoreRequest {
   timestamp?: number;
   sessionDuration: number;
   gameStartTime: number;
+  securityMetadata?: {
+    gameStateHash: string;
+    clientTimestamp: number;
+    sessionStartTime?: number;
+    submissionSource?: string;
+    gameplayMetrics: {
+      totalClicks: number;
+      averageReactionTime: number;
+      gameplayPattern: string;
+    };
+  };
 }
 
 export interface SubmitScoreResponse {

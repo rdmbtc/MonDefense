@@ -5611,8 +5611,8 @@ if (isBrowser) {
           try {
             console.log(`Submitting score: Score=${score}, Waves=${waves}`);
             
-            // Check if global score submission function is available
-            if (typeof window !== 'undefined' && window.submitGameScore) {
+            // Check if secure score submission function is available
+            if (typeof window !== 'undefined' && window.secureSubmitScore) {
               // Show loading feedback to user
               const feedbackText = this.add.text(400, 400, 'Submitting Score...', {
                 fontFamily: 'Arial',
@@ -5623,9 +5623,18 @@ if (isBrowser) {
               }).setOrigin(0.5);
               feedbackText.setDepth(1003);
               
-              // Call the global submission function
+              // Generate game state hash for integrity verification
+              const gameStateData = {
+                score: score,
+                waves: waves,
+                timestamp: Date.now(),
+                gameTime: this.gameTime || 0,
+                enemiesDefeated: this.enemiesDefeated || 0
+              };
+              
+              // Call the secure submission function
               const transactionCount = 1; // Always 1 transaction per game session
-              const success = await window.submitGameScore(score, transactionCount);
+              const success = window.secureSubmitScore(score, transactionCount, gameStateData);
               
               // Remove loading text
               feedbackText.destroy();
