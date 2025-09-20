@@ -634,7 +634,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
             </span>
             
             <div className="text-xs text-white/60 mt-1">
-              {username ? `Click to view ${username}'s profile on MonadClip` : 'Click to view leaderboard on MonadClip'}
+              {username ? `Click to view profile on MonadClip` : 'Click to view leaderboard on MonadClip'}
             </div>
           </div>
         </div>
