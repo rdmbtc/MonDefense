@@ -558,6 +558,30 @@ export default function ClientWrapper({
     // We'll avoid re-importing if already present in the module's hot state
     const [FarmGameComponent, setFarmGameComponent] = useState<any>(LoadedComponent);
     const [loadError, setLoadError] = useState<any>(null);
+    // Capture recent console messages so users can report issues without opening DevTools
+    const [runtimeLogs, setRuntimeLogs] = useState<string[]>([]);
+    useEffect(() => {
+      const push = (msg: string) => setRuntimeLogs(prev => [...prev.slice(-98), msg]);
+      const origError = console.error.bind(console);
+      const origWarn = console.warn.bind(console);
+      const origLog = console.log.bind(console);
+      console.error = (...args: any[]) => { try { push('ERROR: ' + args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ')); } catch (e) {} ; origError(...args); };
+      console.warn = (...args: any[]) => { try { push('WARN: ' + args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ')); } catch (e) {} ; origWarn(...args); };
+      console.log = (...args: any[]) => { try { push('LOG: ' + args.map(a => (typeof a === 'object' ? JSON.stringify(a) : String(a))).join(' ')); } catch (e) {} ; origLog(...args); };
+
+      const onErr = (ev: any) => { try { push('ONERROR: ' + (ev?.message || ev?.toString() || String(ev))); } catch (e) {} };
+      const onReject = (ev: any) => { try { push('UNHANDLEDREJECTION: ' + (ev?.reason ? (typeof ev.reason === 'object' ? JSON.stringify(ev.reason) : String(ev.reason)) : String(ev))); } catch (e) {} };
+      window.addEventListener('error', onErr);
+      window.addEventListener('unhandledrejection', onReject as EventListener);
+
+      return () => {
+        console.error = origError;
+        console.warn = origWarn;
+        console.log = origLog;
+        window.removeEventListener('error', onErr);
+        window.removeEventListener('unhandledrejection', onReject as EventListener);
+      };
+    }, []);
     const loadFarmGame = async () => {
       setLoadError(null);
       try {
@@ -579,7 +603,7 @@ export default function ClientWrapper({
 
     return (
       <div className={`farm-game-container w-full ${isMobile ? 'mobile-view' : ''}`}>
-        {loadError ? (
+    {loadError ? (
           <div className="w-full max-w-[800px] h-[600px] md:h-[600px] h-[400px] flex flex-col items-center justify-center bg-black/60 border border-white/10 p-6">
             <div className="text-white text-center mb-4">Failed to load the game.</div>
             <div className="text-sm text-white/60 mb-4">{String(loadError)}</div>
@@ -601,6 +625,21 @@ export default function ClientWrapper({
             hasSubmittedScore={hasSubmittedScore}
           />
         )}
+        {/* Runtime logs overlay */}
+        <div style={{position:'fixed', right:12, bottom:12, width:360, maxHeight:240, zIndex:9999}}>
+          <details style={{background:'rgba(0,0,0,0.6)', color:'#fff', padding:8, borderRadius:8}}>
+            <summary style={{cursor:'pointer', outline:'none'}}>Runtime Logs ({runtimeLogs.length})</summary>
+            <div style={{overflowY:'auto', maxHeight:180, fontSize:12, marginTop:8}}>
+              {runtimeLogs.slice().reverse().slice(0,20).map((l, i) => (
+                <div key={i} style={{padding:'4px 0', borderBottom:'1px solid rgba(255,255,255,0.04)'}}>{l}</div>
+              ))}
+            </div>
+            <div style={{display:'flex', gap:8, marginTop:8}}>
+              <button onClick={() => { navigator.clipboard?.writeText(runtimeLogs.join('\n')).catch(()=>{}); }} style={{padding:'6px 8px', background:'#0ea5e9', color:'#000', borderRadius:6}}>Copy Logs</button>
+              <button onClick={() => { setRuntimeLogs([]); }} style={{padding:'6px 8px', background:'#ef4444', color:'#fff', borderRadius:6}}>Clear</button>
+            </div>
+          </details>
+        </div>
     </div>
   );
 }
