@@ -1,7 +1,6 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import dynamic from 'next/dynamic';
 import Phaser from 'phaser';
 
 // Type declarations for Phaser objects
@@ -12,11 +11,8 @@ declare global {
   }
 }
 
-// Dynamically import FarmGame with SSR disabled
-const FarmGame = dynamic(
-  () => import('./FarmGame').then((mod) => mod.default || mod),
-  { ssr: false, loading: () => <LoadingPlaceholder /> }
-);
+// Manual client-only loader for FarmGame so we can catch runtime import/init errors
+const FarmGameLoaderPlaceholder = LoadingPlaceholder; // for typing clarity
 
 // Loading placeholder component
 function LoadingPlaceholder() {
@@ -556,14 +552,55 @@ export default function ClientWrapper({
   }
   
   console.log("Rendering FarmGame with coins:", farmCoins, "Mobile:", isMobile, "GameMode:", gameMode);
-  return (
-    <div className={`farm-game-container w-full ${isMobile ? 'mobile-view' : ''}`}>
-      <FarmGame 
-        farmCoins={farmCoins} 
-        addFarmCoins={addFarmCoins} 
-        gameMode={gameMode}
-        onGameEvent={onGameEvent}
-      />
+    // Client-side dynamic import with error handling
+    const [LoadedComponent, setLoadedComponent] = (globalThis as any).__farmGameLoaderState ||= [null, null];
+
+    // We'll avoid re-importing if already present in the module's hot state
+    const [FarmGameComponent, setFarmGameComponent] = useState<any>(LoadedComponent);
+    const [loadError, setLoadError] = useState<any>(null);
+    const loadFarmGame = async () => {
+      setLoadError(null);
+      try {
+        const mod = await import('./FarmGame');
+        const Comp = mod.default || mod;
+        setFarmGameComponent(() => Comp);
+        // persist to global so HMR doesn't rerun expensive imports
+        (globalThis as any).__farmGameLoaderState[0] = Comp;
+      } catch (err) {
+        console.error('Failed to dynamically import FarmGame:', err);
+        setLoadError(err);
+      }
+    };
+
+    useEffect(() => {
+      if (!FarmGameComponent) loadFarmGame();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+
+    return (
+      <div className={`farm-game-container w-full ${isMobile ? 'mobile-view' : ''}`}>
+        {loadError ? (
+          <div className="w-full max-w-[800px] h-[600px] md:h-[600px] h-[400px] flex flex-col items-center justify-center bg-black/60 border border-white/10 p-6">
+            <div className="text-white text-center mb-4">Failed to load the game.</div>
+            <div className="text-sm text-white/60 mb-4">{String(loadError)}</div>
+            <div className="flex gap-2">
+              <button onClick={() => { setLoadError(null); loadFarmGame(); }} className="px-4 py-2 bg-green-600 text-white rounded">Retry</button>
+              <button onClick={() => location.reload()} className="px-4 py-2 bg-gray-700 text-white rounded">Reload Page</button>
+            </div>
+          </div>
+        ) : !FarmGameComponent ? (
+          <LoadingPlaceholder />
+        ) : (
+          <FarmGameComponent 
+            farmCoins={farmCoins}
+            addFarmCoins={addFarmCoins}
+            gameMode={gameMode}
+            onGameEvent={onGameEvent}
+            onScoreSubmit={onScoreSubmit}
+            isSubmitting={isSubmitting}
+            hasSubmittedScore={hasSubmittedScore}
+          />
+        )}
     </div>
   );
 }
