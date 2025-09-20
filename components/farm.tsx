@@ -80,7 +80,7 @@ interface DefenseTypeInfo {
 declare global {
   interface Window {
     Phaser: any;
-    game: any;
+    game?: any;
     _defendGameFixInterval?: number | NodeJS.Timeout; 
   }
 }

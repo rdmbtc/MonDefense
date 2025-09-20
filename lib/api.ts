@@ -77,9 +77,6 @@ export const api = axios.create({
   headers: {
     "Content-Type": "application/json",
     "Accept": "application/json, text/plain, */*",
-    "Accept-Encoding": "gzip, deflate, br",
-    "Accept-Language": "en-US,en;q=0.9",
-    "Connection": "keep-alive",
   },
 });
 

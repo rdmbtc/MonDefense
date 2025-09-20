@@ -8,7 +8,7 @@ import Phaser from 'phaser';
 declare global {
   interface Window {
     Phaser: any;
-    game: any;
+    game?: any;
   }
 }
 
@@ -53,7 +53,7 @@ function applyMageFixes() {
     }
   }, 500);
 
-  function applyFixesToGame(game: any) {
+  function applyFixesToGame(game: Window['game']) {
     if (!game || !game.scene) return;
     
     // Try to find Defense class

@@ -1,36 +1,16 @@
-import { useState, useEffect } from 'react';
+import { useWindowSize } from './useWindowSize';
 
 /**
  * Custom hook for responsive design similar to react-native-responsive-screen
  * but implemented for web/Next.js
  */
 export const useResponsive = () => {
-  // Set initial dimensions to prevent SSR issues
-  const [dimensions, setDimensions] = useState({
-    width: typeof window !== 'undefined' ? window.innerWidth : 1920,
-    height: typeof window !== 'undefined' ? window.innerHeight : 1080,
-  });
+  const { width, height } = useWindowSize();
 
-  useEffect(() => {
-    // Only run on client side
-    if (typeof window === 'undefined') return;
-
-    // Update dimensions when window is resized
-    const handleResize = () => {
-      setDimensions({
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
-    };
-
-    // Set up event listener
-    window.addEventListener('resize', handleResize);
-
-    // Clean up
-    return () => {
-      window.removeEventListener('resize', handleResize);
-    };
-  }, []);
+  const dimensions = {
+    width: width ?? 1920,
+    height: height ?? 1080,
+  };
 
   /**
    * Convert width percentage to pixels
