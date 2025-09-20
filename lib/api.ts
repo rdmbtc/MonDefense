@@ -1,7 +1,18 @@
 "use client";
 
-import axios from "axios";
+import axios, { InternalAxiosRequestConfig } from "axios";
 import { addSignatureToHeaders } from "../utils/signature";
+import { SecurityValidator } from "./security";
+import { monitoringService } from "./monitoring";
+
+// Extended Axios config type for metadata
+interface ExtendedAxiosRequestConfig extends InternalAxiosRequestConfig {
+  metadata?: {
+    startTime?: number;
+    playerId?: string;
+    sessionId?: string;
+  };
+}
 
 // CSRF Token Management
 class CSRFManager {
@@ -68,9 +79,11 @@ export const api = axios.create({
   },
 });
 
-// Request interceptor to add CSRF tokens and signatures
+// Enhanced request interceptor with security validation
 api.interceptors.request.use(
-  async (config) => {
+  async (config: ExtendedAxiosRequestConfig) => {
+    const startTime = Date.now();
+    
     // Add CSRF token for state-changing operations
     if (['post', 'put', 'patch', 'delete'].includes(config.method?.toLowerCase() || '')) {
       try {
@@ -92,6 +105,70 @@ api.interceptors.request.use(
         // Continue without signature - server will handle as optional
       }
     }
+
+    // Enhanced security validation for specific endpoints
+    if (config.url?.includes('/submit-score') && config.data) {
+      const validation = SecurityValidator.validateScoreRequest(config.data);
+      if (!validation.valid) {
+        monitoringService.logSecurityEvent(
+          'validation',
+          'error',
+          `Score validation failed: ${validation.errors.join(', ')}`,
+          { 
+            errors: validation.errors,
+            requestData: config.data,
+            endpoint: config.url
+          },
+          config.data.player,
+          config.data.sessionId
+        );
+        throw new Error(`Security validation failed: ${validation.errors.join(', ')}`);
+      }
+
+      // Validate request headers
+      const headerValidation = SecurityValidator.validateRequestHeaders(config.headers);
+      if (!headerValidation.valid) {
+        monitoringService.logSecurityEvent(
+          'validation',
+          'warn',
+          `Header validation issues: ${headerValidation.issues.join(', ')}`,
+          { 
+            issues: headerValidation.issues,
+            headers: config.headers
+          },
+          config.data.player,
+          config.data.sessionId
+        );
+      }
+    }
+    
+    // Add security headers for frontend-backend integration
+    config.headers['X-Security-Version'] = '1.0.0';
+    config.headers['X-Client-Timestamp'] = Date.now().toString();
+    config.headers['X-Request-ID'] = generateRequestId();
+    
+    // Add security metadata for score submissions
+    if (config.url?.includes('/submit-score') && config.data) {
+      const securityMetadata = {
+        player: config.data.player,
+        sessionId: config.data.sessionId,
+        previousScore: config.data.previousScore || 0,
+        sessionStartTime: config.data.gameStartTime || Date.now(),
+        clientTimestamp: Date.now(),
+        submissionCount: config.data.submissionCount || 1,
+        averageScorePerSecond: config.data.averageScorePerSecond || 0,
+        lastSubmissionTime: config.data.lastSubmissionTime || Date.now()
+      };
+      
+      config.data.securityMetadata = securityMetadata;
+    }
+    
+    // Add metadata for tracking
+    config.metadata = {
+      startTime,
+      playerId: config.data?.player,
+      sessionId: config.data?.sessionId
+    };
     
     return config;
   },
@@ -100,10 +177,38 @@ api.interceptors.request.use(
   }
 );
 
-// Response interceptor for error handling
+// Enhanced response interceptor with monitoring
 api.interceptors.response.use(
-  response => response,
-  async (error) => {
+  (response) => {
+    const config = response.config as ExtendedAxiosRequestConfig;
+    const duration = Date.now() - (config.metadata?.startTime || Date.now());
+    
+    // Log successful API call
+    monitoringService.logApiCall(
+      config.url || 'unknown',
+      config.method || 'GET',
+      true,
+      duration,
+      config.metadata?.playerId,
+      config.metadata?.sessionId
+    );
+    
+    return response;
+  },
+  async (error: any) => {
+    const config = error.config as ExtendedAxiosRequestConfig;
+    const duration = Date.now() - (config.metadata?.startTime || Date.now());
+    
+    // Log failed API call
+    monitoringService.logApiCall(
+      config.url || 'unknown',
+      config.method || 'GET',
+      false,
+      duration,
+      config.metadata?.playerId,
+      config.metadata?.sessionId
+    );
+
     // Handle CSRF token errors
     if (error.response?.status === 403) {
       const errorData = error.response?.data;
@@ -123,14 +228,117 @@ api.interceptors.response.use(
       }
     }
     
-    // Handle other common errors
+    // Handle rate limiting
+    if (error.response?.status === 429) {
+      const retryAfter = error.response.headers['retry-after'];
+      monitoringService.logSecurityEvent(
+        'rate_limit',
+        'warn',
+        `Rate limit exceeded. Retry after: ${retryAfter || 'unknown'}`,
+        { 
+          retryAfter,
+          endpoint: error.config.url,
+          method: error.config.method
+        },
+        error.config.metadata?.playerId,
+        error.config.metadata?.sessionId
+      );
+    }
+    
+    // Handle authentication errors
     if (error.response?.status === 401) {
-      console.error("Unauthorized request");
+      monitoringService.logSecurityEvent(
+        'validation',
+        'warn',
+        'Unauthorized request attempt',
+        { 
+          endpoint: error.config.url,
+          method: error.config.method
+        },
+        error.config.metadata?.playerId,
+        error.config.metadata?.sessionId
+      );
+    }
+    
+    // Handle validation errors
+    if (error.response?.status === 400) {
+      monitoringService.logSecurityEvent(
+        'validation',
+        'error',
+        `Validation error: ${error.response.data?.error || 'Unknown error'}`,
+        { 
+          endpoint: error.config.url,
+          method: error.config.method,
+          errorDetails: error.response.data
+        },
+        error.config.metadata?.playerId,
+        error.config.metadata?.sessionId
+      );
     }
     
     return Promise.reject(error);
   }
 );
+
+// Generate unique request ID for tracking
+function generateRequestId(): string {
+  return `req_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+}
+
+// Enhanced API wrapper with security and monitoring
+export const secureApi = {
+  ...api,
+  
+  // Enhanced POST method with security validation
+  async post<T>(url: string, data?: any, config?: any): Promise<T> {
+    const startTime = Date.now();
+    const enhancedConfig = {
+      ...config,
+      metadata: {
+        ...config?.metadata,
+        startTime,
+        playerId: data?.player,
+        sessionId: data?.sessionId
+      }
+    };
+
+    // Security validation for sensitive endpoints
+    if (url.includes('/submit-score') && data) {
+      const validation = SecurityValidator.validateScoreRequest(data);
+      if (!validation.valid) {
+        monitoringService.logSecurityEvent(
+          'validation',
+          'error',
+          `Score validation failed: ${validation.errors.join(', ')}`,
+          { 
+            errors: validation.errors,
+            requestData: data,
+            endpoint: url
+          },
+          data.player,
+          data.sessionId
+        );
+        throw new Error(`Security validation failed: ${validation.errors.join(', ')}`);
+      }
+    }
+
+    return api.post(url, data, enhancedConfig);
+  },
+
+  // Enhanced GET method with monitoring
+  async get<T>(url: string, config?: any): Promise<T> {
+    const startTime = Date.now();
+    const enhancedConfig = {
+      ...config,
+      metadata: {
+        ...config?.metadata,
+        startTime
+      }
+    };
+
+    return api.get(url, enhancedConfig);
+  }
+};
 
 // API endpoints
 export const apiEndpoints = {

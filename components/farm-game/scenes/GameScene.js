@@ -135,6 +135,25 @@ if (isBrowser) {
             this.UpgradeClass = this.registry.get('UpgradeClass');
             this.gameMode = this.registry.get('gameMode') || 'farm';
             
+            // Set up secure score submission callbacks
+            this.onScoreSubmit = this.registry.get('onScoreSubmit') || null;
+            this.onGameEvent = this.registry.get('onGameEvent') || null;
+            this.isSubmitting = this.registry.get('isSubmitting') || false;
+            this.hasSubmittedScore = this.registry.get('hasSubmittedScore') || false;
+            
+            // Listen for registry updates for submission state
+            this.registry.events.on('changedata', (parent, key, data) => {
+              if (key === 'onScoreSubmit') {
+                this.onScoreSubmit = data;
+              } else if (key === 'onGameEvent') {
+                this.onGameEvent = data;
+              } else if (key === 'isSubmitting') {
+                this.isSubmitting = data;
+              } else if (key === 'hasSubmittedScore') {
+                this.hasSubmittedScore = data;
+              }
+            });
+            
             // If gameMode is defense, automatically start defense mode
             if (this.gameMode === 'defense') {
               this.gameState.isActive = true;
@@ -5607,8 +5626,8 @@ if (isBrowser) {
           try {
             console.log(`Submitting score: Score=${score}, Waves=${waves}`);
             
-            // Check if global score submission function is available
-            if (typeof window !== 'undefined' && window.submitGameScore) {
+            // Check if secure score submission callback is available
+            if (typeof this.onScoreSubmit === 'function') {
               // Show loading feedback to user
               const feedbackText = this.add.text(400, 400, 'Submitting Score...', {
                 fontFamily: 'Arial',
@@ -5619,9 +5638,9 @@ if (isBrowser) {
               }).setOrigin(0.5);
               feedbackText.setDepth(1003);
               
-              // Call the global submission function
+              // Call the secure submission callback
               const transactionCount = 1; // Always 1 transaction per game session
-              const success = await window.submitGameScore(score, transactionCount);
+              const success = await this.onScoreSubmit(score, transactionCount);
               
               // Remove loading text
               feedbackText.destroy();
@@ -5682,7 +5701,7 @@ if (isBrowser) {
                 submitText.setColor('#FFFFFF');
                 submitText.setText('Submit Score');
               }
-              throw new Error('Score submission not available');
+              throw new Error('Secure score submission not available');
             }
             
           } catch (error) {

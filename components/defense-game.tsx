@@ -23,6 +23,7 @@ declare global {
   interface Window {
     _defenseMode?: boolean;
     _farmMode?: boolean;
+    // No global submit functions exposed - all score submission handled internally
   }
 }
 
@@ -65,6 +66,12 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const [sessionToken, setSessionToken] = useState<string | null>(null);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isProcessingChapter, setIsProcessingChapter] = useState(false);
+  
+  // Game state tracking for security
+  const [gameStartTime, setGameStartTime] = useState<number | null>(null);
+  const [gameSessionData, setGameSessionData] = useState<any>(null);
+  const [lastScoreUpdate, setLastScoreUpdate] = useState<number>(0);
+  const [scoreUpdateCount, setScoreUpdateCount] = useState(0);
   
   // Use custom hooks for API integration
   const { authenticated, user, ready, logout, login } = usePrivy();
@@ -157,6 +164,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         }
         setGameMode('game');
         setGameStarted(true);
+        setGameStartTime(Date.now()); // Track game start time for security
       } else {
         // Advance to next slide
         const nextIndex = chapterIndex + 1;
@@ -210,9 +218,6 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
 
   // Audio is now handled directly in nextChapterSlide on user interaction
 
-  // Note: Audio is now handled in nextChapterSlide on user interaction
-  // This prevents browser autoplay restrictions
-
   // Start game session when user is authenticated
   useEffect(() => {
     if (authenticated && walletAddress && !sessionId) {
@@ -225,10 +230,16 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     if (gameSession.startGameSession.data?.sessionToken) {
       setSessionToken(gameSession.startGameSession.data.sessionToken);
       setSessionId(gameSession.startGameSession.data.sessionId);
+      setGameSessionData({
+        sessionId: gameSession.startGameSession.data.sessionId,
+        sessionToken: gameSession.startGameSession.data.sessionToken,
+        startTime: Date.now(),
+        walletAddress: walletAddress
+      });
     }
   }, [gameSession.startGameSession.data]);
 
-  // Handle score submission using both API and on-chain submission
+  // Enhanced score submission with security validation
   const handleScoreSubmission = useCallback(async (score: number, transactionCount: number = 1): Promise<boolean> => {
     // Prevent multiple submissions
     if (isSubmitting) {
@@ -249,6 +260,29 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       return false;
     }
 
+    // Security validation: Check if game session is valid
+    if (!gameStartTime || !gameSessionData) {
+      console.error('Invalid game session data');
+      toast.error('Game session invalid. Please restart the game.');
+      return false;
+    }
+
+    // Calculate session duration for score validation
+    const sessionDuration = Date.now() - gameStartTime;
+    const maxPossibleScore = Math.floor(sessionDuration / 1000) * 100; // Max 100 points per second
+    
+    // Security check: Score should not exceed reasonable limits based on session time
+    if (score > maxPossibleScore * 2) { // Allow some buffer for legitimate play
+      console.warn('Suspicious score detected:', {
+        score,
+        maxPossibleScore,
+        sessionDuration,
+        walletAddress
+      });
+      toast.error('Invalid score detected. Please play the game normally.');
+      return false;
+    }
+
     // Check if user has a registered username (optional - allow submission without username)
     if (!username) {
       console.log('No username found, but allowing score submission with wallet address');
@@ -259,14 +293,16 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       setIsSubmitting(true);
       console.log('Submitting score via API and on-chain:', score);
       
-      // Submit to existing API with timestamp
+      // Submit to existing API with timestamp and session data
       const timestamp = Date.now();
       await gameSession.submitScore.mutateAsync({
         player: walletAddress,
         scoreAmount: score,
         transactionAmount: transactionCount,
         sessionId: sessionId,
-        timestamp: timestamp
+        timestamp: timestamp,
+        sessionDuration: sessionDuration,
+        gameStartTime: gameStartTime
       });
 
       // Submit to Monad Games ID smart contract on-chain
@@ -303,9 +339,52 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     } finally {
       setIsSubmitting(false);
     }
-  }, [walletAddress, sessionToken, sessionId, gameSession.submitScore, isSubmitting]);
+  }, [walletAddress, sessionToken, sessionId, gameSession.submitScore, isSubmitting, gameStartTime, gameSessionData, username]);
 
+  // Secure internal score submission (replaces global function)
+  const submitSecureScore = useCallback(async (score: number, transactionCount: number = 1): Promise<boolean> => {
+    try {
+      // Prevent multiple submissions - check if already submitted or submitting
+      if (hasSubmittedScore || isSubmitting) {
+        console.log('Score already submitted or submission in progress');
+        return false;
+      }
 
+      // Only submit if user is authenticated and has session token
+      if (walletAddress && sessionToken && sessionId && gameStartTime) {
+        const result = await handleScoreSubmission(score, transactionCount);
+        return result;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error in secure score submission:', error);
+      return false;
+    }
+  }, [walletAddress, sessionToken, sessionId, hasSubmittedScore, isSubmitting, gameStartTime, handleScoreSubmission]);
+
+  // Track score updates for security validation
+  const handleScoreUpdate = useCallback((newScore: number) => {
+    if (gameMode === 'game' && gameStarted) {
+      setGameScore(newScore);
+      setLastScoreUpdate(Date.now());
+      setScoreUpdateCount(prev => prev + 1);
+      
+      // Security: Validate score progression
+      if (gameStartTime) {
+        const timeSinceStart = Date.now() - gameStartTime;
+        const expectedMaxScore = Math.floor(timeSinceStart / 1000) * 100; // Max 100 points per second
+        
+        if (newScore > expectedMaxScore * 3) { // Allow buffer for legitimate play
+          console.warn('Suspicious score progression detected:', {
+            score: newScore,
+            expectedMaxScore,
+            timeSinceStart,
+            walletAddress
+          });
+        }
+      }
+    }
+  }, [gameMode, gameStarted, gameStartTime, walletAddress]);
 
   useEffect(() => {
     // Initialize game state for defense mode when game starts
@@ -314,36 +393,49 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         // Set up defense-specific global state
         window._defenseMode = true;
         window._farmMode = false;
+        
+        // Remove any existing global functions to prevent console abuse
+        if ((window as any).submitGameScore) {
+          delete (window as any).submitGameScore;
+        }
+        if ((window as any).submitScore) {
+          delete (window as any).submitScore;
+        }
+        
+        // DO NOT expose any score submission functions to global scope
+        // All score submission is handled internally via secure callback
       }
       
       // Reset submission state for new game
       setHasSubmittedScore(false);
-      
-      // Expose global function for Phaser game to call directly
-      window.submitGameScore = async (score: number, transactionCount: number): Promise<boolean> => {
-        try {
-          // Prevent multiple submissions - check if already submitted or submitting
-          if (hasSubmittedScore || isSubmitting) {
-            console.log('Score already submitted or submission in progress');
-            return false;
-          }
-
-          // Only submit if user is authenticated and has session token
-          if (walletAddress && sessionToken && sessionId) {
-            const result = await handleScoreSubmission(score, transactionCount);
-            return result;
-          }
-          return false;
-        } catch (error) {
-          console.error('Error in global score submission:', error);
-          return false;
-        }
-      };
+      setScoreUpdateCount(0);
+      setLastScoreUpdate(0);
       
       return () => {
-        // Remove global function
-        if (window.submitGameScore) {
-          delete window.submitGameScore;
+        // Cleanup global references
+        if (typeof window !== 'undefined') {
+          window._defenseMode = false;
+          
+          // Clean up any remaining global functions
+          if ((window as any).submitSecureScore) {
+            delete (window as any).submitSecureScore;
+          }
+          if ((window as any).submitGameScore) {
+            delete (window as any).submitGameScore;
+          }
+          if ((window as any).submitScore) {
+            delete (window as any).submitScore;
+          }
+          
+          // Clean up any running game instances
+          if (window.game && window.game.destroy) {
+            try {
+              window.game.destroy(true);
+              window.game = null;
+            } catch (error) {
+              console.warn('Error destroying game:', error);
+            }
+          }
         }
       };
     }
@@ -402,9 +494,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         }
       }
     };
-  }, [gameMode, walletAddress, sessionToken, sessionId, hasSubmittedScore, isSubmitting, handleScoreSubmission]);
-
-
+  }, [gameMode, walletAddress, sessionToken, sessionId, hasSubmittedScore, isSubmitting, submitSecureScore]);
 
   const handleBackToMenu = () => {
     // Clean up game before going back
@@ -491,6 +581,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                        backgroundMusicPlayPromise.current = null;
                        setGameMode('game');
                        setGameStarted(true);
+                       setGameStartTime(Date.now()); // Track game start time for security
                      });
                    } else {
                      backgroundMusicRef.current.pause();
@@ -498,15 +589,18 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                      backgroundMusicPlayPromise.current = null;
                      setGameMode('game');
                      setGameStarted(true);
+                     setGameStartTime(Date.now()); // Track game start time for security
                    }
                  } catch (e) {
                    // Ignore pause errors
                    setGameMode('game');
                    setGameStarted(true);
+                   setGameStartTime(Date.now()); // Track game start time for security
                  }
                } else {
                  setGameMode('game');
                  setGameStarted(true);
+                 setGameStartTime(Date.now()); // Track game start time for security
                }
             }}
             variant="outline"
@@ -821,7 +915,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                 case 'scoreUpdate':
                   if (data && typeof data === 'number') {
                     // Sync React score with Phaser game score
-                    setGameScore(data);
+                    handleScoreUpdate(data);
                   }
                   break;
                 case 'gameOver':
@@ -845,6 +939,10 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                   break;
               }
             }}
+            // Pass secure score submission function to game
+            onScoreSubmit={submitSecureScore}
+            isSubmitting={isSubmitting}
+            hasSubmittedScore={hasSubmittedScore}
           />
         ) : (
           <div className="flex items-center justify-center h-full">

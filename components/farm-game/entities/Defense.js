@@ -81,17 +81,18 @@ export default class Defense {
       this.manaRegenRate = 5.0; // Good mana regen
       this.createMoyakiMage();
     } else if (type === 'keon') {
-      this.cost = 150; // Premium defense - more accessible
-      this.range = 280; // Excellent range
-      this.cooldown = 2000; // Balanced cooldown for power
-      this.damage = 2.5; // High damage
+      this.cost = 150; // Premium defense - balanced cost
+      this.range = 220; // Good range but not overpowered
+      this.cooldown = 2500; // Longer cooldown for balance
+      this.damage = 1.8; // Reduced damage from 2.5 to 1.8
       this.targetTypes = ['bird', 'rabbit', 'fox', 'slime', 'ghost', 'skeleton', 'bat', 'spider', 'wolf', 'snake', 'goblin'];
-      this.aoeRadius = 100; // Large AOE radius
-      this.aoeDamageMultiplier = 0.8; // High AOE damage
-      this.maxMana = 120;
+      this.aoeRadius = 80; // Reduced AOE radius from 100 to 80
+      this.aoeDamageMultiplier = 0.6; // Reduced AOE damage from 0.8 to 0.6
+      this.maxMana = 100; // Reduced max mana from 120 to 100
       this.currentMana = this.maxMana;
-      this.manaCostPerShot = 25; // High mana cost for power
-      this.manaRegenRate = 8.0; // Fast mana regen to compensate
+      this.manaCostPerShot = 20; // Reduced mana cost from 25 to 20
+      this.manaRegenRate = 6.0; // Reduced mana regen from 8.0 to 6.0
+      this.waveLifetime = 3; // Reduced from 4 to 3 waves for better balance
       this.createKeonMage();
     }
     
@@ -128,7 +129,7 @@ export default class Defense {
       'chog': 2,      // Basic defense - 2 waves
       'molandak': 3,  // Mid-tier defense - 3 waves
       'moyaki': 3,    // Mid-tier defense - 3 waves
-      'keon': 4       // Premium defense - 4 waves
+      'keon': 3       // Premium defense - 3 waves (balanced)
     };
     return lifetimes[type] || 2; // Default to 2 waves
   }

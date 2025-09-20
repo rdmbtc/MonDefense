@@ -11,7 +11,7 @@ let CropClass = null;
 let GameSceneClass = null;
 
 // Create a dynamic component with SSR disabled
-const FarmGameInner = ({ farmCoins, addFarmCoins, gameMode = 'farm', onGameEvent }) => {
+const FarmGameInner = ({ farmCoins, addFarmCoins, gameMode = 'farm', onGameEvent, onScoreSubmit, isSubmitting, hasSubmittedScore }) => {
   const [gameStarted, setGameStarted] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
   const isClient = useRef(false);
@@ -322,6 +322,27 @@ const FarmGameInner = ({ farmCoins, addFarmCoins, gameMode = 'farm', onGameEvent
       } else {
         console.log("onGameEvent callback was not provided to initializeGame");
       }
+
+      // Store the secure score submission function
+      if (typeof onScoreSubmit === 'function') {
+        game.registry.set('onScoreSubmit', async (score, transactionCount = 1) => {
+          try {
+            console.log(`[Phaser Registry] Calling onScoreSubmit with: score=${score}, transactions=${transactionCount}`);
+            const result = await onScoreSubmit(score, transactionCount);
+            console.log(`[Phaser Registry] Score submission result:`, result);
+            return result;
+          } catch (error) {
+            console.error("Error in registry onScoreSubmit callback:", error);
+            return false;
+          }
+        });
+      } else {
+        console.log("onScoreSubmit callback was not provided to initializeGame");
+      }
+
+      // Store submission state
+      game.registry.set('isSubmitting', isSubmitting || false);
+      game.registry.set('hasSubmittedScore', hasSubmittedScore || false);
 
       // Wait for the game to be ready
       game.events.once('ready', () => {

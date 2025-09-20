@@ -38,6 +38,7 @@ export interface StartGameSessionRequest {
 }
 
 export interface StartGameSessionResponse {
+  success: boolean;
   sessionToken: string;
   sessionId: string;
 }
@@ -52,14 +53,19 @@ export interface SubmitScoreRequest {
   scoreAmount: number;
   sessionId: string;
   timestamp?: number;
+  sessionDuration?: number;
+  gameStartTime?: number;
 }
 
 export interface SubmitScoreResponse {
-  success: true;
+  success: boolean;
   transactionHash: string;
+  blockNumber?: string;
+  gasUsed?: string;
   player: `0x${string}`;
   scoreAmount: number;
   transactionAmount: number;
+  note?: string;
 }
 
 // Player score response interface

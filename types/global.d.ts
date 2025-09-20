@@ -7,8 +7,10 @@ interface Window {
     removeListener: (eventName: string, callback: (...args: any[]) => void) => void;
     selectedAddress?: string;
   };
-  // Global function for Phaser game to submit scores via API
-  submitGameScore?: (score: number, transactionCount: number) => Promise<boolean>;
+  // Phaser game instance for proper cleanup
+  game?: any;
+  // NO GLOBAL SCORE SUBMISSION FUNCTIONS - All handled internally for security
+  // submitGameScore?: Removed for security - prevents console-based score hacking
 }
 
 // Ethereum provider error codes
