@@ -5591,6 +5591,13 @@ if (isBrowser) {
         }
 
         // Add method to submit score via API
+        // Add helper method to validate scene context
+        isSceneValid() {
+          return this && this.scene && this.scene.isActive && this.scene.isActive() && 
+                 this.add && typeof this.add.text === 'function' &&
+                 this.tweens && typeof this.tweens.add === 'function';
+        }
+
         async submitScore(score, waves, submitButton, submitText) {
           // Prevent multiple submissions
           if (this.isSubmittingScore) {
@@ -5613,15 +5620,22 @@ if (isBrowser) {
             
             // Check if secure score submission function is available
             if (typeof window !== 'undefined' && window.secureSubmitScore) {
-              // Show loading feedback to user
-              const feedbackText = this.add.text(400, 400, 'Submitting Score...', {
-                fontFamily: 'Arial',
-                fontSize: '24px',
-                color: '#FFD700',
-                stroke: '#000000',
-                strokeThickness: 2
-              }).setOrigin(0.5);
-              feedbackText.setDepth(1003);
+              // Show loading feedback to user - add null check for scene context
+              let feedbackText = null;
+              if (this.isSceneValid()) {
+                try {
+                  feedbackText = this.add.text(400, 400, 'Submitting Score...', {
+                    fontFamily: 'Arial',
+                    fontSize: '24px',
+                    color: '#FFD700',
+                    stroke: '#000000',
+                    strokeThickness: 2
+                  }).setOrigin(0.5);
+                  feedbackText.setDepth(1003);
+                } catch (e) {
+                  console.warn('Could not create feedback text:', e);
+                }
+              }
               
               // Generate game state hash for integrity verification
               const gameStateData = {
@@ -5636,8 +5650,14 @@ if (isBrowser) {
               const transactionCount = 1; // Always 1 transaction per game session
               const success = window.secureSubmitScore(score, transactionCount, gameStateData);
               
-              // Remove loading text
-              feedbackText.destroy();
+              // Remove loading text safely
+              if (feedbackText && typeof feedbackText.destroy === 'function') {
+                try {
+                  feedbackText.destroy();
+                } catch (e) {
+                  console.warn('Could not destroy feedback text:', e);
+                }
+              }
               
               if (success) {
                 // Update button to show success and hide it
@@ -5646,36 +5666,46 @@ if (isBrowser) {
                   submitText.setColor('#00FF00');
                   
                   // Fade out the submit button after showing success
-                  this.tweens.add({
-                    targets: [submitButton, submitText],
-                    alpha: 0,
-                    duration: 2000,
-                    onComplete: () => {
-                      submitButton.destroy();
-                      submitText.destroy();
-                    }
-                  });
+                  if (this.isSceneValid()) {
+                    this.tweens.add({
+                      targets: [submitButton, submitText],
+                      alpha: 0,
+                      duration: 2000,
+                      onComplete: () => {
+                        if (submitButton && typeof submitButton.destroy === 'function') submitButton.destroy();
+                        if (submitText && typeof submitText.destroy === 'function') submitText.destroy();
+                      }
+                    });
+                  }
                 }
                 
-                // Show success feedback
-                const successText = this.add.text(400, 450, 'Score submitted successfully!\nUse "Play Again" to start a new game\n(Click to dismiss)', {
-                  fontFamily: 'Arial',
-                  fontSize: '20px',
-                  color: '#00FF00',
-                  stroke: '#000000',
-                  strokeThickness: 2,
-                  align: 'center'
-                }).setOrigin(0.5);
-                successText.setDepth(1003);
-                
-                // Make success text clickable to dismiss
-                successText.setInteractive({ useHandCursor: true })
-                  .on('pointerdown', () => {
-                    successText.destroy();
-                  });
-                
-                // Store reference for cleanup during game restart
-                this.successText = successText;
+                // Show success feedback - add null check for scene context
+                if (this.isSceneValid()) {
+                  try {
+                    const successText = this.add.text(400, 450, 'Score submitted successfully!\nUse "Play Again" to start a new game\n(Click to dismiss)', {
+                      fontFamily: 'Arial',
+                      fontSize: '20px',
+                      color: '#00FF00',
+                      stroke: '#000000',
+                      strokeThickness: 2,
+                      align: 'center'
+                    }).setOrigin(0.5);
+                    successText.setDepth(1003);
+                    
+                    // Make success text clickable to dismiss
+                    successText.setInteractive({ useHandCursor: true })
+                      .on('pointerdown', () => {
+                        if (successText && typeof successText.destroy === 'function') {
+                          successText.destroy();
+                        }
+                      });
+                    
+                    // Store reference for cleanup during game restart
+                    this.successText = successText;
+                  } catch (e) {
+                    console.warn('Could not create success text:', e);
+                  }
+                }
                 
               } else {
                 // Re-enable button on failure
@@ -5701,26 +5731,36 @@ if (isBrowser) {
           } catch (error) {
             console.error('Error submitting score:', error);
             
-            // Show error feedback
-            const errorText = this.add.text(400, 400, 'Score submission failed\nTry again or use "Play Again"', {
-              fontFamily: 'Arial',
-              fontSize: '20px',
-              color: '#FF0000',
-              stroke: '#000000',
-              strokeThickness: 2,
-              align: 'center'
-            }).setOrigin(0.5);
-            errorText.setDepth(1003);
-            
-            // Fade out the error text after 4 seconds
-            this.tweens.add({
-              targets: errorText,
-              alpha: 0,
-              duration: 4000,
-              onComplete: () => {
-                errorText.destroy();
+            // Show error feedback - add null check for scene context
+            if (this.isSceneValid()) {
+              try {
+                const errorText = this.add.text(400, 400, 'Score submission failed\nTry again or use "Play Again"', {
+                  fontFamily: 'Arial',
+                  fontSize: '20px',
+                  color: '#FF0000',
+                  stroke: '#000000',
+                  strokeThickness: 2,
+                  align: 'center'
+                }).setOrigin(0.5);
+                errorText.setDepth(1003);
+                
+                // Fade out the error text after 4 seconds
+                if (this.isSceneValid()) {
+                  this.tweens.add({
+                    targets: errorText,
+                    alpha: 0,
+                    duration: 4000,
+                    onComplete: () => {
+                      if (errorText && typeof errorText.destroy === 'function') {
+                        errorText.destroy();
+                      }
+                    }
+                  });
+                }
+              } catch (e) {
+                console.warn('Could not create error text:', e);
               }
-            });
+            }
           } finally {
             // Reset submission flag
             this.isSubmittingScore = false;
