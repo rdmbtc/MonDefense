@@ -3606,7 +3606,7 @@ if (isBrowser) {
             }
             
             // Reset tool mode to attack after placing
-            this.setToolMode('attack');
+            // this.setToolMode('attack');
           };
         }
 
