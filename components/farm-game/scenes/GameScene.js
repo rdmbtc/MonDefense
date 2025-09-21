@@ -1558,8 +1558,8 @@ if (isBrowser) {
                   this.pendingDefensePlacement = false;
                   this.pendingDefenseType = null;
                   
-                  // Return to attack mode automatically for better user experience
-                  this.setToolMode('attack');
+                  // Don't automatically return to attack mode - let player continue placing defenses
+                  // this.setToolMode('attack');
                   
                   // Hide any indicators that might be visible
                   if (this.plantingIndicator) this.plantingIndicator.visible = false;
