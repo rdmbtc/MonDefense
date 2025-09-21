@@ -1,17 +1,12 @@
 'use client';
 
-// TypeScript type annotations for Phaser
-/** @typedef {import('phaser')} Phaser */
-
 export default class Defense {
   constructor(scene, type, x, y) {
     this.scene = scene;
     this.type = type;
     this.x = x;
     this.y = y;
-    this.id = `${type}_${x}_${y}_${Date.now()}`; // Add unique ID for debugging
     this.active = true;
-    this.container = null; // Add container property for Phaser display
     this.range = 200; // Reduced range
     this.cooldown = 1800; // Increased cooldown
     this.damage = 0.45; // Reduced damage
@@ -2788,7 +2783,7 @@ export default class Defense {
     if (this.type === 'chog') {
       // Nature burst - basic AOE
       enemiesInRange.forEach(enemy => {
-        this.launchProjectile(enemy, 'green');
+        this.launchProjectile(enemy, 'green', true);
 
         const damageAmount = this.damage * this.specialAttackDamageMultiplier;
         this.applyDamageToEnemy(enemy, damageAmount);
@@ -2801,7 +2796,7 @@ export default class Defense {
     else if (this.type === 'molandak') {
       // Ice storm - freeze enemies
       enemiesInRange.forEach(enemy => {
-        this.launchProjectile(enemy, 'blue');
+        this.launchProjectile(enemy, 'blue', true);
 
         const damageAmount = this.damage * this.specialAttackDamageMultiplier;
         this.applyDamageToEnemy(enemy, damageAmount);
@@ -2818,7 +2813,7 @@ export default class Defense {
     else if (this.type === 'moyaki') {
       // Fire blast - burn enemies
       enemiesInRange.forEach(enemy => {
-        this.launchProjectile(enemy, 'red');
+        this.launchProjectile(enemy, 'red', true);
 
         const damageAmount = this.damage * this.specialAttackDamageMultiplier;
         this.applyDamageToEnemy(enemy, damageAmount);
@@ -2835,7 +2830,7 @@ export default class Defense {
     else if (this.type === 'keon') {
       // Divine judgment - massive damage and multiple effects
       enemiesInRange.forEach(enemy => {
-        this.launchProjectile(enemy, 'gold');
+        this.launchProjectile(enemy, 'gold', true);
 
         const damageAmount = this.damage * this.specialAttackDamageMultiplier * 1.5; // Extra damage for premium
         this.applyDamageToEnemy(enemy, damageAmount);

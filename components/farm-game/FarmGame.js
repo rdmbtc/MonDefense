@@ -61,6 +61,20 @@ const FarmGameInner = ({ farmCoins, addFarmCoins, gameMode = 'farm', onGameEvent
           console.log("Destroying game instance");
           gameInstanceRef.current.destroy(true);
           gameInstanceRef.current = null;
+          
+          // Clean up global references to prevent session persistence issues
+          if (typeof window !== 'undefined') {
+            window.game = null;
+            if (window.gameFunctions) {
+              window.gameFunctions = {};
+            }
+          }
+          
+          // Reset global module cache to prevent third game session issues
+          PhaserLoaded = false;
+          EnemyClass = null;
+          CropClass = null;
+          GameSceneClass = null;
         } catch (error) {
           console.error("Error destroying game on unmount:", error);
         }

@@ -1,8 +1,5 @@
 'use client';
 
-// TypeScript type annotations for Phaser
-/** @typedef {import('phaser')} Phaser */
-
 export default class Crop extends Phaser.GameObjects.Container {
   constructor(scene, x, y, cropType = 'carrot') {
     super(scene, x, y);
@@ -99,23 +96,6 @@ export default class Crop extends Phaser.GameObjects.Container {
     // Hide health bar initially
     this.healthBarBg.setVisible(false);
     this.healthBar.setVisible(false);
-  }
-  
-  updateHealthBar() {
-    if (this.healthBar) {
-      const healthPercentage = this.health / this.maxHealth;
-      const barWidth = 30 * healthPercentage;
-      this.healthBar.setSize(barWidth, 4);
-      
-      // Change color based on health
-      if (healthPercentage > 0.6) {
-        this.healthBar.setFillStyle(0x00FF00); // Green
-      } else if (healthPercentage > 0.3) {
-        this.healthBar.setFillStyle(0xFFFF00); // Yellow
-      } else {
-        this.healthBar.setFillStyle(0xFF0000); // Red
-      }
-    }
   }
   
   startGrowth() {

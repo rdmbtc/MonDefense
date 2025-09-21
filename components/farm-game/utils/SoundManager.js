@@ -1,8 +1,3 @@
-'use client';
-
-// TypeScript type annotations for Phaser
-/** @typedef {import('phaser')} Phaser */
-
 /**
  * SoundManager - Handles all sound effects and music for the farm game
  * Provides centralized control for audio loading, playing, and volume management
@@ -462,4 +457,4 @@ export default class SoundManager {
     this.music = null;
     console.log("SoundManager: Destroyed.");
   }
-}
+} 
