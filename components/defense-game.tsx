@@ -224,6 +224,24 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
     }
   }, [gameSession.startGameSession.data]);
 
+  // Listen for session token refresh events
+  useEffect(() => {
+    const handleSessionTokenRefresh = (event: CustomEvent) => {
+      const { sessionToken: newToken, sessionId: newSessionId } = event.detail;
+      console.log('Session token refreshed, updating state:', { newToken, newSessionId });
+      setSessionToken(newToken);
+      setSessionId(newSessionId);
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('sessionTokenRefreshed', handleSessionTokenRefresh as EventListener);
+      
+      return () => {
+        window.removeEventListener('sessionTokenRefreshed', handleSessionTokenRefresh as EventListener);
+      };
+    }
+  }, []);
+
   // Handle score submission using both API and on-chain submission
   const handleScoreSubmission = useCallback(async (score: number, transactionCount: number = 1, gameStateHash?: string): Promise<boolean> => {
     // Prevent multiple submissions

@@ -77,6 +77,61 @@ export function useGameSession(gameSessionToken: string | null) {
           status: error.response?.status,
           headers: error.response?.headers
         });
+
+        // Handle 401 Unauthorized - token might be expired
+        if (error.response?.status === 401) {
+          console.log("Token expired, attempting to refresh session...");
+          
+          // Try to start a new session if we have wallet address
+          if (data.player) {
+            try {
+              console.log("Starting new game session for token refresh...");
+              const newSessionResponse = await api.post<StartGameSessionResponse>(
+                apiEndpoints.startGameSession,
+                { walletAddress: data.player }
+              );
+              
+              if (newSessionResponse.data?.sessionToken) {
+                console.log("New session created, retrying score submission...");
+                
+                // Update the data with new session info
+                const updatedData = {
+                  ...data,
+                  sessionId: newSessionResponse.data.sessionId
+                };
+                
+                // Retry with new token
+                const retryResponse = await api.post<SubmitScoreResponse>(
+                  apiEndpoints.submitScore,
+                  updatedData,
+                  {
+                    headers: {
+                      Authorization: `Bearer ${newSessionResponse.data.sessionToken}`,
+                    },
+                  }
+                );
+                
+                console.log("Score submission successful after token refresh:", retryResponse.data);
+                
+                // Trigger a callback to update the session token in the parent component
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('sessionTokenRefreshed', {
+                    detail: {
+                      sessionToken: newSessionResponse.data.sessionToken,
+                      sessionId: newSessionResponse.data.sessionId
+                    }
+                  }));
+                }
+                
+                return retryResponse.data;
+              }
+            } catch (refreshError: any) {
+              console.error("Failed to refresh session:", refreshError);
+              throw new Error("Session expired and refresh failed. Please restart the game.");
+            }
+          }
+        }
+        
         throw new Error(`Submission failed: ${error.response?.data?.error || error.message}`);
       }
     },
