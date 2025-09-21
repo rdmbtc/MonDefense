@@ -2,6 +2,9 @@
 
 import * as Phaser from 'phaser';
 
+// TypeScript type annotations
+/** @typedef {import('./SoundManager.js').default} SoundManager */
+
 class VolumeControls {
     /**
      * @param {Phaser.Scene} scene The Phaser Scene to add the controls to.
@@ -205,4 +208,4 @@ class VolumeControls {
     }
 }
 
-export default VolumeControls; 
+export default VolumeControls;
