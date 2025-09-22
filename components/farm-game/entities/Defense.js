@@ -351,7 +351,7 @@ export default class Defense {
     if (this.scene.textures.exists(this.skinKey)) {
       console.log(`✅ ${this.skinKey} texture confirmed to exist in scene`);
       this.sprite = this.scene.add.image(this.x, this.y, this.skinKey);
-      this.sprite.setDisplaySize(38, 38); // Standard size
+      this.sprite.setDisplaySize(55, 55); // Increased size from 38x38 to 55x55
       this.sprite.setDepth(101); // Ensure visible above ground tiles
       console.log(`✅ CHOG sprite created successfully with actual texture, visible: ${this.sprite.visible}`);
     } else {
@@ -390,7 +390,7 @@ export default class Defense {
     if (this.scene.textures.exists(this.skinKey)) {
       console.log(`✅ ${this.skinKey} texture confirmed to exist in scene`);
       this.sprite = this.scene.add.image(this.x, this.y, this.skinKey);
-      this.sprite.setDisplaySize(38, 38); // Standard size
+      this.sprite.setDisplaySize(55, 55); // Increased size from 38x38 to 55x55
       this.sprite.setDepth(101); // Ensure visible above ground tiles
       console.log(`✅ MOLANDAK sprite created successfully with actual texture, visible: ${this.sprite.visible}`);
     } else {
@@ -424,7 +424,7 @@ export default class Defense {
     if (this.scene.textures.exists(this.skinKey)) {
       console.log(`✅ ${this.skinKey} texture confirmed to exist in scene`);
       this.sprite = this.scene.add.image(this.x, this.y, this.skinKey);
-      this.sprite.setDisplaySize(38, 38); // Standard size
+      this.sprite.setDisplaySize(55, 55); // Increased size from 38x38 to 55x55
       this.sprite.setDepth(101); // Ensure visible above ground tiles
       console.log(`✅ MOYAKI sprite created successfully with actual texture, visible: ${this.sprite.visible}`);
     } else {
@@ -458,7 +458,7 @@ export default class Defense {
     if (this.scene.textures.exists(this.skinKey)) {
       console.log(`✅ ${this.skinKey} texture confirmed to exist in scene`);
       this.sprite = this.scene.add.image(this.x, this.y, this.skinKey);
-      this.sprite.setDisplaySize(38, 38); // Standard size
+      this.sprite.setDisplaySize(55, 55); // Increased size from 38x38 to 55x55
       this.sprite.setDepth(101); // Ensure visible above ground tiles
       console.log(`✅ KEON sprite created successfully with actual texture, visible: ${this.sprite.visible}`);
     } else {

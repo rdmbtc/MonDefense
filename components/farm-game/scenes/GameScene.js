@@ -258,14 +258,14 @@ if (isBrowser) {
             this.load.image('keon_attack', '/defense/keon_idle.png'); // Use idle for attack for now
 
             // Load additional skin textures
-            this.load.image('jumapel_idle', '/defense/jumapel idle.png');
-            this.load.image('jumapel_attack', '/defense/jumapel attack.png');
-            this.load.image('skrumpet_idle', '/defense/skrumpet  idle.png');
-            this.load.image('skrumpet_attack', '/defense/skrumpet  attack.png');
-            this.load.image('erkin_idle', '/defense/erkin idle.png');
-            this.load.image('erkin_attack', '/defense/erkin attack.png');
-            this.load.image('realnads_idle', '/defense/realnads idle.png');
-            this.load.image('realnads_attack', '/defense/realnads attack.png');
+            this.load.image('jumapel_idle', '/defense/jumapel_idle.png');
+            this.load.image('jumapel_attack', '/defense/jumapel_attack.png');
+            this.load.image('skrumpet_idle', '/defense/skrumpet_idle.png');
+            this.load.image('skrumpet_attack', '/defense/skrumpet_attack.png');
+            this.load.image('erkin_idle', '/defense/erkin_idle.png');
+            this.load.image('erkin_attack', '/defense/erkin_attack.png');
+            this.load.image('realnads_idle', '/defense/realnads_idle.png');
+            this.load.image('realnads_attack', '/defense/realnads_attack.png');
 
             // Load legacy ABS and MON defense textures (still used in some places)
             this.load.image('ABS_idle', '/defense/abster idle.png');
@@ -1042,8 +1042,8 @@ if (isBrowser) {
               color: '#FFD700'
             }).setDepth(UI_DEPTH);
             
-            // Skill Tree Button - Positioned near settings button
-            this.skillTreeButton = this.add.text(640, 30, '🌟 Skills', {
+            // Skill Tree Button - Positioned with proper spacing from settings
+            this.skillTreeButton = this.add.text(580, 30, '🌟 Skills', {
               fontFamily: 'Arial',
               fontSize: '16px',
               color: '#FFFFFF',

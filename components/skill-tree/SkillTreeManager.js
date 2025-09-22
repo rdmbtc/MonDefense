@@ -554,6 +554,59 @@ class SkillTreeManager {
     this.saveProgress();
     this.dispatchProgressUpdate();
   }
+
+  // Check if a skill is unlocked
+  isSkillUnlocked(defenderId, skillId) {
+    const defender = this.skillTreeData[defenderId];
+    if (!defender) return false;
+    
+    for (const tier of Object.values(defender.tiers)) {
+      const skill = tier.skills.find(s => s.id === skillId);
+      if (skill) {
+        return skill.unlocked || false;
+      }
+    }
+    return false;
+  }
+
+  // Check if a skill can be unlocked (requirements met)
+  canUnlockSkill(defenderId, skillId) {
+    const defender = this.skillTreeData[defenderId];
+    if (!defender) return false;
+    
+    for (const tier of Object.values(defender.tiers)) {
+      const skill = tier.skills.find(s => s.id === skillId);
+      if (skill) {
+        // Already unlocked
+        if (skill.unlocked) return false;
+        
+        // Check requirements
+        const hasScore = this.totalScore >= skill.scoreRequired;
+        const hasEnemies = this.enemiesDefeated >= skill.enemiesRequired;
+        
+        return hasScore && hasEnemies;
+      }
+    }
+    return false;
+  }
+
+  // Unlock a skill
+  unlockSkill(defenderId, skillId) {
+    const defender = this.skillTreeData[defenderId];
+    if (!defender) return false;
+    
+    for (const tier of Object.values(defender.tiers)) {
+      const skill = tier.skills.find(s => s.id === skillId);
+      if (skill && this.canUnlockSkill(defenderId, skillId)) {
+        skill.unlocked = true;
+        this.unlockedSkills.add(`${defenderId}_${skillId}`);
+        this.saveProgress();
+        this.dispatchProgressUpdate();
+        return true;
+      }
+    }
+    return false;
+  }
 }
 
 // Export for use in other modules
