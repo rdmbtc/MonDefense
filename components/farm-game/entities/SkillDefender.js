@@ -25,19 +25,38 @@ export default class SkillDefender extends Defense {
       return;
     }
     
+    console.log(`[SKILL DEBUG] Initializing skills for ${this.type.toUpperCase()}`);
+    
     // Get unlocked skills for this defender type
     const defenderData = this.skillTreeManager.getDefenderData(this.type.toUpperCase());
-    if (!defenderData) return;
+    if (!defenderData) {
+      console.warn(`[SKILL DEBUG] No defender data found for ${this.type.toUpperCase()}`);
+      return;
+    }
     
-    // Check each tier for unlocked skills
+    // Get activated skills from skillTreeManager (not just unlocked ones)
+    const activatedSkills = this.skillTreeManager.getActiveSkills(this.type.toUpperCase());
+    console.log(`[SKILL DEBUG] Activated skills for ${this.type.toUpperCase()}:`, Array.from(activatedSkills));
+    
+    // Also check for unlocked skills that should be auto-activated
     Object.values(defenderData.tiers).forEach(tier => {
       tier.skills.forEach(skill => {
         if (skill.unlocked) {
+          console.log(`[SKILL DEBUG] Found unlocked skill: ${skill.id}`);
           this.activeSkills.add(skill.id);
           this.skillCooldowns.set(skill.id, 0);
         }
       });
     });
+    
+    // Add activated skills from skillTreeManager
+    activatedSkills.forEach(skillId => {
+      console.log(`[SKILL DEBUG] Adding activated skill: ${skillId}`);
+      this.activeSkills.add(skillId);
+      this.skillCooldowns.set(skillId, 0);
+    });
+    
+    console.log(`[SKILL DEBUG] Final active skills for ${this.type.toUpperCase()}:`, Array.from(this.activeSkills));
   }
   
   applyUnlockedSkills() {
@@ -257,15 +276,15 @@ export default class SkillDefender extends Defense {
     this.frostAuraRadius = 100;
     this.frostSlowEffect = 0.3; // 30% slow
     
-    // Create visual aura
-    const aura = this.scene.add.circle(this.x, this.y, this.frostAuraRadius, 0x87CEEB, 0.1);
-    aura.setStrokeStyle(2, 0x4682B4);
+    // Create visual aura and store reference for cleanup
+    this.frostAuraVisual = this.scene.add.circle(this.x, this.y, this.frostAuraRadius, 0x87CEEB, 0.1);
+    this.frostAuraVisual.setStrokeStyle(2, 0x4682B4);
+    this.frostAuraVisual.setDepth(99); // Below defense but above ground
     
     // Apply slow effect to enemies in range
-    const auraInterval = setInterval(() => {
-      if (!this.active) {
-        clearInterval(auraInterval);
-        aura.destroy();
+    this.frostAuraInterval = setInterval(() => {
+      if (!this.active || !this.frostAuraVisual) {
+        this.cleanupFrostAura();
         return;
       }
       
@@ -286,6 +305,17 @@ export default class SkillDefender extends Defense {
         }
       });
     }, 500);
+  }
+
+  cleanupFrostAura() {
+    if (this.frostAuraInterval) {
+      clearInterval(this.frostAuraInterval);
+      this.frostAuraInterval = null;
+    }
+    if (this.frostAuraVisual) {
+      this.frostAuraVisual.destroy();
+      this.frostAuraVisual = null;
+    }
   }
   
   addIceShardEffect() {
@@ -479,6 +509,9 @@ export default class SkillDefender extends Defense {
     this.activeSkills.clear();
     this.skillCooldowns.clear();
     this.skillEffects.clear();
+    
+    // Clean up frost aura specifically
+    this.cleanupFrostAura();
     
     super.destroy();
   }
