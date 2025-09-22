@@ -3,7 +3,7 @@
 import SkillManager from './SkillManager.js';
 
 export default class Defense {
-  constructor(scene, type, x, y) {
+  constructor(scene, type, x, y, skinKey = null) {
     this.scene = scene;
     this.type = type;
     this.x = x;
@@ -13,6 +13,9 @@ export default class Defense {
     this.cooldown = 1800; // Increased cooldown
     this.damage = 0.45; // Reduced damage
     this.targetTypes = []; // Types of enemies this defense can target
+    
+    // Store the skin key for this defense
+    this.skinKey = skinKey || `${type}_idle`;
     
     // Mana properties
     this.maxMana = 100; // Default max mana
@@ -342,17 +345,17 @@ export default class Defense {
   
   createChogMage() {
     // Create visual representation of CHOG character
-    console.log(`🛡️ Creating CHOG sprite at (${this.x}, ${this.y}) using texture 'chog_idle'`);
+    console.log(`🛡️ Creating CHOG sprite at (${this.x}, ${this.y}) using texture '${this.skinKey}'`);
 
     // Verify texture exists before creating sprite
-    if (this.scene.textures.exists('chog_idle')) {
-      console.log(`✅ chog_idle texture confirmed to exist in scene`);
-      this.sprite = this.scene.add.image(this.x, this.y, 'chog_idle');
+    if (this.scene.textures.exists(this.skinKey)) {
+      console.log(`✅ ${this.skinKey} texture confirmed to exist in scene`);
+      this.sprite = this.scene.add.image(this.x, this.y, this.skinKey);
       this.sprite.setDisplaySize(38, 38); // Standard size
       this.sprite.setDepth(101); // Ensure visible above ground tiles
       console.log(`✅ CHOG sprite created successfully with actual texture, visible: ${this.sprite.visible}`);
     } else {
-      console.error(`❌ chog_idle texture NOT found in scene! Available textures:`, Object.keys(this.scene.textures.list));
+      console.error(`❌ ${this.skinKey} texture NOT found in scene! Available textures:`, Object.keys(this.scene.textures.list));
       // Create fallback sprite
       this.sprite = this.scene.add.circle(this.x, this.y, 24, 0x00AA00);
       this.sprite.setDepth(101);
@@ -381,17 +384,17 @@ export default class Defense {
 
   createMolandakMage() {
     // Create visual representation of MOLANDAK character
-    console.log(`❄️ Creating MOLANDAK sprite at (${this.x}, ${this.y}) using texture 'molandak_idle'`);
+    console.log(`❄️ Creating MOLANDAK sprite at (${this.x}, ${this.y}) using texture '${this.skinKey}'`);
 
     // Verify texture exists before creating sprite
-    if (this.scene.textures.exists('molandak_idle')) {
-      console.log(`✅ molandak_idle texture confirmed to exist in scene`);
-      this.sprite = this.scene.add.image(this.x, this.y, 'molandak_idle');
+    if (this.scene.textures.exists(this.skinKey)) {
+      console.log(`✅ ${this.skinKey} texture confirmed to exist in scene`);
+      this.sprite = this.scene.add.image(this.x, this.y, this.skinKey);
       this.sprite.setDisplaySize(38, 38); // Standard size
       this.sprite.setDepth(101); // Ensure visible above ground tiles
       console.log(`✅ MOLANDAK sprite created successfully with actual texture, visible: ${this.sprite.visible}`);
     } else {
-      console.error(`❌ molandak_idle texture NOT found in scene! Available textures:`, Object.keys(this.scene.textures.list));
+      console.error(`❌ ${this.skinKey} texture NOT found in scene! Available textures:`, Object.keys(this.scene.textures.list));
       // Create fallback sprite
       this.sprite = this.scene.add.circle(this.x, this.y, 24, 0x0088FF);
       this.sprite.setDepth(101);
@@ -415,17 +418,17 @@ export default class Defense {
 
   createMoyakiMage() {
     // Create visual representation of MOYAKI character
-    console.log(`🔥 Creating MOYAKI sprite at (${this.x}, ${this.y}) using texture 'moyaki_idle'`);
+    console.log(`🔥 Creating MOYAKI sprite at (${this.x}, ${this.y}) using texture '${this.skinKey}'`);
 
     // Verify texture exists before creating sprite
-    if (this.scene.textures.exists('moyaki_idle')) {
-      console.log(`✅ moyaki_idle texture confirmed to exist in scene`);
-      this.sprite = this.scene.add.image(this.x, this.y, 'moyaki_idle');
+    if (this.scene.textures.exists(this.skinKey)) {
+      console.log(`✅ ${this.skinKey} texture confirmed to exist in scene`);
+      this.sprite = this.scene.add.image(this.x, this.y, this.skinKey);
       this.sprite.setDisplaySize(38, 38); // Standard size
       this.sprite.setDepth(101); // Ensure visible above ground tiles
       console.log(`✅ MOYAKI sprite created successfully with actual texture, visible: ${this.sprite.visible}`);
     } else {
-      console.error(`❌ moyaki_idle texture NOT found in scene! Available textures:`, Object.keys(this.scene.textures.list));
+      console.error(`❌ ${this.skinKey} texture NOT found in scene! Available textures:`, Object.keys(this.scene.textures.list));
       // Create fallback sprite
       this.sprite = this.scene.add.circle(this.x, this.y, 24, 0xFF4400);
       this.sprite.setDepth(101);
@@ -449,17 +452,17 @@ export default class Defense {
 
   createKeonMage() {
     // Create visual representation of KEON character (premium)
-    console.log(`👑 Creating KEON sprite at (${this.x}, ${this.y}) using texture 'keon_idle'`);
+    console.log(`👑 Creating KEON sprite at (${this.x}, ${this.y}) using texture '${this.skinKey}'`);
 
     // Verify texture exists before creating sprite
-    if (this.scene.textures.exists('keon_idle')) {
-      console.log(`✅ keon_idle texture confirmed to exist in scene`);
-      this.sprite = this.scene.add.image(this.x, this.y, 'keon_idle');
+    if (this.scene.textures.exists(this.skinKey)) {
+      console.log(`✅ ${this.skinKey} texture confirmed to exist in scene`);
+      this.sprite = this.scene.add.image(this.x, this.y, this.skinKey);
       this.sprite.setDisplaySize(38, 38); // Standard size
       this.sprite.setDepth(101); // Ensure visible above ground tiles
       console.log(`✅ KEON sprite created successfully with actual texture, visible: ${this.sprite.visible}`);
     } else {
-      console.error(`❌ keon_idle texture NOT found in scene! Available textures:`, Object.keys(this.scene.textures.list));
+      console.error(`❌ ${this.skinKey} texture NOT found in scene! Available textures:`, Object.keys(this.scene.textures.list));
       // Create fallback sprite
       this.sprite = this.scene.add.circle(this.x, this.y, 19, 0xFFD700);
       this.sprite.setDepth(101);
@@ -1444,11 +1447,11 @@ export default class Defense {
       this.performAreaAttack(enemyX, enemyY, this.aoeRadius, this.damage * this.aoeDamageMultiplier, 'fire');
     } else if (this.type === 'keon') {
       if (this.sprite) {
-        this.sprite.setTexture('keon_attack');
+        this.sprite.setTexture(this.skinKey.replace('_idle', '_attack'));
         this.scene.tweens.add({
           targets: this.sprite,
           scaleX: 1.2, scaleY: 1.2, duration: 150, yoyo: true,
-          onComplete: () => { if (this.sprite && this.sprite.active) this.sprite.setTexture('keon_idle'); }
+          onComplete: () => { if (this.sprite && this.sprite.active) this.sprite.setTexture(this.skinKey); }
         });
       }
       // Launch multiple projectiles for premium unit
@@ -1467,7 +1470,7 @@ export default class Defense {
     if (this.type === 'chog') {
       // CHOG nature attack animation
       if (this.sprite) {
-        this.sprite.setTexture('chog_attack');
+        this.sprite.setTexture(this.skinKey.replace('_idle', '_attack'));
 
         // Enhanced nature cast animation
         if (this.scene && this.scene.tweens) {
@@ -1482,7 +1485,7 @@ export default class Defense {
             ease: 'Back.easeOut',
             onComplete: () => {
               if (this.sprite && this.sprite.active) {
-                this.sprite.setTexture('chog_idle');
+                this.sprite.setTexture(this.skinKey);
               }
             }
           });
@@ -1500,7 +1503,7 @@ export default class Defense {
     } else if (this.type === 'molandak') {
       // MOLANDAK ice attack animation
       if (this.sprite) {
-        this.sprite.setTexture('molandak_attack');
+        this.sprite.setTexture(this.skinKey.replace('_idle', '_attack'));
 
         // Enhanced ice cast animation
         if (this.scene && this.scene.tweens) {
@@ -1515,7 +1518,7 @@ export default class Defense {
             ease: 'Power2.easeOut',
             onComplete: () => {
               if (this.sprite && this.sprite.active) {
-                this.sprite.setTexture('molandak_idle');
+                this.sprite.setTexture(this.skinKey);
               }
             }
           });
@@ -1533,7 +1536,7 @@ export default class Defense {
     } else if (this.type === 'moyaki') {
       // MOYAKI fire attack animation
       if (this.sprite) {
-        this.sprite.setTexture('moyaki_attack');
+        this.sprite.setTexture(this.skinKey.replace('_idle', '_attack'));
 
         // Enhanced fire cast animation
         if (this.scene && this.scene.tweens) {
@@ -1548,7 +1551,7 @@ export default class Defense {
             ease: 'Power2.easeOut',
             onComplete: () => {
               if (this.sprite && this.sprite.active) {
-                this.sprite.setTexture('moyaki_idle');
+                this.sprite.setTexture(this.skinKey);
               }
             }
           });
@@ -1566,7 +1569,7 @@ export default class Defense {
     } else if (this.type === 'keon') {
       // KEON divine attack animation
       if (this.sprite) {
-        this.sprite.setTexture('keon_attack');
+        this.sprite.setTexture(this.skinKey.replace('_idle', '_attack'));
 
         // Enhanced divine cast animation
         if (this.scene && this.scene.tweens) {
@@ -1581,7 +1584,7 @@ export default class Defense {
             ease: 'Back.easeOut',
             onComplete: () => {
               if (this.sprite && this.sprite.active) {
-                this.sprite.setTexture('keon_idle');
+                this.sprite.setTexture(this.skinKey);
               }
             }
           });

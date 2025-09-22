@@ -98,8 +98,8 @@ if (isBrowser) {
             clickDamage: 0.5,
             canPlant: true,
             autoWave: true // Add auto-wave functionality by default
-          };
-           this.enemiesSpawned = 0;
+        };
+        this.enemiesSpawned = 0;
            this.totalEnemiesInWave = 0;
           this.upgradeSystem = null;
           this.pendingDefensePlacement = false; // New flag to track if we're waiting for placement click
@@ -257,6 +257,16 @@ if (isBrowser) {
             this.load.image('keon_idle', '/defense/keon_idle.png');
             this.load.image('keon_attack', '/defense/keon_idle.png'); // Use idle for attack for now
 
+            // Load additional skin textures
+            this.load.image('jumapel_idle', '/defense/jumapel idle.png');
+            this.load.image('jumapel_attack', '/defense/jumapel attack.png');
+            this.load.image('skrumpet_idle', '/defense/skrumpet  idle.png');
+            this.load.image('skrumpet_attack', '/defense/skrumpet  attack.png');
+            this.load.image('erkin_idle', '/defense/erkin idle.png');
+            this.load.image('erkin_attack', '/defense/erkin attack.png');
+            this.load.image('realnads_idle', '/defense/realnads idle.png');
+            this.load.image('realnads_attack', '/defense/realnads attack.png');
+
             // Load legacy ABS and MON defense textures (still used in some places)
             this.load.image('ABS_idle', '/defense/abster idle.png');
             this.load.image('ABS_attack', '/defense/abster attacks.png');
@@ -312,6 +322,10 @@ if (isBrowser) {
                     fileObj.key === 'molandak_idle' || fileObj.key === 'molandak_attack' ||
                     fileObj.key === 'moyaki_idle' || fileObj.key === 'moyaki_attack' ||
                     fileObj.key === 'keon_idle' || fileObj.key === 'keon_attack' ||
+                    fileObj.key === 'jumapel_idle' || fileObj.key === 'jumapel_attack' ||
+                    fileObj.key === 'skrumpet_idle' || fileObj.key === 'skrumpet_attack' ||
+                    fileObj.key === 'erkin_idle' || fileObj.key === 'erkin_attack' ||
+                    fileObj.key === 'realnads_idle' || fileObj.key === 'realnads_attack' ||
                     fileObj.key === 'ABS_idle' || fileObj.key === 'ABS_attack' ||
                     fileObj.key === 'MON_idle' || fileObj.key === 'MON_attack') {
                   // Creating placeholder for missing asset
@@ -684,7 +698,7 @@ if (isBrowser) {
                 return;
               }
               
-              // DEFENSE PLACEMENT MODE - For both chog and molandak
+              // DEFENSE PLACEMENT MODE - For all defense types
               if (this.pendingDefensePlacement && this.pendingDefenseType) {
                 // Check valid placement area
                 if (pointer.x < 200) {
@@ -692,8 +706,11 @@ if (isBrowser) {
                   return;
                 }
                 
-                // Calculate cost
-                const cost = this.pendingDefenseType === 'chog' ? 25 : 50;
+                // Calculate cost based on defense type
+                const cost = this.pendingDefenseType === 'chog' ? 25 : 
+                           this.pendingDefenseType === 'molandak' ? 50 : 
+                           this.pendingDefenseType === 'moyaki' ? 80 : 
+                           this.pendingDefenseType === 'keon' ? 150 : 50;
                 
                 // Check if enough coins
                 if (this.gameState.farmCoins < cost) {
@@ -708,12 +725,21 @@ if (isBrowser) {
                   
                   // Show success message and range indicator
                   if (defense) {
-                    const defenseName = this.pendingDefenseType === 'chog' ? 'Ice Mage' : 'Fire Mage';
-                    const color = this.pendingDefenseType === 'chog' ? 0x0088FF : 0xFF4400;
+                    const defenseName = this.pendingDefenseType === 'chog' ? 'CHOG Defender' : 
+                                      this.pendingDefenseType === 'molandak' ? 'MOLANDAK Guardian' : 
+                                      this.pendingDefenseType === 'moyaki' ? 'MOYAKI Warrior' : 
+                                      this.pendingDefenseType === 'keon' ? 'KEON Champion' : 'Defense';
+                    const color = this.pendingDefenseType === 'chog' ? 0x0088FF : 
+                                this.pendingDefenseType === 'molandak' ? 0xFF4400 : 
+                                this.pendingDefenseType === 'moyaki' ? 0xFF0000 : 
+                                this.pendingDefenseType === 'keon' ? 0xFF00FF : 0x00FFFF;
                     this.showFloatingText(pointer.x, pointer.y - 30, `${defenseName} placed!`, color);
                     
                     // Create range visual effect
-                    const range = this.pendingDefenseType === 'chog' ? 250 : 200;
+                    const range = this.pendingDefenseType === 'chog' ? 250 : 
+                                this.pendingDefenseType === 'molandak' ? 200 : 
+                                this.pendingDefenseType === 'moyaki' ? 180 : 
+                                this.pendingDefenseType === 'keon' ? 300 : 200;
                     const rangeEffect = this.add.circle(pointer.x, pointer.y, range, color, 0.2);
                     rangeEffect.setStrokeStyle(2, color);
                     this.tweens.add({
@@ -3634,10 +3660,14 @@ if (isBrowser) {
             // Create defense - handle upgrades in the Defense constructor
             // Use SkillDefender if skillTreeManager is available, otherwise use regular Defense
             let defense;
+            
+            // Get the appropriate skin for this defender type
+            const skinKey = this.skinCustomization ? this.skinCustomization.getSkinForDefender(defenseType) : `${defenseType}_idle`;
+            
             if (window.skillTreeManager) {
-              defense = new SkillDefender(this, defenseType, x, y, window.skillTreeManager);
+              defense = new SkillDefender(this, defenseType, x, y, window.skillTreeManager, skinKey);
             } else {
-              defense = new DefenseClass(this, defenseType, x, y);
+              defense = new DefenseClass(this, defenseType, x, y, skinKey);
             }
             
             // Add to defenses array
@@ -4155,7 +4185,7 @@ if (isBrowser) {
         }
 
         // Toggle skin customization panel
-        toggleSkinCustomization() {
+        toggleSkinCustomization(defenderType = null) {
           try {
             if (!this.skinCustomization) return;
             
@@ -4166,13 +4196,134 @@ if (isBrowser) {
               // Hide the skin customization panel
               this.skinCustomization.hide();
             } else {
-              // Show the skin customization panel
-              this.skinCustomization.show();
+              // Show the skin customization panel with defender selection
+              if (defenderType) {
+                this.skinCustomization.show(defenderType);
+              } else {
+                // Show defender selection menu first
+                this.showDefenderSelectionMenu();
+              }
             }
             
             console.log(`Skin customization panel ${isVisible ? 'hidden' : 'shown'}`);
           } catch (error) {
-            console.error("Error toggling skin customization panel:", error);
+            console.error('Error toggling skin customization:', error);
+          }
+        }
+        
+        showDefenderSelectionMenu() {
+          const centerX = this.cameras.main.width / 2;
+          const centerY = this.cameras.main.height / 2;
+          
+          // Create container for defender selection
+          this.defenderSelectionContainer = this.add.container(0, 0);
+          this.defenderSelectionContainer.setDepth(9999);
+          
+          // Background overlay
+          const overlay = this.add.rectangle(0, 0, 
+            this.cameras.main.width, 
+            this.cameras.main.height, 
+            0x000000, 0.7);
+          overlay.setOrigin(0, 0);
+          this.defenderSelectionContainer.add(overlay);
+          
+          // Main panel
+          const panelWidth = 500;
+          const panelHeight = 350;
+          const mainPanel = this.add.rectangle(centerX, centerY, panelWidth, panelHeight, 0x2a2a2a);
+          mainPanel.setStrokeStyle(3, 0x4a4a4a);
+          this.defenderSelectionContainer.add(mainPanel);
+          
+          // Title
+          const title = this.add.text(centerX, centerY - 140, 'SELECT DEFENDER TO CUSTOMIZE', {
+            fontSize: '24px',
+            fontFamily: 'Arial',
+            color: '#ffffff',
+            fontStyle: 'bold'
+          });
+          title.setOrigin(0.5);
+          this.defenderSelectionContainer.add(title);
+          
+          // Close button
+          const closeButton = this.add.rectangle(centerX + 230, centerY - 140, 40, 40, 0xff4444);
+          closeButton.setStrokeStyle(2, 0xffffff);
+          const closeText = this.add.text(centerX + 230, centerY - 140, 'X', {
+            fontSize: '20px',
+            fontFamily: 'Arial',
+            color: '#ffffff',
+            fontStyle: 'bold'
+          });
+          closeText.setOrigin(0.5);
+          closeButton.setInteractive({ useHandCursor: true });
+          closeButton.on('pointerdown', () => this.hideDefenderSelectionMenu());
+          this.defenderSelectionContainer.add([closeButton, closeText]);
+          
+          // Defender buttons
+          const defenders = [
+            { type: 'chog', name: 'CHOG Defender', color: 0x0088FF, icon: '🧙‍♂️' },
+            { type: 'molandak', name: 'MOLANDAK Guardian', color: 0xFF4400, icon: '🧙‍♀️' },
+            { type: 'moyaki', name: 'MOYAKI Warrior', color: 0xFF0000, icon: '⚔️' },
+            { type: 'keon', name: 'KEON Champion', color: 0xFF00FF, icon: '🛡️' }
+          ];
+          
+          const buttonWidth = 100;
+          const buttonHeight = 80;
+          const startX = centerX - (defenders.length * 110) / 2 + 55;
+          
+          defenders.forEach((defender, index) => {
+            const x = startX + (index * 110);
+            const y = centerY - 20;
+            
+            // Defender button
+            const button = this.add.rectangle(x, y, buttonWidth, buttonHeight, defender.color);
+            button.setStrokeStyle(2, 0xffffff);
+            button.setInteractive({ useHandCursor: true });
+            
+            // Defender icon/image
+            let defenderImage;
+            const imageKey = `${defender.type}_idle`;
+            if (this.textures.exists(imageKey)) {
+              defenderImage = this.add.image(x, y - 10, imageKey);
+              defenderImage.setDisplaySize(50, 50);
+            } else {
+              defenderImage = this.add.text(x, y - 10, defender.icon, {
+                fontSize: '32px'
+              });
+              defenderImage.setOrigin(0.5);
+            }
+            
+            // Defender name
+            const nameText = this.add.text(x, y + 25, defender.name, {
+              fontSize: '10px',
+              fontFamily: 'Arial',
+              color: '#ffffff',
+              align: 'center',
+              wordWrap: { width: 90 }
+            });
+            nameText.setOrigin(0.5);
+            
+            // Button interaction
+            button.on('pointerdown', () => {
+              this.hideDefenderSelectionMenu();
+              this.skinCustomization.show(defender.type);
+            });
+            
+            button.on('pointerover', () => {
+              button.setStrokeStyle(3, 0xffffff);
+            });
+            
+            button.on('pointerout', () => {
+              button.setStrokeStyle(2, 0xffffff);
+            });
+            
+            this.defenderSelectionContainer.add([button, defenderImage, nameText]);
+          });
+        }
+        
+        hideDefenderSelectionMenu() {
+          if (this.defenderSelectionContainer) {
+            this.defenderSelectionContainer.destroy();
+            this.defenderSelectionContainer = null;
           }
         }
 
@@ -6349,32 +6500,75 @@ if (isBrowser) {
         }
         
         showSkillTreeOverlay() {
-          // Create dark overlay background
-          this.skillTreeOverlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.7);
+          // Initialize skill tree elements array for proper cleanup
+          this.skillTreeElements = [];
+          
+          // Create dark overlay background with gradient effect
+          this.skillTreeOverlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.85);
           this.skillTreeOverlay.setDepth(7000);
           this.skillTreeOverlay.setInteractive();
+          this.skillTreeElements.push(this.skillTreeOverlay);
           
-          // Create skill tree panel
-          this.skillTreePanel = this.add.rectangle(400, 300, 600, 500, 0x2D1B69, 1);
+          // Create main skill tree panel with modern design
+          this.skillTreePanel = this.add.rectangle(400, 300, 700, 550, 0x1a1a2e, 1);
           this.skillTreePanel.setDepth(7001);
-          this.skillTreePanel.setStrokeStyle(3, 0x6B46C1);
+          this.skillTreePanel.setStrokeStyle(4, 0x16213e);
+          this.skillTreeElements.push(this.skillTreePanel);
           
-          // Title
-          this.skillTreeTitle = this.add.text(400, 80, 'Skill Tree', {
-            fontFamily: 'Arial',
-            fontSize: '32px',
-            color: '#FFFFFF',
-            fontStyle: 'bold'
+          // Add inner glow effect
+          this.skillTreeGlow = this.add.rectangle(400, 300, 690, 540, 0x0f3460, 0.3);
+          this.skillTreeGlow.setDepth(7001);
+          this.skillTreeGlow.setStrokeStyle(2, 0x0f3460);
+          this.skillTreeElements.push(this.skillTreeGlow);
+          
+          // Modern title with glow effect
+          this.skillTreeTitle = this.add.text(400, 60, 'SKILL NEXUS', {
+            fontFamily: 'Arial Black',
+            fontSize: '36px',
+            color: '#00d4ff',
+            fontStyle: 'bold',
+            stroke: '#003d5c',
+            strokeThickness: 3,
+            shadow: {
+              offsetX: 2,
+              offsetY: 2,
+              color: '#000000',
+              blur: 8,
+              fill: true
+            }
           }).setOrigin(0.5).setDepth(7002);
+          this.skillTreeElements.push(this.skillTreeTitle);
           
-          // Close button
-          this.skillTreeCloseBtn = this.add.text(650, 80, '✕', {
+          // Subtitle
+          this.skillTreeSubtitle = this.add.text(400, 95, 'Enhance Your Defenders', {
             fontFamily: 'Arial',
-            fontSize: '24px',
-            color: '#FF6B6B',
-            backgroundColor: '#000000',
-            padding: { x: 8, y: 4 }
-          }).setOrigin(0.5).setDepth(7002).setInteractive({ useHandCursor: true });
+            fontSize: '16px',
+            color: '#8cc8ff',
+            fontStyle: 'italic'
+          }).setOrigin(0.5).setDepth(7002);
+          this.skillTreeElements.push(this.skillTreeSubtitle);
+          
+          // Modern close button
+          this.skillTreeCloseBtn = this.add.rectangle(680, 60, 40, 40, 0xff4757, 1);
+          this.skillTreeCloseBtn.setDepth(7002);
+          this.skillTreeCloseBtn.setStrokeStyle(2, 0xc44569);
+          this.skillTreeCloseBtn.setInteractive({ useHandCursor: true });
+          this.skillTreeElements.push(this.skillTreeCloseBtn);
+          
+          this.skillTreeCloseBtnText = this.add.text(680, 60, '✕', {
+            fontFamily: 'Arial Black',
+            fontSize: '20px',
+            color: '#ffffff'
+          }).setOrigin(0.5).setDepth(7003);
+          this.skillTreeElements.push(this.skillTreeCloseBtnText);
+          
+          // Add hover effects to close button
+          this.skillTreeCloseBtn.on('pointerover', () => {
+            this.skillTreeCloseBtn.setFillStyle(0xff6b7d);
+          });
+          this.skillTreeCloseBtn.on('pointerout', () => {
+            this.skillTreeCloseBtn.setFillStyle(0xff4757);
+          });
           
           this.skillTreeCloseBtn.on('pointerdown', () => {
             this.toggleSkillTree();
@@ -6383,22 +6577,58 @@ if (isBrowser) {
             }
           });
           
-          // Display current progress
+          // Progress panel with modern design
+          this.progressPanel = this.add.rectangle(400, 130, 650, 60, 0x0f1419, 0.8);
+          this.progressPanel.setDepth(7001);
+          this.progressPanel.setStrokeStyle(2, 0x2c5aa0);
+          this.skillTreeElements.push(this.progressPanel);
+          
+          // Display current progress with modern styling
           const skillTreeManager = window.skillTreeManager;
           if (skillTreeManager) {
             const progressData = skillTreeManager.getProgressData();
             
-            this.add.text(400, 120, `Total Score: ${progressData.totalScore}`, {
-              fontFamily: 'Arial',
-              fontSize: '18px',
-              color: '#FFD700'
+            // Score display with icon
+            const scoreIcon = this.add.text(250, 120, '⭐', {
+              fontSize: '20px'
             }).setOrigin(0.5).setDepth(7002);
+            this.skillTreeElements.push(scoreIcon);
             
-            this.add.text(400, 145, `Enemies Defeated: ${progressData.enemiesDefeated}`, {
-              fontFamily: 'Arial',
+            const scoreText = this.add.text(280, 120, `${progressData.totalScore.toLocaleString()}`, {
+              fontFamily: 'Arial Bold',
               fontSize: '18px',
-              color: '#FFD700'
+              color: '#ffd700',
+              fontStyle: 'bold'
+            }).setOrigin(0, 0.5).setDepth(7002);
+            this.skillTreeElements.push(scoreText);
+            
+            const scoreLabel = this.add.text(280, 135, 'Total Score', {
+              fontFamily: 'Arial',
+              fontSize: '12px',
+              color: '#8cc8ff'
+            }).setOrigin(0, 0.5).setDepth(7002);
+            this.skillTreeElements.push(scoreLabel);
+            
+            // Enemies display with icon
+            const enemyIcon = this.add.text(450, 120, '⚔️', {
+              fontSize: '20px'
             }).setOrigin(0.5).setDepth(7002);
+            this.skillTreeElements.push(enemyIcon);
+            
+            const enemiesText = this.add.text(480, 120, `${progressData.enemiesDefeated.toLocaleString()}`, {
+              fontFamily: 'Arial Bold',
+              fontSize: '18px',
+              color: '#ff6b6b',
+              fontStyle: 'bold'
+            }).setOrigin(0, 0.5).setDepth(7002);
+            this.skillTreeElements.push(enemiesText);
+            
+            const enemiesLabel = this.add.text(480, 135, 'Enemies Defeated', {
+              fontFamily: 'Arial',
+              fontSize: '12px',
+              color: '#8cc8ff'
+            }).setOrigin(0, 0.5).setDepth(7002);
+            this.skillTreeElements.push(enemiesLabel);
             
             // Display available defenders and their skills
             this.displayDefenderSkills(skillTreeManager);
@@ -6406,47 +6636,180 @@ if (isBrowser) {
         }
         
         displayDefenderSkills(skillTreeManager) {
-          const defenders = skillTreeManager.getAllDefenders();
-          let yOffset = 180;
+          const defenders = ['archer', 'mage', 'warrior', 'cannon'];
+          const startY = 180;
+          const spacing = 90;
           
-          defenders.forEach((defenderId, index) => {
-            const defenderSkills = skillTreeManager.getDefenderSkills(defenderId);
+          defenders.forEach((defenderType, index) => {
+            const y = startY + (index * spacing);
             
-            // Defender name
-            this.add.text(200 + (index * 150), yOffset, defenderId, {
-              fontFamily: 'Arial',
-              fontSize: '16px',
-              color: '#FFFFFF',
+            // Defender section background
+            const defenderBg = this.add.rectangle(400, y, 650, 75, 0x0d1117, 0.6);
+            defenderBg.setDepth(7001);
+            defenderBg.setStrokeStyle(1, 0x21262d);
+            this.skillTreeElements.push(defenderBg);
+            
+            // Defender icon/avatar background
+            const defenderIcon = this.add.rectangle(130, y, 50, 50, 0x1f2937, 1);
+            defenderIcon.setDepth(7002);
+            defenderIcon.setStrokeStyle(2, 0x374151);
+            this.skillTreeElements.push(defenderIcon);
+            
+            // Defender type emoji/icon
+            const defenderEmoji = this.getDefenderEmoji(defenderType);
+            const defenderEmojiText = this.add.text(130, y, defenderEmoji, {
+              fontSize: '24px'
+            }).setOrigin(0.5).setDepth(7003);
+            this.skillTreeElements.push(defenderEmojiText);
+            
+            // Defender name with modern styling
+            const defenderNameText = this.add.text(180, y - 10, defenderType.charAt(0).toUpperCase() + defenderType.slice(1), {
+              fontFamily: 'Arial Black',
+              fontSize: '18px',
+              color: '#f8fafc',
               fontStyle: 'bold'
-            }).setOrigin(0.5).setDepth(7002);
+            }).setOrigin(0, 0.5).setDepth(7002);
+            this.skillTreeElements.push(defenderNameText);
             
-            // Display skills for this defender
-            let skillYOffset = yOffset + 30;
-            Object.values(defenderSkills.tiers).forEach(tier => {
-              tier.skills.forEach(skill => {
-                const isUnlocked = skillTreeManager.unlockedSkills.has(skill.id);
-                const color = isUnlocked ? '#00FF00' : '#888888';
-                
-                const skillText = this.add.text(200 + (index * 150), skillYOffset, skill.name, {
-                  fontFamily: 'Arial',
-                  fontSize: '12px',
-                  color: color
-                }).setOrigin(0.5).setDepth(7002);
-                
-                if (!isUnlocked) {
-                  skillText.setInteractive({ useHandCursor: true });
-                  skillText.on('pointerover', () => {
-                    // Show skill requirements tooltip
-                    this.showSkillTooltip(skill, 200 + (index * 150), skillYOffset);
-                  });
-                  skillText.on('pointerout', () => {
-                    this.hideSkillTooltip();
-                  });
-                }
-                
-                skillYOffset += 20;
+            // Defender class label
+            const defenderClass = this.add.text(180, y + 8, this.getDefenderClass(defenderType), {
+              fontFamily: 'Arial',
+              fontSize: '12px',
+              color: '#94a3b8',
+              fontStyle: 'italic'
+            }).setOrigin(0, 0.5).setDepth(7002);
+            this.skillTreeElements.push(defenderClass);
+            
+            // Get skills for this defender
+            const skills = skillTreeManager.getDefenderSkills(defenderType);
+            
+            if (skills && skills.tiers) {
+              let skillIndex = 0;
+              Object.values(skills.tiers).forEach(tier => {
+                tier.skills.forEach((skill) => {
+                  const skillX = 300 + (skillIndex * 110);
+                  const isUnlocked = skillTreeManager.isSkillUnlocked(defenderType, skill.id);
+                  const canUnlock = skillTreeManager.canUnlockSkill(defenderType, skill.id);
+                  
+                  // Skill node with hexagonal design
+                  const skillBg = this.add.rectangle(skillX, y, 90, 50, 
+                    isUnlocked ? 0x10b981 : (canUnlock ? 0x3b82f6 : 0x374151), 1);
+                  skillBg.setDepth(7002);
+                  skillBg.setStrokeStyle(2, 
+                    isUnlocked ? 0x059669 : (canUnlock ? 0x2563eb : 0x4b5563));
+                  this.skillTreeElements.push(skillBg);
+                  
+                  // Skill status indicator
+                  const statusIndicator = this.add.circle(skillX + 35, y - 20, 4, 
+                    isUnlocked ? 0x10b981 : (canUnlock ? 0x3b82f6 : 0x6b7280));
+                  statusIndicator.setDepth(7003);
+                  this.skillTreeElements.push(statusIndicator);
+                  
+                  // Skill name with better typography
+                  const skillText = this.add.text(skillX, y - 8, skill.name, {
+                    fontFamily: 'Arial Bold',
+                    fontSize: '11px',
+                    color: isUnlocked ? '#ffffff' : (canUnlock ? '#e2e8f0' : '#9ca3af'),
+                    align: 'center',
+                    wordWrap: { width: 80 }
+                  }).setOrigin(0.5).setDepth(7003);
+                  this.skillTreeElements.push(skillText);
+                  
+                  // Cost with modern styling
+                  const costText = this.add.text(skillX, y + 12, `${skill.scoreRequired || 100} ⭐`, {
+                    fontFamily: 'Arial',
+                    fontSize: '10px',
+                    color: isUnlocked ? '#6ee7b7' : (canUnlock ? '#93c5fd' : '#9ca3af'),
+                    align: 'center'
+                  }).setOrigin(0.5).setDepth(7003);
+                  this.skillTreeElements.push(costText);
+                  
+                  // Make skill interactive
+                  if (!isUnlocked) {
+                    skillBg.setInteractive({ useHandCursor: true });
+                    
+                    skillBg.on('pointerdown', () => {
+                      if (canUnlock) {
+                        skillTreeManager.unlockSkill(defenderType, skill.id);
+                        this.hideSkillTreeOverlay();
+                        this.showSkillTreeOverlay(); // Refresh the display
+                        if (this.soundManager) {
+                          this.soundManager.play('upgrade');
+                        }
+                      } else {
+                        // Show insufficient resources feedback
+                        this.showInsufficientResourcesFeedback(skillX, y);
+                      }
+                    });
+                    
+                    // Enhanced hover effects
+                    skillBg.on('pointerover', () => {
+                      if (canUnlock) {
+                        skillBg.setFillStyle(0x1d4ed8);
+                        skillBg.setStrokeStyle(2, 0x1e40af);
+                      }
+                      this.showSkillTooltip(skill, skillX, y - 40);
+                    });
+                    
+                    skillBg.on('pointerout', () => {
+                      skillBg.setFillStyle(canUnlock ? 0x3b82f6 : 0x374151);
+                      skillBg.setStrokeStyle(2, canUnlock ? 0x2563eb : 0x4b5563);
+                      this.hideSkillTooltip();
+                    });
+                  } else {
+                    // Add glow effect for unlocked skills
+                    const glowEffect = this.add.rectangle(skillX, y, 94, 54, 0x10b981, 0.2);
+                    glowEffect.setDepth(7001);
+                    this.skillTreeElements.push(glowEffect);
+                  }
+                  
+                  skillIndex++;
+                });
               });
-            });
+            }
+          });
+        }
+        
+        getDefenderEmoji(defenderType) {
+          const emojis = {
+            'archer': '🏹',
+            'mage': '🔮',
+            'warrior': '⚔️',
+            'cannon': '💣'
+          };
+          return emojis[defenderType] || '🛡️';
+        }
+        
+        getDefenderClass(defenderType) {
+          const classes = {
+            'archer': 'Ranged DPS',
+            'mage': 'Magic DPS',
+            'warrior': 'Melee Tank',
+            'cannon': 'Area DPS'
+          };
+          return classes[defenderType] || 'Defender';
+        }
+        
+        showInsufficientResourcesFeedback(x, y) {
+          const feedback = this.add.text(x, y - 30, 'Insufficient Score!', {
+            fontFamily: 'Arial Bold',
+            fontSize: '12px',
+            color: '#ef4444',
+            backgroundColor: '#1f2937',
+            padding: { x: 8, y: 4 }
+          }).setOrigin(0.5).setDepth(7004);
+          this.skillTreeElements.push(feedback);
+          
+          // Fade out after 2 seconds
+          this.tweens.add({
+            targets: feedback,
+            alpha: 0,
+            duration: 2000,
+            onComplete: () => {
+              if (feedback && feedback.destroy) {
+                feedback.destroy();
+              }
+            }
           });
         }
         
@@ -6488,31 +6851,33 @@ if (isBrowser) {
         }
         
         hideSkillTreeOverlay() {
-          // Clean up all skill tree UI elements
-          if (this.skillTreeOverlay) {
-            this.skillTreeOverlay.destroy();
-            this.skillTreeOverlay = null;
+          // Clean up all tracked skill tree elements
+          if (this.skillTreeElements) {
+            this.skillTreeElements.forEach(element => {
+              if (element && element.destroy) {
+                element.destroy();
+              }
+            });
+            this.skillTreeElements = [];
           }
-          if (this.skillTreePanel) {
-            this.skillTreePanel.destroy();
-            this.skillTreePanel = null;
-          }
-          if (this.skillTreeTitle) {
-            this.skillTreeTitle.destroy();
-            this.skillTreeTitle = null;
-          }
-          if (this.skillTreeCloseBtn) {
-            this.skillTreeCloseBtn.destroy();
-            this.skillTreeCloseBtn = null;
-          }
+          
+          // Clean up individual references
+          this.skillTreeOverlay = null;
+          this.skillTreePanel = null;
+          this.skillTreeTitle = null;
+          this.skillTreeCloseBtn = null;
           
           // Clean up any tooltips
           this.hideSkillTooltip();
           
-          // Clean up any other skill tree elements that might exist
+          // Final cleanup - remove any remaining elements with skill tree depth
           this.children.list.forEach(child => {
             if (child.depth >= 7000 && child.depth < 8000) {
-              child.destroy();
+              try {
+                child.destroy();
+              } catch (e) {
+                // Element already destroyed, ignore
+              }
             }
           });
         }
