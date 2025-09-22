@@ -3,8 +3,8 @@
 import Defense from './Defense.js';
 
 export default class SkillDefender extends Defense {
-  constructor(scene, type, x, y, skillTreeManager) {
-    super(scene, type, x, y);
+  constructor(scene, type, x, y, skillTreeManager, skinKey = null) {
+    super(scene, type, x, y, skinKey);
     
     this.skillTreeManager = skillTreeManager;
     this.activeSkills = new Set();

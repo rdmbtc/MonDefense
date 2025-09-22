@@ -317,9 +317,14 @@ export default class SkinCustomization {
     loadSkinPreferences() {
         try {
             const saved = localStorage.getItem('mondefense_skins');
+            console.log('[SKIN DEBUG] Loading skin preferences from localStorage:', saved);
             if (saved) {
                 const savedSkins = JSON.parse(saved);
+                console.log('[SKIN DEBUG] Parsed saved skins:', savedSkins);
                 this.currentSkins = { ...this.currentSkins, ...savedSkins };
+                console.log('[SKIN DEBUG] Updated currentSkins after loading:', this.currentSkins);
+            } else {
+                console.log('[SKIN DEBUG] No saved skin preferences found, using defaults');
             }
         } catch (error) {
             console.warn('Could not load skin preferences:', error);
