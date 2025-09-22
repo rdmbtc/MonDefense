@@ -19,6 +19,12 @@ export default class SkillDefender extends Defense {
   }
   
   initializeSkills() {
+    // Check if skillTreeManager is available
+    if (!this.skillTreeManager || typeof this.skillTreeManager.getDefenderData !== 'function') {
+      console.warn('SkillTreeManager not available, skipping skill initialization');
+      return;
+    }
+    
     // Get unlocked skills for this defender type
     const defenderData = this.skillTreeManager.getDefenderData(this.type.toUpperCase());
     if (!defenderData) return;

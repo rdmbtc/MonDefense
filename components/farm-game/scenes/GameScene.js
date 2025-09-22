@@ -6577,8 +6577,8 @@ if (isBrowser) {
           // Initialize skill tree elements array for proper cleanup
           this.skillTreeElements = [];
           
-          // Create animated dark overlay background with particle effects
-          this.skillTreeOverlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.92);
+          // Create animated dark overlay background with particle effects - REDUCED SIZE
+          this.skillTreeOverlay = this.add.rectangle(400, 300, 600, 450, 0x000000, 0.85);
           this.skillTreeOverlay.setDepth(7000);
           this.skillTreeOverlay.setInteractive();
           this.skillTreeElements.push(this.skillTreeOverlay);
@@ -6586,27 +6586,27 @@ if (isBrowser) {
           // Add animated background particles
           this.createSkillTreeParticles();
           
-          // Create main skill tree panel with AAA design and multiple layers
-          this.skillTreePanel = this.add.rectangle(400, 300, 720, 570, 0x0a0e1a, 1);
+          // Create main skill tree panel with AAA design and multiple layers - REDUCED SIZE
+          this.skillTreePanel = this.add.rectangle(400, 300, 540, 420, 0x0a0e1a, 0.95);
           this.skillTreePanel.setDepth(7001);
           this.skillTreePanel.setStrokeStyle(3, 0x1e293b);
           this.skillTreeElements.push(this.skillTreePanel);
           
-          // Add outer glow border
-          this.skillTreeOuterGlow = this.add.rectangle(400, 300, 730, 580, 0x000000, 0);
+          // Add outer glow border - REDUCED SIZE
+          this.skillTreeOuterGlow = this.add.rectangle(400, 300, 550, 430, 0x000000, 0);
           this.skillTreeOuterGlow.setDepth(7000);
           this.skillTreeOuterGlow.setStrokeStyle(6, 0x0ea5e9, 0.4);
           this.skillTreeElements.push(this.skillTreeOuterGlow);
           
-          // Add inner gradient panels for depth
-          this.skillTreeInnerPanel1 = this.add.rectangle(400, 300, 700, 550, 0x111827, 0.8);
+          // Add inner gradient panels for depth - REDUCED SIZE WITH ENHANCED BLUR EFFECT
+          this.skillTreeInnerPanel1 = this.add.rectangle(400, 300, 520, 400, 0x111827, 0.8);
           this.skillTreeInnerPanel1.setDepth(7001);
-          this.skillTreeInnerPanel1.setStrokeStyle(2, 0x374151);
+          this.skillTreeInnerPanel1.setStrokeStyle(2, 0x374151, 0.6);
           this.skillTreeElements.push(this.skillTreeInnerPanel1);
           
-          this.skillTreeInnerPanel2 = this.add.rectangle(400, 300, 680, 530, 0x1f2937, 0.6);
+          this.skillTreeInnerPanel2 = this.add.rectangle(400, 300, 500, 380, 0x1f2937, 0.6);
           this.skillTreeInnerPanel2.setDepth(7001);
-          this.skillTreeInnerPanel2.setStrokeStyle(1, 0x4b5563);
+          this.skillTreeInnerPanel2.setStrokeStyle(1, 0x4b5563, 0.4);
           this.skillTreeElements.push(this.skillTreeInnerPanel2);
           
           // Add animated corner decorations
@@ -6814,7 +6814,7 @@ if (isBrowser) {
         }
         
         displayDefenderSkills(skillTreeManager) {
-          const defenders = ['archer', 'mage', 'warrior', 'cannon'];
+          const defenders = ['CHOG', 'MOLANDAK', 'MOYAKI', 'KEON'];
           const startY = 190;
           const spacing = 95;
           
@@ -6867,7 +6867,7 @@ if (isBrowser) {
             });
             
             // Enhanced defender name with epic styling
-            const defenderNameText = this.add.text(190, y - 15, defenderType.charAt(0).toUpperCase() + defenderType.slice(1), {
+            const defenderNameText = this.add.text(190, y - 15, defenderType, {
               fontFamily: 'Arial Black',
               fontSize: '22px',
               color: '#f1f5f9',
@@ -7100,30 +7100,30 @@ if (isBrowser) {
         
         getDefenderEmoji(defenderType) {
           const emojis = {
-            'archer': '🏹',
-            'mage': '🔮',
-            'warrior': '⚔️',
-            'cannon': '💣'
+            'CHOG': '🌪️',
+            'MOLANDAK': '❄️',
+            'MOYAKI': '🔥',
+            'KEON': '⚡'
           };
           return emojis[defenderType] || '🛡️';
         }
         
         getDefenderColor(defenderType) {
           const colors = {
-            'archer': 0x10b981,    // Emerald
-            'mage': 0x8b5cf6,      // Purple
-            'warrior': 0xf59e0b,   // Amber
-            'cannon': 0xef4444     // Red
+            'CHOG': 0x10b981,      // Emerald for wind
+            'MOLANDAK': 0x3b82f6,  // Blue for ice
+            'MOYAKI': 0xef4444,    // Red for fire
+            'KEON': 0xf59e0b       // Amber for lightning
           };
           return colors[defenderType] || 0x6b7280;
         }
         
         getDefenderClass(defenderType) {
           const classes = {
-            'archer': 'Ranged DPS',
-            'mage': 'Magic DPS',
-            'warrior': 'Melee Tank',
-            'cannon': 'Area DPS'
+            'CHOG': 'Wind Master',
+            'MOLANDAK': 'Ice Guardian',
+            'MOYAKI': 'Fire Warrior',
+            'KEON': 'Lightning Champion'
           };
           return classes[defenderType] || 'Defender';
         }
