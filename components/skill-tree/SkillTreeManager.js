@@ -314,6 +314,18 @@ class SkillTreeManager {
     this.dispatchProgressUpdate();
   }
 
+  // Method called directly from game when enemy is defeated
+  onEnemyDefeated(enemyType, currentScore) {
+    this.enemiesDefeated++;
+    // Use the higher of current total score or the passed score
+    this.totalScore = Math.max(this.totalScore, currentScore || this.totalScore);
+    this.checkSkillUnlocks();
+    this.saveProgress();
+    
+    // Dispatch update event for UI
+    this.dispatchProgressUpdate();
+  }
+
   // Handle score updates from other sources
   handleScoreUpdate(event) {
     if (event.detail && typeof event.detail.score === 'number') {

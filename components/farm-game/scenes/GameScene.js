@@ -1042,13 +1042,13 @@ if (isBrowser) {
               color: '#FFD700'
             }).setDepth(UI_DEPTH);
             
-            // Skill Tree Button
-            this.skillTreeButton = this.add.text(650, 30, '🌟 Skills', {
+            // Skill Tree Button - Repositioned for better spacing
+            this.skillTreeButton = this.add.text(650, 50, '🌟 Skills', {
               fontFamily: 'Arial',
-              fontSize: '18px',
+              fontSize: '16px',
               color: '#FFFFFF',
               backgroundColor: '#6B46C1',
-              padding: { x: 10, y: 5 }
+              padding: { x: 12, y: 8 }
             }).setDepth(UI_DEPTH).setInteractive({ useHandCursor: true });
             
             this.skillTreeButton.on('pointerdown', () => {
@@ -1612,7 +1612,7 @@ if (isBrowser) {
                 const snappedY = Math.floor(pointer.y / gridSize) * gridSize + (gridSize / 2);
                 
                 // Place the defense at the snapped position
-                const success = this.placeDefense(snappedX, snappedY, defenseType);
+                const success = this.placeDefense(defenseType, snappedX, snappedY);
                 
                 if (success) {
                   // Reset flags
@@ -3075,8 +3075,8 @@ if (isBrowser) {
         
         createToolbar() {
           try {
-            // Create a larger background for the toolbar to accommodate all buttons
-            const toolbarBg = this.add.rectangle(200, 550, 520, 65, 0x333333, 0.8).setDepth(1999); // Ensure toolbar BG is below buttons
+            // Create a larger background for the toolbar to accommodate all buttons with better spacing
+            const toolbarBg = this.add.rectangle(200, 570, 520, 65, 0x333333, 0.8).setDepth(1999); // Moved down for better spacing
 
             // Store buttons for reference - Initialize object first
             this.toolbarButtons = {};
@@ -3107,8 +3107,8 @@ if (isBrowser) {
             const costFontSize = '12px';
             const labelFontSize = '12px';
 
-            // Add attack button
-            const attackButton = this.add.rectangle(40, 550, buttonWidth, buttonHeight, 0xFF4400).setDepth(2000);
+            // Add attack button - moved down for better spacing
+            const attackButton = this.add.rectangle(40, 570, buttonWidth, buttonHeight, 0xFF4400).setDepth(2000);
             attackButton.on('pointerdown', () => {
               this.pendingDefensePlacement = false; // Reset placement flag
               this.setToolMode('attack');
@@ -3117,7 +3117,7 @@ if (isBrowser) {
             this.addUIAnimations(attackButton); // Add UI animations - this will handle setInteractive
             this.toolbarButtons.attack = attackButton; // Store reference
 
-            const attackText = this.add.text(40, 550, '👆', {
+            const attackText = this.add.text(40, 570, '👆', {
               fontFamily: 'Arial',
               fontSize: '32px' // Increased from 24px
             }).setOrigin(0.5).setDepth(2001);
@@ -3125,8 +3125,8 @@ if (isBrowser) {
             attackText.on('pointerdown', () => attackButton.emit('pointerdown')); // Trigger button's event
 
 
-            // Add crop button
-            const cropButton = this.add.rectangle(110, 550, buttonWidth, buttonHeight, 0x006600).setDepth(2000);
+            // Add crop button - moved down for better spacing
+            const cropButton = this.add.rectangle(110, 570, buttonWidth, buttonHeight, 0x006600).setDepth(2000);
             cropButton.on('pointerdown', () => {
               this.pendingDefensePlacement = false; // Reset placement flag
               this.setToolMode('plant');
@@ -3138,13 +3138,13 @@ if (isBrowser) {
             // IMPORTANT: Always use tree images for crops - NEVER change this!
             let cropImage;
             if (this.textures.exists('Fruit_tree3')) {
-              cropImage = this.add.image(110, 550, 'Fruit_tree3').setDepth(2001);
+              cropImage = this.add.image(110, 570, 'Fruit_tree3').setDepth(2001);
               cropImage.setDisplaySize(iconSize, iconSize); // Use variable size
               cropImage.setInteractive({ useHandCursor: true });
               cropImage.on('pointerdown', () => { cropButton.emit('pointerdown'); });
             } else {
               // Fallback to emoji if image doesn't exist
-              cropImage = this.add.text(110, 550, '🌳', {
+              cropImage = this.add.text(110, 570, '🌳', {
                 fontFamily: 'Arial', fontSize: '32px'
               }).setOrigin(0.5).setDepth(2001);
               cropImage.setInteractive({ useHandCursor: true });
@@ -3152,8 +3152,8 @@ if (isBrowser) {
             }
 
 
-            // Add chog button (ABS mage)
-            const chogButton = this.add.rectangle(180, 550, buttonWidth, buttonHeight, 0x000066).setDepth(2000);
+            // Add chog button (ABS mage) - moved down for better spacing
+            const chogButton = this.add.rectangle(180, 570, buttonWidth, buttonHeight, 0x000066).setDepth(2000);
             chogButton.on('pointerdown', () => {
               this.pendingDefenseType = 'chog';
               this.pendingDefensePlacement = true;
@@ -3165,7 +3165,7 @@ if (isBrowser) {
              this.toolbarButtons.chog = chogButton; // Store reference
 
             // Create larger invisible hover area for better tooltip interaction
-            const chogHoverArea = this.add.rectangle(180, 550, buttonWidth + 20, buttonHeight + 20, 0x000000, 0).setDepth(1998);
+            const chogHoverArea = this.add.rectangle(180, 570, buttonWidth + 20, buttonHeight + 20, 0x000000, 0).setDepth(1998);
             chogHoverArea.setInteractive({ useHandCursor: true });
             chogHoverArea.on('pointerdown', () => { chogButton.emit('pointerdown'); });
             this.toolbarButtons.chogHover = chogHoverArea;
@@ -3174,12 +3174,12 @@ if (isBrowser) {
             const absImageKey = 'ABS_idle';
             let absImage;
             if (this.textures.exists(absImageKey)) {
-              absImage = this.add.image(180, 550, absImageKey).setDepth(2001);
+              absImage = this.add.image(180, 570, absImageKey).setDepth(2001);
               absImage.setDisplaySize(iconSize, iconSize); // Use variable size
               absImage.setInteractive({ useHandCursor: true });
               absImage.on('pointerdown', () => { chogButton.emit('pointerdown'); });
             } else {
-              absImage = this.add.text(180, 550, '🧙‍♂️', {
+              absImage = this.add.text(180, 570, '🧙‍♂️', {
                 fontFamily: 'Arial', fontSize: '32px'
               }).setOrigin(0.5).setDepth(2001);
               absImage.setInteractive({ useHandCursor: true });
@@ -3188,8 +3188,8 @@ if (isBrowser) {
             this.toolbarButtons.chogImage = absImage; // Store reference
 
 
-            // Add molandak button (MON mage)
-            const molandakButton = this.add.rectangle(250, 550, buttonWidth, buttonHeight, 0x660000).setDepth(2000);
+            // Add molandak button (MON mage) - moved down for better spacing
+            const molandakButton = this.add.rectangle(250, 570, buttonWidth, buttonHeight, 0x660000).setDepth(2000);
             molandakButton.on('pointerdown', () => {
               this.pendingDefenseType = 'molandak';
               this.pendingDefensePlacement = true;
@@ -3201,7 +3201,7 @@ if (isBrowser) {
             this.toolbarButtons.molandak = molandakButton; // Store reference
 
             // Create larger invisible hover area for better tooltip interaction
-            const molandakHoverArea = this.add.rectangle(250, 550, buttonWidth + 20, buttonHeight + 20, 0x000000, 0).setDepth(1998);
+            const molandakHoverArea = this.add.rectangle(250, 570, buttonWidth + 20, buttonHeight + 20, 0x000000, 0).setDepth(1998);
             molandakHoverArea.setInteractive({ useHandCursor: true });
             molandakHoverArea.on('pointerdown', () => { molandakButton.emit('pointerdown'); });
             this.toolbarButtons.molandakHover = molandakHoverArea;
@@ -3210,12 +3210,12 @@ if (isBrowser) {
             const monImageKey = 'MON_idle';
             let monImage;
             if (this.textures.exists(monImageKey)) {
-              monImage = this.add.image(250, 550, monImageKey).setDepth(2001);
+              monImage = this.add.image(250, 570, monImageKey).setDepth(2001);
               monImage.setDisplaySize(iconSize, iconSize); // Use variable size
               monImage.setInteractive({ useHandCursor: true });
               monImage.on('pointerdown', () => { molandakButton.emit('pointerdown'); });
             } else {
-              monImage = this.add.text(250, 550, '🧙‍♀️', {
+              monImage = this.add.text(250, 570, '🧙‍♀️', {
                 fontFamily: 'Arial', fontSize: '32px'
               }).setOrigin(0.5).setDepth(2001);
               monImage.setInteractive({ useHandCursor: true });
@@ -3229,8 +3229,8 @@ if (isBrowser) {
             let keonImage, moyakiImage;
             let keonCostText, moyakiCostText;
 
-            // keon Button
-            keonButton = this.add.rectangle(320, 550, buttonWidth, buttonHeight, 0x990099).setDepth(2000);
+            // keon Button - moved down for better spacing
+            keonButton = this.add.rectangle(320, 570, buttonWidth, buttonHeight, 0x990099).setDepth(2000);
             keonButton.on('pointerdown', () => {
               this.pendingDefenseType = 'keon';
               this.pendingDefensePlacement = true;
@@ -3242,27 +3242,27 @@ if (isBrowser) {
             this.toolbarButtons.keon = keonButton; // Store reference
 
             // Create larger invisible hover area for better tooltip interaction
-            const keonHoverArea = this.add.rectangle(320, 550, buttonWidth + 20, buttonHeight + 20, 0x000000, 0).setDepth(1998);
+            const keonHoverArea = this.add.rectangle(320, 570, buttonWidth + 20, buttonHeight + 20, 0x000000, 0).setDepth(1998);
             keonHoverArea.setInteractive({ useHandCursor: true });
             keonHoverArea.on('pointerdown', () => { keonButton.emit('pointerdown'); });
             this.toolbarButtons.keonHover = keonHoverArea;
 
             if (this.textures.exists('keon_idle')) {
-              keonImage = this.add.image(320, 550, 'keon_idle').setDepth(2001);
+              keonImage = this.add.image(320, 570, 'keon_idle').setDepth(2001);
               keonImage.setDisplaySize(iconSize, iconSize);
               keonImage.setInteractive({ useHandCursor: true });
               keonImage.on('pointerdown', () => { keonButton.emit('pointerdown'); });
             } else {
-              keonImage = this.add.text(320, 550, '🧙', { fontFamily: 'Arial', fontSize: '32px' }).setOrigin(0.5).setDepth(2001);
+              keonImage = this.add.text(320, 570, '🧙', { fontFamily: 'Arial', fontSize: '32px' }).setOrigin(0.5).setDepth(2001);
               keonImage.setInteractive({ useHandCursor: true });
               keonImage.on('pointerdown', () => { keonButton.emit('pointerdown'); });
             }
-            keonCostText = this.add.text(320, 570, '150', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
+            keonCostText = this.add.text(320, 590, '150', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
             this.toolbarButtons.keonImage = keonImage; // Store reference
             this.toolbarButtons.keonCostText = keonCostText; // Store reference
 
-            // moyaki Button
-            moyakiButton = this.add.rectangle(390, 550, buttonWidth, buttonHeight, 0x990000).setDepth(2000);
+            // moyaki Button - moved down for better spacing
+            moyakiButton = this.add.rectangle(390, 570, buttonWidth, buttonHeight, 0x990000).setDepth(2000);
             moyakiButton.on('pointerdown', () => {
               this.pendingDefenseType = 'moyaki';
               this.pendingDefensePlacement = true;
@@ -3274,23 +3274,23 @@ if (isBrowser) {
             this.toolbarButtons.moyaki = moyakiButton; // Store reference
 
             // Create larger invisible hover area for better tooltip interaction
-            const moyakiHoverArea = this.add.rectangle(390, 550, buttonWidth + 20, buttonHeight + 20, 0x000000, 0).setDepth(1998);
+            const moyakiHoverArea = this.add.rectangle(390, 570, buttonWidth + 20, buttonHeight + 20, 0x000000, 0).setDepth(1998);
             moyakiHoverArea.setInteractive({ useHandCursor: true });
             moyakiHoverArea.on('pointerdown', () => { moyakiButton.emit('pointerdown'); });
             this.toolbarButtons.moyakiHover = moyakiHoverArea;
 
 
             if (this.textures.exists('moyaki_idle')) {
-              moyakiImage = this.add.image(390, 550, 'moyaki_idle').setDepth(2001);
+              moyakiImage = this.add.image(390, 570, 'moyaki_idle').setDepth(2001);
               moyakiImage.setDisplaySize(iconSize, iconSize);
               moyakiImage.setInteractive({ useHandCursor: true });
                moyakiImage.on('pointerdown', () => { moyakiButton.emit('pointerdown'); });
             } else {
-              moyakiImage = this.add.text(390, 550, '💣', { fontFamily: 'Arial', fontSize: '32px' }).setOrigin(0.5).setDepth(2001);
+              moyakiImage = this.add.text(390, 570, '💣', { fontFamily: 'Arial', fontSize: '32px' }).setOrigin(0.5).setDepth(2001);
               moyakiImage.setInteractive({ useHandCursor: true });
                moyakiImage.on('pointerdown', () => { moyakiButton.emit('pointerdown'); });
             }
-            moyakiCostText = this.add.text(390, 570, '80', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
+            moyakiCostText = this.add.text(390, 590, '80', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
              this.toolbarButtons.moyakiImage = moyakiImage; // Store reference
              this.toolbarButtons.moyakiCostText = moyakiCostText; // Store reference
 
@@ -3299,40 +3299,40 @@ if (isBrowser) {
             moyakiButton.visible = false; moyakiImage.visible = false; moyakiCostText.visible = false;
 
 
-            // Add upgrade button
-            const upgradeButton = this.add.rectangle(460, 550, buttonWidth, buttonHeight, 0x555500).setDepth(2000);
+            // Add upgrade button - moved down for better spacing
+            const upgradeButton = this.add.rectangle(460, 570, buttonWidth, buttonHeight, 0x555500).setDepth(2000);
             upgradeButton.on('pointerdown', () => this.toggleUpgradePanel());
             addBounceEffect(upgradeButton); // Add bounce effect
             this.addUIAnimations(upgradeButton); // Add UI animations - this will handle setInteractive
             this.toolbarButtons.upgrade = upgradeButton; // Store reference
 
-            const upgradeText = this.add.text(460, 550, '⚙️', {
+            const upgradeText = this.add.text(460, 570, '⚙️', {
               fontFamily: 'Arial', fontSize: '32px'
             }).setOrigin(0.5).setDepth(2001);
             upgradeText.setInteractive({ useHandCursor: true });
             upgradeText.on('pointerdown', () => upgradeButton.emit('pointerdown'));
 
-            // Add skin customization button
-            const skinButton = this.add.rectangle(530, 550, buttonWidth, buttonHeight, 0x8B4513).setDepth(2000);
+            // Add skin customization button - moved down for better spacing
+            const skinButton = this.add.rectangle(530, 570, buttonWidth, buttonHeight, 0x8B4513).setDepth(2000);
             skinButton.on('pointerdown', () => this.toggleSkinCustomization());
             addBounceEffect(skinButton); // Add bounce effect
             this.addUIAnimations(skinButton); // Add UI animations - this will handle setInteractive
             this.toolbarButtons.skin = skinButton; // Store reference
 
-            const skinText = this.add.text(530, 550, '👤', {
+            const skinText = this.add.text(530, 570, '👤', {
               fontFamily: 'Arial', fontSize: '32px'
             }).setOrigin(0.5).setDepth(2001);
             skinText.setInteractive({ useHandCursor: true });
             skinText.on('pointerdown', () => skinButton.emit('pointerdown'));
 
 
-            // Add costs/labels underneath
-            this.add.text(40, 570, 'Attack', { fontFamily: 'Arial', fontSize: labelFontSize, color: '#FFFFFF' }).setOrigin(0.5).setDepth(2001);
-            this.add.text(110, 570, '5', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
-            this.add.text(180, 570, '25', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
-            this.add.text(250, 570, '50', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
-            this.add.text(460, 570, 'Upgrade', { fontFamily: 'Arial', fontSize: labelFontSize, color: '#FFFFFF' }).setOrigin(0.5).setDepth(2001);
-            this.add.text(530, 570, 'Skins', { fontFamily: 'Arial', fontSize: labelFontSize, color: '#FFFFFF' }).setOrigin(0.5).setDepth(2001);
+            // Add costs/labels underneath - adjusted for new spacing
+            this.add.text(40, 590, 'Attack', { fontFamily: 'Arial', fontSize: labelFontSize, color: '#FFFFFF' }).setOrigin(0.5).setDepth(2001);
+            this.add.text(110, 590, '5', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
+            this.add.text(180, 590, '25', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
+            this.add.text(250, 590, '50', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
+            this.add.text(460, 590, 'Upgrade', { fontFamily: 'Arial', fontSize: labelFontSize, color: '#FFFFFF' }).setOrigin(0.5).setDepth(2001);
+            this.add.text(530, 590, 'Skins', { fontFamily: 'Arial', fontSize: labelFontSize, color: '#FFFFFF' }).setOrigin(0.5).setDepth(2001);
 
 
             // Set initial tool to attack mode
@@ -3637,7 +3637,7 @@ if (isBrowser) {
             // Check if position is valid (right side of screen)
             if (x < 200) {
               this.showFloatingText(x, y, "Place on RIGHT side only!", 0xFF0000);
-              return;
+              return false;
             }
             
             // Calculate cost based on defense type
@@ -3646,7 +3646,7 @@ if (isBrowser) {
             // Check if player has enough coins
             if (this.gameState.farmCoins < cost) {
               this.showFloatingText(x, y, `Need ${cost} coins!`, 0xFF0000);
-              return;
+              return false;
             }
             
             // Add Defense class from registry
@@ -3654,7 +3654,7 @@ if (isBrowser) {
             
             if (!DefenseClass) {
               console.error("Defense class not available");
-              return;
+              return false;
             }
             
             // Create defense - handle upgrades in the Defense constructor
@@ -3692,6 +3692,8 @@ if (isBrowser) {
             
             // Reset tool mode to attack after placing
             // this.setToolMode('attack');
+            
+            return true;
           };
         }
 
@@ -6503,71 +6505,125 @@ if (isBrowser) {
           // Initialize skill tree elements array for proper cleanup
           this.skillTreeElements = [];
           
-          // Create dark overlay background with gradient effect
-          this.skillTreeOverlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.85);
+          // Create animated dark overlay background with particle effects
+          this.skillTreeOverlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.92);
           this.skillTreeOverlay.setDepth(7000);
           this.skillTreeOverlay.setInteractive();
           this.skillTreeElements.push(this.skillTreeOverlay);
           
-          // Create main skill tree panel with modern design
-          this.skillTreePanel = this.add.rectangle(400, 300, 700, 550, 0x1a1a2e, 1);
+          // Add animated background particles
+          this.createSkillTreeParticles();
+          
+          // Create main skill tree panel with AAA design and multiple layers
+          this.skillTreePanel = this.add.rectangle(400, 300, 720, 570, 0x0a0e1a, 1);
           this.skillTreePanel.setDepth(7001);
-          this.skillTreePanel.setStrokeStyle(4, 0x16213e);
+          this.skillTreePanel.setStrokeStyle(3, 0x1e293b);
           this.skillTreeElements.push(this.skillTreePanel);
           
-          // Add inner glow effect
-          this.skillTreeGlow = this.add.rectangle(400, 300, 690, 540, 0x0f3460, 0.3);
-          this.skillTreeGlow.setDepth(7001);
-          this.skillTreeGlow.setStrokeStyle(2, 0x0f3460);
-          this.skillTreeElements.push(this.skillTreeGlow);
+          // Add outer glow border
+          this.skillTreeOuterGlow = this.add.rectangle(400, 300, 730, 580, 0x000000, 0);
+          this.skillTreeOuterGlow.setDepth(7000);
+          this.skillTreeOuterGlow.setStrokeStyle(6, 0x0ea5e9, 0.4);
+          this.skillTreeElements.push(this.skillTreeOuterGlow);
           
-          // Modern title with glow effect
-          this.skillTreeTitle = this.add.text(400, 60, 'SKILL NEXUS', {
+          // Add inner gradient panels for depth
+          this.skillTreeInnerPanel1 = this.add.rectangle(400, 300, 700, 550, 0x111827, 0.8);
+          this.skillTreeInnerPanel1.setDepth(7001);
+          this.skillTreeInnerPanel1.setStrokeStyle(2, 0x374151);
+          this.skillTreeElements.push(this.skillTreeInnerPanel1);
+          
+          this.skillTreeInnerPanel2 = this.add.rectangle(400, 300, 680, 530, 0x1f2937, 0.6);
+          this.skillTreeInnerPanel2.setDepth(7001);
+          this.skillTreeInnerPanel2.setStrokeStyle(1, 0x4b5563);
+          this.skillTreeElements.push(this.skillTreeInnerPanel2);
+          
+          // Add animated corner decorations
+          this.createCornerDecorations();
+          
+          // Epic title with multiple effects
+          this.skillTreeTitle = this.add.text(400, 60, 'NEXUS OF POWER', {
             fontFamily: 'Arial Black',
-            fontSize: '36px',
+            fontSize: '42px',
             color: '#00d4ff',
             fontStyle: 'bold',
-            stroke: '#003d5c',
-            strokeThickness: 3,
+            stroke: '#001a2e',
+            strokeThickness: 4,
             shadow: {
-              offsetX: 2,
-              offsetY: 2,
+              offsetX: 3,
+              offsetY: 3,
               color: '#000000',
-              blur: 8,
+              blur: 12,
               fill: true
             }
           }).setOrigin(0.5).setDepth(7002);
           this.skillTreeElements.push(this.skillTreeTitle);
           
-          // Subtitle
-          this.skillTreeSubtitle = this.add.text(400, 95, 'Enhance Your Defenders', {
+          // Add title glow animation
+          this.tweens.add({
+            targets: this.skillTreeTitle,
+            scaleX: 1.05,
+            scaleY: 1.05,
+            duration: 2000,
+            yoyo: true,
+            repeat: -1,
+            ease: 'Sine.easeInOut'
+          });
+          
+          // Enhanced subtitle with gradient effect
+          this.skillTreeSubtitle = this.add.text(400, 95, 'Ascend Beyond Mortal Limits', {
             fontFamily: 'Arial',
-            fontSize: '16px',
-            color: '#8cc8ff',
-            fontStyle: 'italic'
+            fontSize: '18px',
+            color: '#64748b',
+            fontStyle: 'italic',
+            stroke: '#000000',
+            strokeThickness: 1
           }).setOrigin(0.5).setDepth(7002);
           this.skillTreeElements.push(this.skillTreeSubtitle);
           
-          // Modern close button
-          this.skillTreeCloseBtn = this.add.rectangle(680, 60, 40, 40, 0xff4757, 1);
+          // Epic close button with hover animations
+          this.skillTreeCloseBtn = this.add.rectangle(680, 60, 45, 45, 0x991b1b, 1);
           this.skillTreeCloseBtn.setDepth(7002);
-          this.skillTreeCloseBtn.setStrokeStyle(2, 0xc44569);
+          this.skillTreeCloseBtn.setStrokeStyle(3, 0xdc2626);
           this.skillTreeCloseBtn.setInteractive({ useHandCursor: true });
           this.skillTreeElements.push(this.skillTreeCloseBtn);
           
+          // Add close button glow
+          this.skillTreeCloseBtnGlow = this.add.rectangle(680, 60, 50, 50, 0x000000, 0);
+          this.skillTreeCloseBtnGlow.setDepth(7001);
+          this.skillTreeCloseBtnGlow.setStrokeStyle(2, 0xef4444, 0.6);
+          this.skillTreeElements.push(this.skillTreeCloseBtnGlow);
+          
           this.skillTreeCloseBtnText = this.add.text(680, 60, '✕', {
             fontFamily: 'Arial Black',
-            fontSize: '20px',
-            color: '#ffffff'
+            fontSize: '24px',
+            color: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 2
           }).setOrigin(0.5).setDepth(7003);
           this.skillTreeElements.push(this.skillTreeCloseBtnText);
           
-          // Add hover effects to close button
+          // Add enhanced hover effects to close button
           this.skillTreeCloseBtn.on('pointerover', () => {
-            this.skillTreeCloseBtn.setFillStyle(0xff6b7d);
+            this.skillTreeCloseBtn.setFillStyle(0xdc2626);
+            this.skillTreeCloseBtnGlow.setStrokeStyle(3, 0xef4444, 0.8);
+            this.tweens.add({
+              targets: this.skillTreeCloseBtn,
+              scaleX: 1.1,
+              scaleY: 1.1,
+              duration: 200,
+              ease: 'Back.easeOut'
+            });
           });
           this.skillTreeCloseBtn.on('pointerout', () => {
-            this.skillTreeCloseBtn.setFillStyle(0xff4757);
+            this.skillTreeCloseBtn.setFillStyle(0x991b1b);
+            this.skillTreeCloseBtnGlow.setStrokeStyle(2, 0xef4444, 0.6);
+            this.tweens.add({
+              targets: this.skillTreeCloseBtn,
+              scaleX: 1,
+              scaleY: 1,
+              duration: 200,
+              ease: 'Back.easeOut'
+            });
           });
           
           this.skillTreeCloseBtn.on('pointerdown', () => {
@@ -6577,108 +6633,204 @@ if (isBrowser) {
             }
           });
           
-          // Progress panel with modern design
-          this.progressPanel = this.add.rectangle(400, 130, 650, 60, 0x0f1419, 0.8);
+          // Enhanced progress panel with AAA styling
+          this.progressPanel = this.add.rectangle(400, 130, 680, 70, 0x0f172a, 0.95);
           this.progressPanel.setDepth(7001);
-          this.progressPanel.setStrokeStyle(2, 0x2c5aa0);
+          this.progressPanel.setStrokeStyle(2, 0x1e40af);
           this.skillTreeElements.push(this.progressPanel);
           
-          // Display current progress with modern styling
+          // Add progress panel glow
+          this.progressPanelGlow = this.add.rectangle(400, 130, 690, 80, 0x000000, 0);
+          this.progressPanelGlow.setDepth(7000);
+          this.progressPanelGlow.setStrokeStyle(3, 0x3b82f6, 0.3);
+          this.skillTreeElements.push(this.progressPanelGlow);
+          
+          // Add animated progress decorations
+          this.createProgressDecorations();
+          
+          // Display current progress with AAA styling and animations
           const skillTreeManager = window.skillTreeManager;
           if (skillTreeManager) {
             const progressData = skillTreeManager.getProgressData();
             
-            // Score display with icon
-            const scoreIcon = this.add.text(250, 120, '⭐', {
-              fontSize: '20px'
+            // Enhanced score display with animated icon
+            const scoreIcon = this.add.text(220, 115, '⭐', {
+              fontSize: '28px'
             }).setOrigin(0.5).setDepth(7002);
             this.skillTreeElements.push(scoreIcon);
             
-            const scoreText = this.add.text(280, 120, `${progressData.totalScore.toLocaleString()}`, {
-              fontFamily: 'Arial Bold',
-              fontSize: '18px',
-              color: '#ffd700',
-              fontStyle: 'bold'
+            // Add pulsing animation to score icon
+            this.tweens.add({
+              targets: scoreIcon,
+              scaleX: 1.2,
+              scaleY: 1.2,
+              duration: 1500,
+              yoyo: true,
+              repeat: -1,
+              ease: 'Sine.easeInOut'
+            });
+            
+            const scoreText = this.add.text(260, 115, `${progressData.totalScore.toLocaleString()}`, {
+              fontFamily: 'Arial Black',
+              fontSize: '22px',
+              color: '#fbbf24',
+              fontStyle: 'bold',
+              stroke: '#92400e',
+              strokeThickness: 2,
+              shadow: {
+                offsetX: 2,
+                offsetY: 2,
+                color: '#000000',
+                blur: 4,
+                fill: true
+              }
             }).setOrigin(0, 0.5).setDepth(7002);
             this.skillTreeElements.push(scoreText);
             
-            const scoreLabel = this.add.text(280, 135, 'Total Score', {
-              fontFamily: 'Arial',
+            const scoreLabel = this.add.text(260, 135, 'POWER LEVEL', {
+              fontFamily: 'Arial Bold',
               fontSize: '12px',
-              color: '#8cc8ff'
+              color: '#d97706',
+              letterSpacing: '1px'
             }).setOrigin(0, 0.5).setDepth(7002);
             this.skillTreeElements.push(scoreLabel);
             
-            // Enemies display with icon
-            const enemyIcon = this.add.text(450, 120, '⚔️', {
-              fontSize: '20px'
+            // Enhanced enemies display with combat icon
+            const enemyIcon = this.add.text(480, 115, '⚔️', {
+              fontSize: '28px'
             }).setOrigin(0.5).setDepth(7002);
             this.skillTreeElements.push(enemyIcon);
             
-            const enemiesText = this.add.text(480, 120, `${progressData.enemiesDefeated.toLocaleString()}`, {
-              fontFamily: 'Arial Bold',
-              fontSize: '18px',
-              color: '#ff6b6b',
-              fontStyle: 'bold'
+            // Add rotation animation to enemy icon
+            this.tweens.add({
+              targets: enemyIcon,
+              rotation: 0.2,
+              duration: 800,
+              yoyo: true,
+              repeat: -1,
+              ease: 'Sine.easeInOut'
+            });
+            
+            const enemiesText = this.add.text(520, 115, `${progressData.enemiesDefeated.toLocaleString()}`, {
+              fontFamily: 'Arial Black',
+              fontSize: '22px',
+              color: '#ef4444',
+              fontStyle: 'bold',
+              stroke: '#7f1d1d',
+              strokeThickness: 2,
+              shadow: {
+                offsetX: 2,
+                offsetY: 2,
+                color: '#000000',
+                blur: 4,
+                fill: true
+              }
             }).setOrigin(0, 0.5).setDepth(7002);
             this.skillTreeElements.push(enemiesText);
             
-            const enemiesLabel = this.add.text(480, 135, 'Enemies Defeated', {
-              fontFamily: 'Arial',
+            const enemiesLabel = this.add.text(520, 135, 'SOULS CLAIMED', {
+              fontFamily: 'Arial Bold',
               fontSize: '12px',
-              color: '#8cc8ff'
+              color: '#dc2626',
+              letterSpacing: '1px'
             }).setOrigin(0, 0.5).setDepth(7002);
             this.skillTreeElements.push(enemiesLabel);
             
-            // Display available defenders and their skills
+            // Display available defenders and their skills with enhanced design
             this.displayDefenderSkills(skillTreeManager);
           }
         }
         
         displayDefenderSkills(skillTreeManager) {
           const defenders = ['archer', 'mage', 'warrior', 'cannon'];
-          const startY = 180;
-          const spacing = 90;
+          const startY = 190;
+          const spacing = 95;
           
           defenders.forEach((defenderType, index) => {
             const y = startY + (index * spacing);
             
-            // Defender section background
-            const defenderBg = this.add.rectangle(400, y, 650, 75, 0x0d1117, 0.6);
+            // Enhanced defender section background with gradient effect
+            const defenderBg = this.add.rectangle(400, y, 680, 85, 0x0f172a, 0.9);
             defenderBg.setDepth(7001);
-            defenderBg.setStrokeStyle(1, 0x21262d);
+            defenderBg.setStrokeStyle(2, 0x1e293b);
             this.skillTreeElements.push(defenderBg);
             
-            // Defender icon/avatar background
-            const defenderIcon = this.add.rectangle(130, y, 50, 50, 0x1f2937, 1);
-            defenderIcon.setDepth(7002);
-            defenderIcon.setStrokeStyle(2, 0x374151);
-            this.skillTreeElements.push(defenderIcon);
+            // Add defender section glow
+            const defenderGlow = this.add.rectangle(400, y, 690, 95, 0x000000, 0);
+            defenderGlow.setDepth(7000);
+            defenderGlow.setStrokeStyle(3, this.getDefenderColor(defenderType), 0.3);
+            this.skillTreeElements.push(defenderGlow);
             
-            // Defender type emoji/icon
+            // Enhanced defender icon with animated background
+            const defenderIconBg = this.add.rectangle(130, y, 60, 60, this.getDefenderColor(defenderType), 0.8);
+            defenderIconBg.setDepth(7002);
+            defenderIconBg.setStrokeStyle(3, this.getDefenderColor(defenderType));
+            this.skillTreeElements.push(defenderIconBg);
+            
+            // Add subtle rotation animation to icon background
+            this.tweens.add({
+              targets: defenderIconBg,
+              rotation: 0.1,
+              duration: 3000,
+              yoyo: true,
+              repeat: -1,
+              ease: 'Sine.easeInOut'
+            });
+            
+            // Defender type emoji/icon with enhanced styling
             const defenderEmoji = this.getDefenderEmoji(defenderType);
             const defenderEmojiText = this.add.text(130, y, defenderEmoji, {
-              fontSize: '24px'
+              fontSize: '32px'
             }).setOrigin(0.5).setDepth(7003);
             this.skillTreeElements.push(defenderEmojiText);
             
-            // Defender name with modern styling
-            const defenderNameText = this.add.text(180, y - 10, defenderType.charAt(0).toUpperCase() + defenderType.slice(1), {
+            // Add floating animation to emoji
+            this.tweens.add({
+              targets: defenderEmojiText,
+              y: y - 3,
+              duration: 2000,
+              yoyo: true,
+              repeat: -1,
+              ease: 'Sine.easeInOut'
+            });
+            
+            // Enhanced defender name with epic styling
+            const defenderNameText = this.add.text(190, y - 15, defenderType.charAt(0).toUpperCase() + defenderType.slice(1), {
               fontFamily: 'Arial Black',
-              fontSize: '18px',
-              color: '#f8fafc',
-              fontStyle: 'bold'
+              fontSize: '22px',
+              color: '#f1f5f9',
+              fontStyle: 'bold',
+              stroke: '#000000',
+              strokeThickness: 2,
+              shadow: {
+                offsetX: 2,
+                offsetY: 2,
+                color: '#000000',
+                blur: 4,
+                fill: true
+              }
             }).setOrigin(0, 0.5).setDepth(7002);
             this.skillTreeElements.push(defenderNameText);
             
-            // Defender class label
-            const defenderClass = this.add.text(180, y + 8, this.getDefenderClass(defenderType), {
-              fontFamily: 'Arial',
-              fontSize: '12px',
-              color: '#94a3b8',
-              fontStyle: 'italic'
+            // Enhanced defender class label with color coding
+            const defenderClass = this.add.text(190, y + 5, this.getDefenderClass(defenderType), {
+              fontFamily: 'Arial Bold',
+              fontSize: '14px',
+              color: this.getDefenderColor(defenderType),
+              fontStyle: 'italic',
+              letterSpacing: '0.5px'
             }).setOrigin(0, 0.5).setDepth(7002);
             this.skillTreeElements.push(defenderClass);
+            
+            // Add defender mastery level indicator
+            const masteryLevel = skillTreeManager.getDefenderMasteryLevel ? skillTreeManager.getDefenderMasteryLevel(defenderType) : 1;
+            const masteryText = this.add.text(190, y + 20, `Mastery Level ${masteryLevel}`, {
+              fontFamily: 'Arial',
+              fontSize: '11px',
+              color: '#64748b',
+              fontStyle: 'italic'
+            }).setOrigin(0, 0.5).setDepth(7002);
+            this.skillTreeElements.push(masteryText);
             
             // Get skills for this defender
             const skills = skillTreeManager.getDefenderSkills(defenderType);
@@ -6687,44 +6839,71 @@ if (isBrowser) {
               let skillIndex = 0;
               Object.values(skills.tiers).forEach(tier => {
                 tier.skills.forEach((skill) => {
-                  const skillX = 300 + (skillIndex * 110);
+                  const skillX = 320 + (skillIndex * 115);
                   const isUnlocked = skillTreeManager.isSkillUnlocked(defenderType, skill.id);
                   const canUnlock = skillTreeManager.canUnlockSkill(defenderType, skill.id);
                   
-                  // Skill node with hexagonal design
-                  const skillBg = this.add.rectangle(skillX, y, 90, 50, 
-                    isUnlocked ? 0x10b981 : (canUnlock ? 0x3b82f6 : 0x374151), 1);
+                  // Enhanced skill node with hexagonal design and multiple layers
+                  const skillBgOuter = this.add.rectangle(skillX, y, 100, 60, 0x000000, 0);
+                  skillBgOuter.setDepth(7001);
+                  skillBgOuter.setStrokeStyle(3, 
+                    isUnlocked ? 0x10b981 : (canUnlock ? 0x3b82f6 : 0x374151), 0.6);
+                  this.skillTreeElements.push(skillBgOuter);
+                  
+                  const skillBg = this.add.rectangle(skillX, y, 95, 55, 
+                    isUnlocked ? 0x065f46 : (canUnlock ? 0x1e40af : 0x1f2937), 0.9);
                   skillBg.setDepth(7002);
                   skillBg.setStrokeStyle(2, 
-                    isUnlocked ? 0x059669 : (canUnlock ? 0x2563eb : 0x4b5563));
+                    isUnlocked ? 0x10b981 : (canUnlock ? 0x3b82f6 : 0x4b5563));
                   this.skillTreeElements.push(skillBg);
                   
-                  // Skill status indicator
-                  const statusIndicator = this.add.circle(skillX + 35, y - 20, 4, 
+                  // Enhanced skill status indicator with glow
+                  const statusIndicator = this.add.circle(skillX + 40, y - 22, 6, 
                     isUnlocked ? 0x10b981 : (canUnlock ? 0x3b82f6 : 0x6b7280));
                   statusIndicator.setDepth(7003);
                   this.skillTreeElements.push(statusIndicator);
                   
-                  // Skill name with better typography
-                  const skillText = this.add.text(skillX, y - 8, skill.name, {
+                  // Add pulsing glow to unlocked skills
+                  if (isUnlocked) {
+                    const statusGlow = this.add.circle(skillX + 40, y - 22, 8, 0x10b981, 0.3);
+                    statusGlow.setDepth(7002);
+                    this.skillTreeElements.push(statusGlow);
+                    
+                    this.tweens.add({
+                      targets: statusGlow,
+                      scaleX: 1.5,
+                      scaleY: 1.5,
+                      alpha: 0,
+                      duration: 1500,
+                      repeat: -1,
+                      ease: 'Power2'
+                    });
+                  }
+                  
+                  // Enhanced skill name with better typography
+                  const skillText = this.add.text(skillX, y - 12, skill.name, {
                     fontFamily: 'Arial Bold',
-                    fontSize: '11px',
+                    fontSize: '12px',
                     color: isUnlocked ? '#ffffff' : (canUnlock ? '#e2e8f0' : '#9ca3af'),
                     align: 'center',
-                    wordWrap: { width: 80 }
+                    wordWrap: { width: 85 },
+                    stroke: '#000000',
+                    strokeThickness: 1
                   }).setOrigin(0.5).setDepth(7003);
                   this.skillTreeElements.push(skillText);
                   
-                  // Cost with modern styling
-                  const costText = this.add.text(skillX, y + 12, `${skill.scoreRequired || 100} ⭐`, {
-                    fontFamily: 'Arial',
-                    fontSize: '10px',
+                  // Enhanced cost display with modern styling
+                  const costText = this.add.text(skillX, y + 15, `${skill.scoreRequired || 100} ⭐`, {
+                    fontFamily: 'Arial Bold',
+                    fontSize: '11px',
                     color: isUnlocked ? '#6ee7b7' : (canUnlock ? '#93c5fd' : '#9ca3af'),
-                    align: 'center'
+                    align: 'center',
+                    stroke: '#000000',
+                    strokeThickness: 1
                   }).setOrigin(0.5).setDepth(7003);
                   this.skillTreeElements.push(costText);
                   
-                  // Make skill interactive
+                  // Make skill interactive with enhanced effects
                   if (!isUnlocked) {
                     skillBg.setInteractive({ useHandCursor: true });
                     
@@ -6742,25 +6921,42 @@ if (isBrowser) {
                       }
                     });
                     
-                    // Enhanced hover effects
+                    // Enhanced hover effects with animations
                     skillBg.on('pointerover', () => {
                       if (canUnlock) {
-                        skillBg.setFillStyle(0x1d4ed8);
-                        skillBg.setStrokeStyle(2, 0x1e40af);
+                        skillBg.setFillStyle(0x2563eb);
+                        skillBgOuter.setStrokeStyle(4, 0x3b82f6, 0.8);
+                        this.tweens.add({
+                          targets: [skillBg, skillBgOuter],
+                          scaleX: 1.05,
+                          scaleY: 1.05,
+                          duration: 200,
+                          ease: 'Back.easeOut'
+                        });
                       }
-                      this.showSkillTooltip(skill, skillX, y - 40);
+                      this.showSkillTooltip(skill, skillX, y - 50);
                     });
                     
                     skillBg.on('pointerout', () => {
-                      skillBg.setFillStyle(canUnlock ? 0x3b82f6 : 0x374151);
-                      skillBg.setStrokeStyle(2, canUnlock ? 0x2563eb : 0x4b5563);
+                      skillBg.setFillStyle(canUnlock ? 0x1e40af : 0x1f2937);
+                      skillBgOuter.setStrokeStyle(3, canUnlock ? 0x3b82f6 : 0x374151, 0.6);
+                      this.tweens.add({
+                        targets: [skillBg, skillBgOuter],
+                        scaleX: 1,
+                        scaleY: 1,
+                        duration: 200,
+                        ease: 'Back.easeOut'
+                      });
                       this.hideSkillTooltip();
                     });
                   } else {
-                    // Add glow effect for unlocked skills
-                    const glowEffect = this.add.rectangle(skillX, y, 94, 54, 0x10b981, 0.2);
+                    // Add epic glow effect for unlocked skills
+                    const glowEffect = this.add.rectangle(skillX, y, 105, 65, 0x10b981, 0.15);
                     glowEffect.setDepth(7001);
                     this.skillTreeElements.push(glowEffect);
+                    
+                    // Add particle effect for unlocked skills
+                    this.createSkillParticles(skillX, y);
                   }
                   
                   skillIndex++;
@@ -6768,6 +6964,66 @@ if (isBrowser) {
               });
             }
           });
+        }
+        
+        // Helper method to create progress decorations
+        createProgressDecorations() {
+          // Add animated corner decorations
+          const corners = [
+            { x: 120, y: 320 },
+            { x: 680, y: 320 },
+            { x: 120, y: 380 },
+            { x: 680, y: 380 }
+          ];
+          
+          corners.forEach((corner, index) => {
+            const decoration = this.add.rectangle(corner.x, corner.y, 8, 8, 0x3b82f6, 0.8);
+            decoration.setDepth(7003);
+            decoration.setRotation(Math.PI / 4);
+            this.skillTreeElements.push(decoration);
+            
+            // Add rotation animation with delay
+            this.tweens.add({
+              targets: decoration,
+              rotation: decoration.rotation + Math.PI * 2,
+              duration: 4000,
+              delay: index * 500,
+              repeat: -1,
+              ease: 'Linear'
+            });
+          });
+        }
+        
+        // Helper method to create skill particles
+        createSkillParticles(x, y) {
+          // Create subtle particle effect for unlocked skills
+          for (let i = 0; i < 3; i++) {
+            const particle = this.add.circle(
+              x + (Math.random() - 0.5) * 20,
+              y + (Math.random() - 0.5) * 20,
+              2,
+              0x10b981,
+              0.6
+            );
+            particle.setDepth(7004);
+            this.skillTreeElements.push(particle);
+            
+            this.tweens.add({
+              targets: particle,
+              y: y - 30,
+              alpha: 0,
+              scaleX: 0.5,
+              scaleY: 0.5,
+              duration: 2000 + Math.random() * 1000,
+              delay: i * 200,
+              ease: 'Power2',
+              onComplete: () => {
+                if (particle && particle.destroy) {
+                  particle.destroy();
+                }
+              }
+            });
+          }
         }
         
         getDefenderEmoji(defenderType) {
@@ -6778,6 +7034,16 @@ if (isBrowser) {
             'cannon': '💣'
           };
           return emojis[defenderType] || '🛡️';
+        }
+        
+        getDefenderColor(defenderType) {
+          const colors = {
+            'archer': 0x10b981,    // Emerald
+            'mage': 0x8b5cf6,      // Purple
+            'warrior': 0xf59e0b,   // Amber
+            'cannon': 0xef4444     // Red
+          };
+          return colors[defenderType] || 0x6b7280;
         }
         
         getDefenderClass(defenderType) {

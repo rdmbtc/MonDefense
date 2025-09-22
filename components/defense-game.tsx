@@ -17,6 +17,7 @@ import { useOnchainScoreSubmissionWithRetry } from '@/hooks/useOnchainScoreSubmi
 import { GAME_CONFIG } from '@/lib/game-config';
 
 
+
 // Extend Window interface to include custom properties
 declare global {
   interface Window {
@@ -48,13 +49,14 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const [gameStarted, setGameStarted] = useState(false);
   const [gameScore, setGameScore] = useState(0);
   const [gameStartTime, setGameStartTime] = useState<number | null>(null);
-
-  const [currentPage, setCurrentPage] = useState(0);
+  const [currentPage, setCurrentPage] = useState('menu');
+  const [skillTreeVisible, setSkillTreeVisible] = useState(false);
   const { farmCoins, addFarmCoins } = useGameContext();
   const backgroundMusicRef = useRef<HTMLAudioElement | null>(null);
   const soundEffectRef = useRef<HTMLAudioElement | null>(null);
   const backgroundMusicPlayPromise = useRef<Promise<void> | null>(null);
   const soundEffectPlayPromise = useRef<Promise<void> | null>(null);
+  const skillTreeManagerRef = useRef<any>(null);
   
   // Audio state management
   const [audioBlocked, setAudioBlocked] = useState(false);
@@ -368,6 +370,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           const SkillTreeManager = require('./skill-tree/SkillTreeManager').default;
           window.skillTreeManager = new SkillTreeManager();
         }
+        skillTreeManagerRef.current = window.skillTreeManager;
       }
       
       // Set game start time when switching to game mode
@@ -722,6 +725,19 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
             </div>
           </div>
         </div>
+
+        {/* Skill Tree Button */}
+        <div className="relative">
+          <Button
+            onClick={() => setSkillTreeVisible(true)}
+            variant="outline"
+            size="sm"
+            className="bg-purple-600/80 hover:bg-purple-500/90 border-purple-400/50 text-white backdrop-blur-sm transition-all duration-200 hover:scale-105 shadow-lg"
+            title="Open Skill Tree"
+          >
+            <span className="text-sm font-medium">🌟 Skills</span>
+          </Button>
+        </div>
         
 
       </div>
@@ -781,8 +797,13 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                   }
                   break;
                 case 'enemyDefeated':
-                  // Score is now handled by scoreUpdate event for proper synchronization
-                  // This event can be used for other enemy defeat effects if needed
+                  // Forward enemy defeat events to skill tree manager
+                  if (skillTreeManagerRef.current) {
+                    // Dispatch browser event for skill tree manager to catch
+                    window.dispatchEvent(new CustomEvent('enemyDefeated', {
+                      detail: { score: gameScore }
+                    }));
+                  }
                   break;
                 case 'waveComplete':
                   if (data && typeof data === 'object' && data.wave && data.score) {
@@ -795,6 +816,13 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
                   if (data && typeof data === 'number') {
                     // Sync React score with Phaser game score
                     setGameScore(data);
+                    
+                    // Forward score updates to skill tree manager
+                    if (skillTreeManagerRef.current) {
+                      window.dispatchEvent(new CustomEvent('scoreUpdate', {
+                        detail: { score: data }
+                      }));
+                    }
                   }
                   break;
                 case 'gameOver':
@@ -852,6 +880,8 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           <span className="text-xs font-medium">🐛 Report Bug</span>
         </Button>
       </div>
+
+     
     </div>
   );
 }
