@@ -1016,6 +1016,25 @@ if (isBrowser) {
               color: '#FFD700'
             }).setDepth(UI_DEPTH);
             
+            // Skill Tree Button
+            this.skillTreeButton = this.add.text(650, 30, '🌟 Skills', {
+              fontFamily: 'Arial',
+              fontSize: '18px',
+              color: '#FFFFFF',
+              backgroundColor: '#6B46C1',
+              padding: { x: 10, y: 5 }
+            }).setDepth(UI_DEPTH).setInteractive({ useHandCursor: true });
+            
+            this.skillTreeButton.on('pointerdown', () => {
+              this.toggleSkillTree();
+              if (this.soundManager) {
+                this.soundManager.play('click');
+              }
+            });
+            
+            // Initialize skill tree overlay as hidden
+            this.skillTreeVisible = false;
+            
             // Next Wave button removed - waves now progress automatically
             
             // UI created with proper depth layering
@@ -6317,6 +6336,187 @@ if (isBrowser) {
             this.updateFarmCoins(amount);
         }
         // --- End Flying Coin Effect ---
+        
+        // --- Skill Tree Methods ---
+        toggleSkillTree() {
+          this.skillTreeVisible = !this.skillTreeVisible;
+          
+          if (this.skillTreeVisible) {
+            this.showSkillTreeOverlay();
+          } else {
+            this.hideSkillTreeOverlay();
+          }
+        }
+        
+        showSkillTreeOverlay() {
+          // Create dark overlay background
+          this.skillTreeOverlay = this.add.rectangle(400, 300, 800, 600, 0x000000, 0.7);
+          this.skillTreeOverlay.setDepth(7000);
+          this.skillTreeOverlay.setInteractive();
+          
+          // Create skill tree panel
+          this.skillTreePanel = this.add.rectangle(400, 300, 600, 500, 0x2D1B69, 1);
+          this.skillTreePanel.setDepth(7001);
+          this.skillTreePanel.setStrokeStyle(3, 0x6B46C1);
+          
+          // Title
+          this.skillTreeTitle = this.add.text(400, 80, 'Skill Tree', {
+            fontFamily: 'Arial',
+            fontSize: '32px',
+            color: '#FFFFFF',
+            fontStyle: 'bold'
+          }).setOrigin(0.5).setDepth(7002);
+          
+          // Close button
+          this.skillTreeCloseBtn = this.add.text(650, 80, '✕', {
+            fontFamily: 'Arial',
+            fontSize: '24px',
+            color: '#FF6B6B',
+            backgroundColor: '#000000',
+            padding: { x: 8, y: 4 }
+          }).setOrigin(0.5).setDepth(7002).setInteractive({ useHandCursor: true });
+          
+          this.skillTreeCloseBtn.on('pointerdown', () => {
+            this.toggleSkillTree();
+            if (this.soundManager) {
+              this.soundManager.play('click');
+            }
+          });
+          
+          // Display current progress
+          const skillTreeManager = window.skillTreeManager;
+          if (skillTreeManager) {
+            const progressData = skillTreeManager.getProgressData();
+            
+            this.add.text(400, 120, `Total Score: ${progressData.totalScore}`, {
+              fontFamily: 'Arial',
+              fontSize: '18px',
+              color: '#FFD700'
+            }).setOrigin(0.5).setDepth(7002);
+            
+            this.add.text(400, 145, `Enemies Defeated: ${progressData.enemiesDefeated}`, {
+              fontFamily: 'Arial',
+              fontSize: '18px',
+              color: '#FFD700'
+            }).setOrigin(0.5).setDepth(7002);
+            
+            // Display available defenders and their skills
+            this.displayDefenderSkills(skillTreeManager);
+          }
+        }
+        
+        displayDefenderSkills(skillTreeManager) {
+          const defenders = skillTreeManager.getAllDefenders();
+          let yOffset = 180;
+          
+          defenders.forEach((defenderId, index) => {
+            const defenderSkills = skillTreeManager.getDefenderSkills(defenderId);
+            
+            // Defender name
+            this.add.text(200 + (index * 150), yOffset, defenderId, {
+              fontFamily: 'Arial',
+              fontSize: '16px',
+              color: '#FFFFFF',
+              fontStyle: 'bold'
+            }).setOrigin(0.5).setDepth(7002);
+            
+            // Display skills for this defender
+            let skillYOffset = yOffset + 30;
+            Object.values(defenderSkills.tiers).forEach(tier => {
+              tier.skills.forEach(skill => {
+                const isUnlocked = skillTreeManager.unlockedSkills.has(skill.id);
+                const color = isUnlocked ? '#00FF00' : '#888888';
+                
+                const skillText = this.add.text(200 + (index * 150), skillYOffset, skill.name, {
+                  fontFamily: 'Arial',
+                  fontSize: '12px',
+                  color: color
+                }).setOrigin(0.5).setDepth(7002);
+                
+                if (!isUnlocked) {
+                  skillText.setInteractive({ useHandCursor: true });
+                  skillText.on('pointerover', () => {
+                    // Show skill requirements tooltip
+                    this.showSkillTooltip(skill, 200 + (index * 150), skillYOffset);
+                  });
+                  skillText.on('pointerout', () => {
+                    this.hideSkillTooltip();
+                  });
+                }
+                
+                skillYOffset += 20;
+              });
+            });
+          });
+        }
+        
+        showSkillTooltip(skill, x, y) {
+          this.hideSkillTooltip(); // Remove any existing tooltip
+          
+          this.skillTooltip = this.add.rectangle(x + 100, y, 200, 80, 0x000000, 0.9);
+          this.skillTooltip.setDepth(7003);
+          this.skillTooltip.setStrokeStyle(1, 0xFFFFFF);
+          
+          this.skillTooltipText = this.add.text(x + 100, y - 20, skill.description, {
+            fontFamily: 'Arial',
+            fontSize: '10px',
+            color: '#FFFFFF',
+            wordWrap: { width: 180 }
+          }).setOrigin(0.5).setDepth(7004);
+          
+          this.skillRequirementText = this.add.text(x + 100, y + 15, `Requires: ${skill.scoreRequired} score, ${skill.enemiesRequired} enemies`, {
+            fontFamily: 'Arial',
+            fontSize: '10px',
+            color: '#FFD700',
+            wordWrap: { width: 180 }
+          }).setOrigin(0.5).setDepth(7004);
+        }
+        
+        hideSkillTooltip() {
+          if (this.skillTooltip) {
+            this.skillTooltip.destroy();
+            this.skillTooltip = null;
+          }
+          if (this.skillTooltipText) {
+            this.skillTooltipText.destroy();
+            this.skillTooltipText = null;
+          }
+          if (this.skillRequirementText) {
+            this.skillRequirementText.destroy();
+            this.skillRequirementText = null;
+          }
+        }
+        
+        hideSkillTreeOverlay() {
+          // Clean up all skill tree UI elements
+          if (this.skillTreeOverlay) {
+            this.skillTreeOverlay.destroy();
+            this.skillTreeOverlay = null;
+          }
+          if (this.skillTreePanel) {
+            this.skillTreePanel.destroy();
+            this.skillTreePanel = null;
+          }
+          if (this.skillTreeTitle) {
+            this.skillTreeTitle.destroy();
+            this.skillTreeTitle = null;
+          }
+          if (this.skillTreeCloseBtn) {
+            this.skillTreeCloseBtn.destroy();
+            this.skillTreeCloseBtn = null;
+          }
+          
+          // Clean up any tooltips
+          this.hideSkillTooltip();
+          
+          // Clean up any other skill tree elements that might exist
+          this.children.list.forEach(child => {
+            if (child.depth >= 7000 && child.depth < 8000) {
+              child.destroy();
+            }
+          });
+        }
+        // --- End Skill Tree Methods ---
       }
       
       // Replace the placeholder with the real implementation

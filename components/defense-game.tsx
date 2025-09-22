@@ -15,7 +15,7 @@ import { useCrossAppAccount } from '@/hooks/useCrossAppAccount';
 import { useUsername } from '@/hooks/useUsername';
 import { useOnchainScoreSubmissionWithRetry } from '@/hooks/useOnchainScoreSubmission';
 import { GAME_CONFIG } from '@/lib/game-config';
-import SkillTreeUI from './skill-tree/SkillTreeUI';
+
 
 // Extend Window interface to include custom properties
 declare global {
@@ -48,7 +48,6 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
   const [gameStarted, setGameStarted] = useState(false);
   const [gameScore, setGameScore] = useState(0);
   const [gameStartTime, setGameStartTime] = useState<number | null>(null);
-  const [showSkillTree, setShowSkillTree] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(0);
   const { farmCoins, addFarmCoins } = useGameContext();
@@ -662,17 +661,6 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
       </div>
       
       <div className="absolute top-4 right-4 z-50 flex gap-4 items-center">
-        {/* Skill Tree Button */}
-        {gameMode === 'game' && gameStarted && (
-          <Button
-            onClick={() => setShowSkillTree(!showSkillTree)}
-            variant="outline"
-            className="bg-purple-600/80 hover:bg-purple-700/80 text-white border-purple-500/50"
-          >
-            🌟 Skills
-          </Button>
-        )}
-        
         {/* Authentication Status */}
         <div className="bg-white/10 backdrop-blur border-white/20 rounded-lg px-4 py-2">
           {!ready ? (
@@ -840,26 +828,6 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
           </div>
         )}
       </div>
-
-      {/* Skill Tree UI Overlay */}
-      {showSkillTree && gameMode === 'game' && (
-        <div className="absolute inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-center justify-center">
-          <div className="relative">
-            <Button
-              onClick={() => setShowSkillTree(false)}
-              variant="outline"
-              className="absolute top-4 right-4 z-10 bg-red-600/80 hover:bg-red-700/80 text-white border-red-500/50"
-            >
-              ✕ Close
-            </Button>
-            <SkillTreeUI 
-              skillTreeManager={window.skillTreeManager}
-              isVisible={true}
-              onClose={() => setShowSkillTree(false)}
-            />
-          </div>
-        </div>
-      )}
 
       {/* Game Instructions Overlay (initially hidden, can be toggled) */}
       <div className="absolute bottom-4 left-4 z-50">

@@ -204,6 +204,11 @@ export default class SkinCustomization {
             const panel = this.scene.add.rectangle(x, y, 100, 120, panelColor);
             panel.setStrokeStyle(2, skin.unlocked ? 0x4a4a4a : 0x666666);
             
+            // Highlight current selection
+            if (this.currentSkins[this.selectedDefenderType] === skin.key) {
+                panel.setStrokeStyle(3, 0x44aa44);
+            }
+            
             // Skin sprite
             let skinSprite;
             if (skin.unlocked && this.scene.textures.exists(skin.key)) {
@@ -245,13 +250,18 @@ export default class SkinCustomization {
             // Make interactive if unlocked
             if (skin.unlocked) {
                 panel.setInteractive({ useHandCursor: true });
-                panel.on('pointerdown', () => this.selectSkin(skin.key));
+                panel.on('pointerdown', () => {
+                    this.selectSkin(skin.key);
+                    // Apply skin immediately when selected
+                    this.applySkin();
+                });
                 panel.on('pointerover', () => {
                     panel.setStrokeStyle(3, 0x66aa66);
                     this.updatePreview(skin.key);
                 });
                 panel.on('pointerout', () => {
-                    panel.setStrokeStyle(2, 0x4a4a4a);
+                    const isSelected = this.currentSkins[this.selectedDefenderType] === skin.key;
+                    panel.setStrokeStyle(isSelected ? 3 : 2, isSelected ? 0x44aa44 : 0x4a4a4a);
                 });
             }
             
@@ -290,8 +300,8 @@ export default class SkinCustomization {
         // Show confirmation
         this.showConfirmation();
         
-        // Close panel
-        this.hide();
+        // Don't close panel automatically - let user continue selecting
+        // this.hide();
     }
     
     saveSkinPreferences() {
