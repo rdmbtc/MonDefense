@@ -3081,9 +3081,14 @@ export default class Defense {
     if (!this.scene.skillTreeManager) return;
     
     const unlockedSkills = this.scene.skillTreeManager.getUnlockedSkills(this.type);
-    unlockedSkills.forEach(skillId => {
-      this.activateSkill(skillId);
-    });
+    console.log(`Initializing skills for ${this.type}:`, unlockedSkills);
+    
+    // Apply each unlocked skill using the skill manager
+    if (this.skillManager && unlockedSkills.length > 0) {
+      const defenderId = `${this.type}_${this.x}_${this.y}`;
+      this.skillManager.applyUnlockedSkills(this, unlockedSkills);
+      console.log(`Applied ${unlockedSkills.length} skills to ${this.type} defense`);
+    }
   }
   
   // Activate a skill for this defender

@@ -599,6 +599,22 @@ class SkillTreeManager {
     this.loadProgress();
   }
 
+  // Get all unlocked skills for a defender
+  getUnlockedSkills(defenderId) {
+    const unlockedSkills = [];
+    const defender = this.skillTreeData[defenderId];
+    if (!defender) return unlockedSkills;
+    
+    for (const tier of Object.values(defender.tiers)) {
+      for (const skill of tier.skills) {
+        if (skill.unlocked) {
+          unlockedSkills.push(skill.id);
+        }
+      }
+    }
+    return unlockedSkills;
+  }
+
   // Check if a skill is unlocked
   isSkillUnlocked(defenderId, skillId) {
     const defender = this.skillTreeData[defenderId];

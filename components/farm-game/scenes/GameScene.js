@@ -4859,11 +4859,14 @@ if (isBrowser) {
             let defense;
             
             if (DefenseClass) {
+              // Get the appropriate skin for this defender type
+              const skinKey = this.skinCustomization ? this.skinCustomization.getSkinForDefender(type) : `${type}_idle`;
+              
               // Use SkillDefender if skillTreeManager is available, otherwise use regular Defense
               if (window.skillTreeManager) {
-                defense = new SkillDefender(this, type, x, y, window.skillTreeManager);
+                defense = new SkillDefender(this, type, x, y, window.skillTreeManager, skinKey);
               } else {
-                defense = new DefenseClass(this, type, x, y);
+                defense = new DefenseClass(this, type, x, y, skinKey);
               }
             } else {
               // Fallback if DefenseClass isn't available
@@ -6731,9 +6734,9 @@ if (isBrowser) {
               }).setDepth(7002);
               this.skillTreeElements.push(scoreIcon);
               
-              // Safe score display with null checks
-              const totalScore = (progressData && typeof progressData.totalScore === 'number') ? progressData.totalScore : 0;
-              const scoreText = this.add.text(180, 165, `${totalScore.toLocaleString()}`, {
+              // Safe score display with null checks - use current game score instead of skill tree total
+              const currentScore = this.gameState?.score || 0;
+              const scoreText = this.add.text(180, 165, `${currentScore.toLocaleString()}`, {
                   fontFamily: 'Arial Black',
                   fontSize: '18px',
                   color: '#fbbf24',
@@ -6741,7 +6744,7 @@ if (isBrowser) {
               }).setDepth(7002);
               this.skillTreeElements.push(scoreText);
               
-              const scoreLabel = this.add.text(180, 185, 'TOTAL SCORE', {
+              const scoreLabel = this.add.text(180, 185, 'CURRENT SCORE', {
                   fontFamily: 'Arial',
                   fontSize: '10px',
                   color: '#64748b',
