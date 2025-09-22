@@ -43,14 +43,14 @@ export default class SkinCustomization {
     loadSkinTextures() {
         // Load additional skin textures that aren't already loaded
         const textureMap = {
-            'jumapel_idle': '/defense/jumapel idle.png',
-            'jumapel_attack': '/defense/jumapel attack.png',
-            'skrumpet_idle': '/defense/skrumpet  idle.png',
-            'skrumpet_attack': '/defense/skrumpet  attack.png',
-            'erkin_idle': '/defense/erkin idle.png',
-            'erkin_attack': '/defense/erkin attack.png',
-            'realnads_idle': '/defense/realnads idle.png',
-            'realnads_attack': '/defense/realnads attack.png'
+            'jumapel_idle': '/defense/jumapel_idle.png',
+            'jumapel_attack': '/defense/jumapel_attack.png',
+            'skrumpet_idle': '/defense/skrumpet_idle.png',
+            'skrumpet_attack': '/defense/skrumpet_attack.png',
+            'erkin_idle': '/defense/erkin_idle.png',
+            'erkin_attack': '/defense/erkin_attack.png',
+            'realnads_idle': '/defense/realnads_idle.png',
+            'realnads_attack': '/defense/realnads_attack.png'
         };
         
         Object.entries(textureMap).forEach(([key, path]) => {

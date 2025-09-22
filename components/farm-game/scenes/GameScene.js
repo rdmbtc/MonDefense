@@ -6500,6 +6500,78 @@ if (isBrowser) {
             this.hideSkillTreeOverlay();
           }
         }
+
+        // Create skill tree background particles
+        createSkillTreeParticles() {
+          // Create floating background particles for the skill tree
+          for (let i = 0; i < 15; i++) {
+            const x = 60 + Math.random() * 680;
+            const y = 80 + Math.random() * 440;
+            
+            const particle = this.add.circle(x, y, 1 + Math.random() * 2, 0x3b82f6, 0.3 + Math.random() * 0.4);
+            particle.setDepth(7000);
+            this.skillTreeElements.push(particle);
+            
+            // Add floating animation
+            this.tweens.add({
+              targets: particle,
+              y: y - 20 - Math.random() * 30,
+              alpha: 0,
+              duration: 3000 + Math.random() * 2000,
+              delay: i * 100,
+              ease: 'Power2',
+              repeat: -1,
+              yoyo: false,
+              onRepeat: () => {
+                particle.y = 520 + Math.random() * 20;
+                particle.alpha = 0.3 + Math.random() * 0.4;
+              }
+            });
+          }
+        }
+
+        // Create corner decorations for the skill tree
+        createCornerDecorations() {
+          const corners = [
+            { x: 80, y: 80, rotation: 0 },
+            { x: 720, y: 80, rotation: Math.PI / 2 },
+            { x: 80, y: 520, rotation: -Math.PI / 2 },
+            { x: 720, y: 520, rotation: Math.PI }
+          ];
+          
+          corners.forEach((corner, index) => {
+            // Create ornate corner decoration
+            const decoration = this.add.graphics();
+            decoration.setDepth(7002);
+            decoration.lineStyle(3, 0x3b82f6, 0.8);
+            decoration.beginPath();
+            decoration.moveTo(0, 0);
+            decoration.lineTo(30, 0);
+            decoration.lineTo(30, 5);
+            decoration.lineTo(5, 5);
+            decoration.lineTo(5, 30);
+            decoration.lineTo(0, 30);
+            decoration.closePath();
+            decoration.strokePath();
+            
+            decoration.x = corner.x;
+            decoration.y = corner.y;
+            decoration.rotation = corner.rotation;
+            
+            this.skillTreeElements.push(decoration);
+            
+            // Add pulsing glow animation
+            this.tweens.add({
+              targets: decoration,
+              alpha: 0.4,
+              duration: 2000,
+              delay: index * 300,
+              yoyo: true,
+              repeat: -1,
+              ease: 'Sine.easeInOut'
+            });
+          });
+        }
         
         showSkillTreeOverlay() {
           // Initialize skill tree elements array for proper cleanup
