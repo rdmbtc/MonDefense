@@ -366,7 +366,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         
         // Initialize skill tree manager
         if (!window.skillTreeManager) {
-          const SkillTreeManager = require('./farm-game/utils/SkillTreeManager').default;
+          const SkillTreeManager = require('./skill-tree/SkillTreeManager').default;
           window.skillTreeManager = new SkillTreeManager();
         }
       }
