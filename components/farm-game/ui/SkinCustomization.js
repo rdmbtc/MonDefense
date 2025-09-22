@@ -332,6 +332,8 @@ export default class SkinCustomization {
                 const newSkin = this.currentSkins[this.selectedDefenderType];
                 if (this.scene.textures.exists(newSkin)) {
                     defense.sprite.setTexture(newSkin);
+                    // Update the skinKey so attacks use the correct skin
+                    defense.skinKey = newSkin;
                 }
             }
         });
