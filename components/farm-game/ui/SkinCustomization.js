@@ -16,19 +16,19 @@ export default class SkinCustomization {
         this.availableSkins = {
             chog: [
                 { key: 'chog_idle', name: 'Default Chog', unlocked: true },
-                { key: 'jumapel_idle', name: 'Jumapel', unlocked: false, requirement: 100 }
+                { key: 'jumapel_idle', name: 'Jumapel', unlocked: true, requirement: 100 }
             ],
             keon: [
                 { key: 'keon_idle', name: 'Default Keon', unlocked: true },
-                { key: 'skrumpet_idle', name: 'Skrumpet', unlocked: false, requirement: 200 }
+                { key: 'skrumpet_idle', name: 'Skrumpet', unlocked: true, requirement: 200 }
             ],
             molandak: [
                 { key: 'molandak_idle', name: 'Default Molandak', unlocked: true },
-                { key: 'erkin_idle', name: 'Erkin', unlocked: false, requirement: 150 }
+                { key: 'erkin_idle', name: 'Erkin', unlocked: true, requirement: 150 }
             ],
             moyaki: [
                 { key: 'moyaki_idle', name: 'Default Moyaki', unlocked: true },
-                { key: 'realnads_idle', name: 'RealNads', unlocked: false, requirement: 300 }
+                { key: 'realnads_idle', name: 'RealNads', unlocked: true, requirement: 300 }
             ]
         };
         

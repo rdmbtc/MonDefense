@@ -1042,8 +1042,8 @@ if (isBrowser) {
               color: '#FFD700'
             }).setDepth(UI_DEPTH);
             
-            // Skill Tree Button - Repositioned for better spacing
-            this.skillTreeButton = this.add.text(650, 50, '🌟 Skills', {
+            // Skill Tree Button - Positioned near settings button
+            this.skillTreeButton = this.add.text(640, 30, '🌟 Skills', {
               fontFamily: 'Arial',
               fontSize: '16px',
               color: '#FFFFFF',
@@ -6577,8 +6577,8 @@ if (isBrowser) {
           // Initialize skill tree elements array for proper cleanup
           this.skillTreeElements = [];
           
-          // Create animated dark overlay background with particle effects - REDUCED SIZE
-          this.skillTreeOverlay = this.add.rectangle(400, 300, 600, 450, 0x000000, 0.85);
+          // Create animated dark overlay background with particle effects - MUCH SMALLER SIZE
+          this.skillTreeOverlay = this.add.rectangle(400, 300, 400, 300, 0x000000, 0.85);
           this.skillTreeOverlay.setDepth(7000);
           this.skillTreeOverlay.setInteractive();
           this.skillTreeElements.push(this.skillTreeOverlay);
@@ -6586,25 +6586,25 @@ if (isBrowser) {
           // Add animated background particles
           this.createSkillTreeParticles();
           
-          // Create main skill tree panel with AAA design and multiple layers - REDUCED SIZE
-          this.skillTreePanel = this.add.rectangle(400, 300, 540, 420, 0x0a0e1a, 0.95);
+          // Create main skill tree panel with AAA design and multiple layers - MUCH SMALLER SIZE
+          this.skillTreePanel = this.add.rectangle(400, 300, 360, 280, 0x0a0e1a, 0.95);
           this.skillTreePanel.setDepth(7001);
-          this.skillTreePanel.setStrokeStyle(3, 0x1e293b);
+          this.skillTreePanel.setStrokeStyle(2, 0x1e293b);
           this.skillTreeElements.push(this.skillTreePanel);
           
-          // Add outer glow border - REDUCED SIZE
-          this.skillTreeOuterGlow = this.add.rectangle(400, 300, 550, 430, 0x000000, 0);
+          // Add outer glow border - MUCH SMALLER SIZE
+          this.skillTreeOuterGlow = this.add.rectangle(400, 300, 370, 290, 0x000000, 0);
           this.skillTreeOuterGlow.setDepth(7000);
-          this.skillTreeOuterGlow.setStrokeStyle(6, 0x0ea5e9, 0.4);
+          this.skillTreeOuterGlow.setStrokeStyle(4, 0x0ea5e9, 0.4);
           this.skillTreeElements.push(this.skillTreeOuterGlow);
           
-          // Add inner gradient panels for depth - REDUCED SIZE WITH ENHANCED BLUR EFFECT
-          this.skillTreeInnerPanel1 = this.add.rectangle(400, 300, 520, 400, 0x111827, 0.8);
+          // Add inner gradient panels for depth - MUCH SMALLER SIZE WITH ENHANCED BLUR EFFECT
+          this.skillTreeInnerPanel1 = this.add.rectangle(400, 300, 340, 260, 0x111827, 0.8);
           this.skillTreeInnerPanel1.setDepth(7001);
-          this.skillTreeInnerPanel1.setStrokeStyle(2, 0x374151, 0.6);
+          this.skillTreeInnerPanel1.setStrokeStyle(1, 0x374151, 0.6);
           this.skillTreeElements.push(this.skillTreeInnerPanel1);
           
-          this.skillTreeInnerPanel2 = this.add.rectangle(400, 300, 500, 380, 0x1f2937, 0.6);
+          this.skillTreeInnerPanel2 = this.add.rectangle(400, 300, 320, 240, 0x1f2937, 0.6);
           this.skillTreeInnerPanel2.setDepth(7001);
           this.skillTreeInnerPanel2.setStrokeStyle(1, 0x4b5563, 0.4);
           this.skillTreeElements.push(this.skillTreeInnerPanel2);
@@ -6612,19 +6612,19 @@ if (isBrowser) {
           // Add animated corner decorations
           this.createCornerDecorations();
           
-          // Epic title with multiple effects
-          this.skillTreeTitle = this.add.text(400, 60, 'NEXUS OF POWER', {
+          // Epic title with multiple effects - SMALLER SIZE
+          this.skillTreeTitle = this.add.text(400, 180, 'NEXUS OF POWER', {
             fontFamily: 'Arial Black',
-            fontSize: '42px',
+            fontSize: '28px',
             color: '#00d4ff',
             fontStyle: 'bold',
             stroke: '#001a2e',
-            strokeThickness: 4,
+            strokeThickness: 3,
             shadow: {
-              offsetX: 3,
-              offsetY: 3,
+              offsetX: 2,
+              offsetY: 2,
               color: '#000000',
-              blur: 12,
+              blur: 8,
               fill: true
             }
           }).setOrigin(0.5).setDepth(7002);
@@ -6641,10 +6641,10 @@ if (isBrowser) {
             ease: 'Sine.easeInOut'
           });
           
-          // Enhanced subtitle with gradient effect
-          this.skillTreeSubtitle = this.add.text(400, 95, 'Ascend Beyond Mortal Limits', {
+          // Enhanced subtitle with gradient effect - SMALLER SIZE
+          this.skillTreeSubtitle = this.add.text(400, 200, 'Ascend Beyond Mortal Limits', {
             fontFamily: 'Arial',
-            fontSize: '18px',
+            fontSize: '14px',
             color: '#64748b',
             fontStyle: 'italic',
             stroke: '#000000',
@@ -6652,22 +6652,22 @@ if (isBrowser) {
           }).setOrigin(0.5).setDepth(7002);
           this.skillTreeElements.push(this.skillTreeSubtitle);
           
-          // Epic close button with hover animations
-          this.skillTreeCloseBtn = this.add.rectangle(680, 60, 45, 45, 0x991b1b, 1);
+          // Epic close button with hover animations - REPOSITIONED FOR SMALLER UI
+          this.skillTreeCloseBtn = this.add.rectangle(570, 180, 35, 35, 0x991b1b, 1);
           this.skillTreeCloseBtn.setDepth(7002);
-          this.skillTreeCloseBtn.setStrokeStyle(3, 0xdc2626);
+          this.skillTreeCloseBtn.setStrokeStyle(2, 0xdc2626);
           this.skillTreeCloseBtn.setInteractive({ useHandCursor: true });
           this.skillTreeElements.push(this.skillTreeCloseBtn);
           
-          // Add close button glow
-          this.skillTreeCloseBtnGlow = this.add.rectangle(680, 60, 50, 50, 0x000000, 0);
+          // Add close button glow - SMALLER SIZE
+          this.skillTreeCloseBtnGlow = this.add.rectangle(570, 180, 40, 40, 0x000000, 0);
           this.skillTreeCloseBtnGlow.setDepth(7001);
           this.skillTreeCloseBtnGlow.setStrokeStyle(2, 0xef4444, 0.6);
           this.skillTreeElements.push(this.skillTreeCloseBtnGlow);
           
-          this.skillTreeCloseBtnText = this.add.text(680, 60, '✕', {
+          this.skillTreeCloseBtnText = this.add.text(570, 180, '✕', {
             fontFamily: 'Arial Black',
-            fontSize: '24px',
+            fontSize: '18px',
             color: '#ffffff',
             stroke: '#000000',
             strokeThickness: 2
@@ -6705,14 +6705,14 @@ if (isBrowser) {
             }
           });
           
-          // Enhanced progress panel with AAA styling
-          this.progressPanel = this.add.rectangle(400, 130, 680, 70, 0x0f172a, 0.95);
+          // Enhanced progress panel with AAA styling - SMALLER SIZE
+          this.progressPanel = this.add.rectangle(400, 130, 480, 50, 0x0f172a, 0.95);
           this.progressPanel.setDepth(7001);
           this.progressPanel.setStrokeStyle(2, 0x1e40af);
           this.skillTreeElements.push(this.progressPanel);
           
-          // Add progress panel glow
-          this.progressPanelGlow = this.add.rectangle(400, 130, 690, 80, 0x000000, 0);
+          // Add progress panel glow - SMALLER SIZE
+          this.progressPanelGlow = this.add.rectangle(400, 130, 490, 60, 0x000000, 0);
           this.progressPanelGlow.setDepth(7000);
           this.progressPanelGlow.setStrokeStyle(3, 0x3b82f6, 0.3);
           this.skillTreeElements.push(this.progressPanelGlow);
@@ -6725,9 +6725,9 @@ if (isBrowser) {
           if (skillTreeManager) {
             const progressData = skillTreeManager.getProgressData();
             
-            // Enhanced score display with animated icon
-            const scoreIcon = this.add.text(220, 115, '⭐', {
-              fontSize: '28px'
+            // Enhanced score display with animated icon - SMALLER SIZE
+            const scoreIcon = this.add.text(280, 115, '⭐', {
+              fontSize: '20px'
             }).setOrigin(0.5).setDepth(7002);
             this.skillTreeElements.push(scoreIcon);
             
@@ -6742,34 +6742,34 @@ if (isBrowser) {
               ease: 'Sine.easeInOut'
             });
             
-            const scoreText = this.add.text(260, 115, `${progressData.totalScore.toLocaleString()}`, {
+            const scoreText = this.add.text(310, 115, `${progressData.totalScore.toLocaleString()}`, {
               fontFamily: 'Arial Black',
-              fontSize: '22px',
+              fontSize: '16px',
               color: '#fbbf24',
               fontStyle: 'bold',
               stroke: '#92400e',
-              strokeThickness: 2,
+              strokeThickness: 1,
               shadow: {
-                offsetX: 2,
-                offsetY: 2,
+                offsetX: 1,
+                offsetY: 1,
                 color: '#000000',
-                blur: 4,
+                blur: 3,
                 fill: true
               }
             }).setOrigin(0, 0.5).setDepth(7002);
             this.skillTreeElements.push(scoreText);
             
-            const scoreLabel = this.add.text(260, 135, 'POWER LEVEL', {
+            const scoreLabel = this.add.text(310, 130, 'POWER LEVEL', {
               fontFamily: 'Arial Bold',
-              fontSize: '12px',
+              fontSize: '9px',
               color: '#d97706',
               letterSpacing: '1px'
             }).setOrigin(0, 0.5).setDepth(7002);
             this.skillTreeElements.push(scoreLabel);
             
-            // Enhanced enemies display with combat icon
-            const enemyIcon = this.add.text(480, 115, '⚔️', {
-              fontSize: '28px'
+            // Enhanced enemies display with combat icon - SMALLER SIZE
+            const enemyIcon = this.add.text(460, 115, '⚔️', {
+              fontSize: '20px'
             }).setOrigin(0.5).setDepth(7002);
             this.skillTreeElements.push(enemyIcon);
             
@@ -6783,26 +6783,26 @@ if (isBrowser) {
               ease: 'Sine.easeInOut'
             });
             
-            const enemiesText = this.add.text(520, 115, `${progressData.enemiesDefeated.toLocaleString()}`, {
+            const enemiesText = this.add.text(490, 115, `${progressData.enemiesDefeated.toLocaleString()}`, {
               fontFamily: 'Arial Black',
-              fontSize: '22px',
+              fontSize: '16px',
               color: '#ef4444',
               fontStyle: 'bold',
               stroke: '#7f1d1d',
-              strokeThickness: 2,
+              strokeThickness: 1,
               shadow: {
-                offsetX: 2,
-                offsetY: 2,
+                offsetX: 1,
+                offsetY: 1,
                 color: '#000000',
-                blur: 4,
+                blur: 3,
                 fill: true
               }
             }).setOrigin(0, 0.5).setDepth(7002);
             this.skillTreeElements.push(enemiesText);
             
-            const enemiesLabel = this.add.text(520, 135, 'SOULS CLAIMED', {
+            const enemiesLabel = this.add.text(490, 130, 'SOULS CLAIMED', {
               fontFamily: 'Arial Bold',
-              fontSize: '12px',
+              fontSize: '9px',
               color: '#dc2626',
               letterSpacing: '1px'
             }).setOrigin(0, 0.5).setDepth(7002);
@@ -6849,56 +6849,56 @@ if (isBrowser) {
               ease: 'Sine.easeInOut'
             });
             
-            // Defender type emoji/icon with enhanced styling
+            // Defender type emoji/icon with enhanced styling - SMALLER SIZE
             const defenderEmoji = this.getDefenderEmoji(defenderType);
             const defenderEmojiText = this.add.text(130, y, defenderEmoji, {
-              fontSize: '32px'
+              fontSize: '24px'
             }).setOrigin(0.5).setDepth(7003);
             this.skillTreeElements.push(defenderEmojiText);
             
             // Add floating animation to emoji
             this.tweens.add({
               targets: defenderEmojiText,
-              y: y - 3,
+              y: y - 2,
               duration: 2000,
               yoyo: true,
               repeat: -1,
               ease: 'Sine.easeInOut'
             });
             
-            // Enhanced defender name with epic styling
-            const defenderNameText = this.add.text(190, y - 15, defenderType, {
+            // Enhanced defender name with epic styling - SMALLER SIZE
+            const defenderNameText = this.add.text(160, y - 10, defenderType, {
               fontFamily: 'Arial Black',
-              fontSize: '22px',
+              fontSize: '16px',
               color: '#f1f5f9',
               fontStyle: 'bold',
               stroke: '#000000',
-              strokeThickness: 2,
+              strokeThickness: 1,
               shadow: {
-                offsetX: 2,
-                offsetY: 2,
+                offsetX: 1,
+                offsetY: 1,
                 color: '#000000',
-                blur: 4,
+                blur: 3,
                 fill: true
               }
             }).setOrigin(0, 0.5).setDepth(7002);
             this.skillTreeElements.push(defenderNameText);
             
-            // Enhanced defender class label with color coding
-            const defenderClass = this.add.text(190, y + 5, this.getDefenderClass(defenderType), {
+            // Enhanced defender class label with color coding - SMALLER SIZE
+            const defenderClass = this.add.text(160, y + 5, this.getDefenderClass(defenderType), {
               fontFamily: 'Arial Bold',
-              fontSize: '14px',
+              fontSize: '11px',
               color: this.getDefenderColor(defenderType),
               fontStyle: 'italic',
-              letterSpacing: '0.5px'
+              letterSpacing: '0.3px'
             }).setOrigin(0, 0.5).setDepth(7002);
             this.skillTreeElements.push(defenderClass);
             
-            // Add defender mastery level indicator
+            // Add defender mastery level indicator - SMALLER SIZE
             const masteryLevel = skillTreeManager.getDefenderMasteryLevel ? skillTreeManager.getDefenderMasteryLevel(defenderType) : 1;
-            const masteryText = this.add.text(190, y + 20, `Mastery Level ${masteryLevel}`, {
+            const masteryText = this.add.text(160, y + 15, `Mastery Level ${masteryLevel}`, {
               fontFamily: 'Arial',
-              fontSize: '11px',
+              fontSize: '9px',
               color: '#64748b',
               fontStyle: 'italic'
             }).setOrigin(0, 0.5).setDepth(7002);
@@ -6911,33 +6911,33 @@ if (isBrowser) {
               let skillIndex = 0;
               Object.values(skills.tiers).forEach(tier => {
                 tier.skills.forEach((skill) => {
-                  const skillX = 320 + (skillIndex * 115);
+                  const skillX = 280 + (skillIndex * 80); // SMALLER SPACING
                   const isUnlocked = skillTreeManager.isSkillUnlocked(defenderType, skill.id);
                   const canUnlock = skillTreeManager.canUnlockSkill(defenderType, skill.id);
                   
-                  // Enhanced skill node with hexagonal design and multiple layers
-                  const skillBgOuter = this.add.rectangle(skillX, y, 100, 60, 0x000000, 0);
+                  // Enhanced skill node with hexagonal design and multiple layers - SMALLER SIZE
+                  const skillBgOuter = this.add.rectangle(skillX, y, 70, 45, 0x000000, 0);
                   skillBgOuter.setDepth(7001);
-                  skillBgOuter.setStrokeStyle(3, 
+                  skillBgOuter.setStrokeStyle(2, 
                     isUnlocked ? 0x10b981 : (canUnlock ? 0x3b82f6 : 0x374151), 0.6);
                   this.skillTreeElements.push(skillBgOuter);
                   
-                  const skillBg = this.add.rectangle(skillX, y, 95, 55, 
+                  const skillBg = this.add.rectangle(skillX, y, 65, 40, 
                     isUnlocked ? 0x065f46 : (canUnlock ? 0x1e40af : 0x1f2937), 0.9);
                   skillBg.setDepth(7002);
-                  skillBg.setStrokeStyle(2, 
+                  skillBg.setStrokeStyle(1, 
                     isUnlocked ? 0x10b981 : (canUnlock ? 0x3b82f6 : 0x4b5563));
                   this.skillTreeElements.push(skillBg);
                   
-                  // Enhanced skill status indicator with glow
-                  const statusIndicator = this.add.circle(skillX + 40, y - 22, 6, 
+                  // Enhanced skill status indicator with glow - SMALLER SIZE
+                  const statusIndicator = this.add.circle(skillX + 25, y - 15, 4, 
                     isUnlocked ? 0x10b981 : (canUnlock ? 0x3b82f6 : 0x6b7280));
                   statusIndicator.setDepth(7003);
                   this.skillTreeElements.push(statusIndicator);
                   
-                  // Add pulsing glow to unlocked skills
+                  // Add pulsing glow to unlocked skills - SMALLER SIZE
                   if (isUnlocked) {
-                    const statusGlow = this.add.circle(skillX + 40, y - 22, 8, 0x10b981, 0.3);
+                    const statusGlow = this.add.circle(skillX + 25, y - 15, 6, 0x10b981, 0.3);
                     statusGlow.setDepth(7002);
                     this.skillTreeElements.push(statusGlow);
                     
@@ -6952,22 +6952,22 @@ if (isBrowser) {
                     });
                   }
                   
-                  // Enhanced skill name with better typography
-                  const skillText = this.add.text(skillX, y - 12, skill.name, {
+                  // Enhanced skill name with better typography - SMALLER SIZE
+                  const skillText = this.add.text(skillX, y - 8, skill.name, {
                     fontFamily: 'Arial Bold',
-                    fontSize: '12px',
+                    fontSize: '9px',
                     color: isUnlocked ? '#ffffff' : (canUnlock ? '#e2e8f0' : '#9ca3af'),
                     align: 'center',
-                    wordWrap: { width: 85 },
+                    wordWrap: { width: 60 },
                     stroke: '#000000',
                     strokeThickness: 1
                   }).setOrigin(0.5).setDepth(7003);
                   this.skillTreeElements.push(skillText);
                   
-                  // Enhanced cost display with modern styling
-                  const costText = this.add.text(skillX, y + 15, `${skill.scoreRequired || 100} ⭐`, {
+                  // Enhanced cost display with modern styling - SMALLER SIZE
+                  const costText = this.add.text(skillX, y + 10, `${skill.scoreRequired || 100} ⭐`, {
                     fontFamily: 'Arial Bold',
-                    fontSize: '11px',
+                    fontSize: '8px',
                     color: isUnlocked ? '#6ee7b7' : (canUnlock ? '#93c5fd' : '#9ca3af'),
                     align: 'center',
                     stroke: '#000000',
