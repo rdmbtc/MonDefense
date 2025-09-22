@@ -524,6 +524,11 @@ class SkillTreeManager {
     return this.skillTreeData[defenderId] || null;
   }
 
+  // Alias method for compatibility with SkillDefender
+  getDefenderData(defenderId) {
+    return this.getDefenderSkills(defenderId);
+  }
+
   // Get all defenders
   getAllDefenders() {
     return Object.keys(this.skillTreeData);
