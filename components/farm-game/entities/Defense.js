@@ -1,5 +1,7 @@
 'use client';
 
+import SkillManager from './SkillManager.js';
+
 export default class Defense {
   constructor(scene, type, x, y) {
     this.scene = scene;
@@ -39,6 +41,15 @@ export default class Defense {
     this.waveLifetime = this.getWaveLifetime(type); // How many waves this defense survives
     this.expirationWave = this.placementWave + this.waveLifetime; // When this defense expires
     this.isExhausted = false;
+    
+    // Initialize skill system
+    this.skillManager = new SkillManager();
+    this.activeSkills = new Set();
+    this.skillEffects = new Map();
+    this.skillCooldowns = new Map();
+    
+    // Apply unlocked skills from skill tree
+    this.initializeSkills();
     
     // Set properties based on defense type
     if (type === 'chog') {
@@ -3028,5 +3039,120 @@ export default class Defense {
               }
           }
       }
+  }
+  
+  // Initialize skills based on skill tree
+  initializeSkills() {
+    if (!this.scene.skillTreeManager) return;
+    
+    const unlockedSkills = this.scene.skillTreeManager.getUnlockedSkills(this.type);
+    unlockedSkills.forEach(skillId => {
+      this.activateSkill(skillId);
+    });
+  }
+  
+  // Activate a skill for this defender
+  activateSkill(skillId) {
+    if (this.activeSkills.has(skillId)) return;
+    
+    this.activeSkills.add(skillId);
+    this.skillManager.applySkillEffect(this, skillId, this.type);
+    
+    // Visual indication of skill activation
+    this.showSkillActivationEffect(skillId);
+  }
+  
+  // Deactivate a skill
+  deactivateSkill(skillId) {
+    if (!this.activeSkills.has(skillId)) return;
+    
+    this.activeSkills.delete(skillId);
+    this.skillManager.removeSkillEffect(this, skillId, this.type);
+  }
+  
+  // Update skill effects
+  updateSkills(delta) {
+    this.skillManager.updateSkillEffects(this, delta);
+    
+    // Update skill cooldowns
+    this.skillCooldowns.forEach((cooldown, skillId) => {
+      if (cooldown > 0) {
+        this.skillCooldowns.set(skillId, Math.max(0, cooldown - delta));
+      }
+    });
+  }
+  
+  // Show visual effect when skill is activated
+  showSkillActivationEffect(skillId) {
+    if (!this.sprite || !this.scene) return;
+    
+    const skillColors = {
+      'enhanced_range': 0x00FF00,
+      'rapid_fire': 0xFF6600,
+      'piercing_shot': 0xFFFF00,
+      'frost_aura': 0x87CEEB,
+      'flame_burst': 0xFF4500,
+      'tactical_analysis': 0x9400D3,
+      'knockback_force': 0x8B4513
+    };
+    
+    const color = skillColors[skillId] || 0xFFD700;
+    
+    // Create skill activation ring
+    const skillRing = this.scene.add.circle(this.x, this.y, 40, color, 0.3);
+    skillRing.setStrokeStyle(3, color);
+    
+    this.scene.tweens.add({
+      targets: skillRing,
+      scaleX: 2,
+      scaleY: 2,
+      alpha: 0,
+      duration: 1000,
+      ease: 'Power2',
+      onComplete: () => skillRing.destroy()
+    });
+    
+    // Add skill name text
+    const skillNames = {
+      'enhanced_range': 'Enhanced Range',
+      'rapid_fire': 'Rapid Fire',
+      'piercing_shot': 'Piercing Shot',
+      'frost_aura': 'Frost Aura',
+      'flame_burst': 'Flame Burst',
+      'tactical_analysis': 'Tactical Analysis',
+      'knockback_force': 'Knockback Force'
+    };
+    
+    const skillText = this.scene.add.text(this.x, this.y - 60, skillNames[skillId] || skillId, {
+      fontSize: '12px',
+      fill: '#FFFFFF',
+      fontWeight: 'bold',
+      backgroundColor: '#000000',
+      padding: { x: 4, y: 2 }
+    }).setOrigin(0.5);
+    
+    this.scene.tweens.add({
+      targets: skillText,
+      y: this.y - 80,
+      alpha: 0,
+      duration: 2000,
+      ease: 'Power2',
+      onComplete: () => skillText.destroy()
+    });
+  }
+  
+  // Get active skills for UI display
+  getActiveSkills() {
+    return Array.from(this.activeSkills);
+  }
+  
+  // Check if skill is on cooldown
+  isSkillOnCooldown(skillId) {
+    return (this.skillCooldowns.get(skillId) || 0) > 0;
+  }
+  
+  // Set skill cooldown
+  setSkillCooldown(skillId, duration) {
+    this.skillCooldowns.set(skillId, duration);
   }
 }

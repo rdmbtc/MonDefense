@@ -6,6 +6,10 @@ import SoundManager from '../utils/SoundManager';
 import VolumeControls from '../utils/volume-controls.js';
 // Import the Defense class
 import Defense from '../entities/Defense.js';
+// Import the SkillDefender class
+import SkillDefender from '../entities/SkillDefender.js';
+// Import the SkinCustomization class
+import SkinCustomization from '../ui/SkinCustomization.js';
 
 // Set up a global flag to prevent recursive/overlapping updates
 let isUpdating = false;
@@ -42,8 +46,9 @@ class GameSceneImpl {
     this.allowPlanting = false;
     this.upgradeSystem = null;
     this.pendingDefensePlacement = false; // New flag to track if we're waiting for placement click
-    this.lastEnemyCleanupTime = 0; // Add this property to track cleanup timing
-    this.volumeControls = null; // Add property for volume controls
+          this.lastEnemyCleanupTime = 0; // Add this property to track cleanup timing
+          this.volumeControls = null; // Add property for volume controls
+          this.skinCustomization = null; // Add property for skin customization
   }
   
   // Add stub methods for safety
@@ -94,8 +99,8 @@ if (isBrowser) {
             canPlant: true,
             autoWave: true // Add auto-wave functionality by default
           };
-          this.enemiesSpawned = 0;
-          this.totalEnemiesInWave = 0;
+           this.enemiesSpawned = 0;
+           this.totalEnemiesInWave = 0;
           this.upgradeSystem = null;
           this.pendingDefensePlacement = false; // New flag to track if we're waiting for placement click
           this.soundManager = null; // Will be initialized in create()
@@ -127,6 +132,11 @@ if (isBrowser) {
               clickDamage: 0.5, // Reduced from 1
               canPlant: true
             };
+            
+            // Initialize skill tree manager
+            if (typeof window !== 'undefined' && window.skillTreeManager) {
+              this.skillTreeManager = window.skillTreeManager;
+            }
             
             // Store callbacks
             this.addFarmCoins = this.registry.get('addFarmCoins');
@@ -453,9 +463,15 @@ if (isBrowser) {
             // Initialize Volume Controls AFTER SoundManager
             this.volumeControls = new VolumeControls(this, this.soundManager);
             this.volumeControls.createUI(); // Create the UI but keep it hidden
+            
+            // Initialize Skin Customization System
+            this.skinCustomization = new SkinCustomization(this);
+            this.skinCustomization.init();
 
             // Register the Defense class in the scene registry
             this.registry.set('DefenseClass', Defense);
+            // Register the SkillDefender class in the scene registry
+            this.registry.set('SkillDefenderClass', SkillDefender);
             // Defense class registered in scene registry
 
             // console.log("GameScene create start"); // Removed duplicate log
@@ -3015,7 +3031,7 @@ if (isBrowser) {
         createToolbar() {
           try {
             // Create a larger background for the toolbar to accommodate all buttons
-            const toolbarBg = this.add.rectangle(200, 550, 420, 65, 0x333333, 0.8).setDepth(1999); // Ensure toolbar BG is below buttons
+            const toolbarBg = this.add.rectangle(200, 550, 520, 65, 0x333333, 0.8).setDepth(1999); // Ensure toolbar BG is below buttons
 
             // Store buttons for reference - Initialize object first
             this.toolbarButtons = {};
@@ -3251,6 +3267,19 @@ if (isBrowser) {
             upgradeText.setInteractive({ useHandCursor: true });
             upgradeText.on('pointerdown', () => upgradeButton.emit('pointerdown'));
 
+            // Add skin customization button
+            const skinButton = this.add.rectangle(530, 550, buttonWidth, buttonHeight, 0x8B4513).setDepth(2000);
+            skinButton.on('pointerdown', () => this.toggleSkinCustomization());
+            addBounceEffect(skinButton); // Add bounce effect
+            this.addUIAnimations(skinButton); // Add UI animations - this will handle setInteractive
+            this.toolbarButtons.skin = skinButton; // Store reference
+
+            const skinText = this.add.text(530, 550, '👤', {
+              fontFamily: 'Arial', fontSize: '32px'
+            }).setOrigin(0.5).setDepth(2001);
+            skinText.setInteractive({ useHandCursor: true });
+            skinText.on('pointerdown', () => skinButton.emit('pointerdown'));
+
 
             // Add costs/labels underneath
             this.add.text(40, 570, 'Attack', { fontFamily: 'Arial', fontSize: labelFontSize, color: '#FFFFFF' }).setOrigin(0.5).setDepth(2001);
@@ -3258,6 +3287,7 @@ if (isBrowser) {
             this.add.text(180, 570, '25', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
             this.add.text(250, 570, '50', { fontFamily: 'Arial', fontSize: costFontSize, color: '#FFFF00' }).setOrigin(0.5).setDepth(2001);
             this.add.text(460, 570, 'Upgrade', { fontFamily: 'Arial', fontSize: labelFontSize, color: '#FFFFFF' }).setOrigin(0.5).setDepth(2001);
+            this.add.text(530, 570, 'Skins', { fontFamily: 'Arial', fontSize: labelFontSize, color: '#FFFFFF' }).setOrigin(0.5).setDepth(2001);
 
 
             // Set initial tool to attack mode
@@ -3583,7 +3613,13 @@ if (isBrowser) {
             }
             
             // Create defense - handle upgrades in the Defense constructor
-            const defense = new DefenseClass(this, defenseType, x, y);
+            // Use SkillDefender if skillTreeManager is available, otherwise use regular Defense
+            let defense;
+            if (window.skillTreeManager) {
+              defense = new SkillDefender(this, defenseType, x, y, window.skillTreeManager);
+            } else {
+              defense = new DefenseClass(this, defenseType, x, y);
+            }
             
             // Add to defenses array
             if (!this.defenses) {
@@ -4096,6 +4132,28 @@ if (isBrowser) {
             console.log(`Upgrade panel ${isVisible ? 'hidden' : 'shown'}`);
           } catch (error) {
             console.error("Error toggling upgrade panel:", error);
+          }
+        }
+
+        // Toggle skin customization panel
+        toggleSkinCustomization() {
+          try {
+            if (!this.skinCustomization) return;
+            
+            // Get current state
+            const isVisible = this.skinCustomization.isVisible || false;
+            
+            if (isVisible) {
+              // Hide the skin customization panel
+              this.skinCustomization.hide();
+            } else {
+              // Show the skin customization panel
+              this.skinCustomization.show();
+            }
+            
+            console.log(`Skin customization panel ${isVisible ? 'hidden' : 'shown'}`);
+          } catch (error) {
+            console.error("Error toggling skin customization panel:", error);
           }
         }
 
@@ -4629,7 +4687,12 @@ if (isBrowser) {
             let defense;
             
             if (DefenseClass) {
-              defense = new DefenseClass(this, type, x, y);
+              // Use SkillDefender if skillTreeManager is available, otherwise use regular Defense
+              if (window.skillTreeManager) {
+                defense = new SkillDefender(this, type, x, y, window.skillTreeManager);
+              } else {
+                defense = new DefenseClass(this, type, x, y);
+              }
             } else {
               // Fallback if DefenseClass isn't available
               defense = {

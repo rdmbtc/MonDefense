@@ -1171,6 +1171,11 @@ export default class Enemy {
           }
         }
 
+      // Update skill tree progress when enemy is defeated
+      if (this.scene.skillTreeManager) {
+        this.scene.skillTreeManager.onEnemyDefeated(this.type, this.scene.gameState.score);
+      }
+
       // Emit enemyDefeated event
       const onGameEvent = this.scene.registry.get('onGameEvent');
       if (typeof onGameEvent === 'function') {
