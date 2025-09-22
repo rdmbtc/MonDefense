@@ -351,7 +351,15 @@ export default class Defense {
     if (this.scene.textures.exists(this.skinKey)) {
       console.log(`✅ ${this.skinKey} texture confirmed to exist in scene`);
       this.sprite = this.scene.add.image(this.x, this.y, this.skinKey);
-      this.sprite.setDisplaySize(55, 55); // Increased size from 38x38 to 55x55
+      
+      // Special scaling for ERKIN skin - make it much bigger
+      if (this.skinKey === 'erkin_idle' || this.skinKey === 'erkin_attack') {
+        this.sprite.setDisplaySize(85, 85); // Much bigger size for ERKIN
+        console.log(`🔥 ERKIN skin detected - using larger size (85x85)`);
+      } else {
+        this.sprite.setDisplaySize(55, 55); // Standard size for other skins
+      }
+      
       this.sprite.setDepth(101); // Ensure visible above ground tiles
       console.log(`✅ CHOG sprite created successfully with actual texture, visible: ${this.sprite.visible}`);
     } else {
@@ -390,7 +398,15 @@ export default class Defense {
     if (this.scene.textures.exists(this.skinKey)) {
       console.log(`✅ ${this.skinKey} texture confirmed to exist in scene`);
       this.sprite = this.scene.add.image(this.x, this.y, this.skinKey);
-      this.sprite.setDisplaySize(55, 55); // Increased size from 38x38 to 55x55
+      
+      // Special scaling for ERKIN skin - make it much bigger
+      if (this.skinKey === 'erkin_idle' || this.skinKey === 'erkin_attack') {
+        this.sprite.setDisplaySize(85, 85); // Much bigger size for ERKIN
+        console.log(`🔥 ERKIN skin detected - using larger size (85x85)`);
+      } else {
+        this.sprite.setDisplaySize(55, 55); // Standard size for other skins
+      }
+      
       this.sprite.setDepth(101); // Ensure visible above ground tiles
       console.log(`✅ MOLANDAK sprite created successfully with actual texture, visible: ${this.sprite.visible}`);
     } else {
@@ -424,7 +440,15 @@ export default class Defense {
     if (this.scene.textures.exists(this.skinKey)) {
       console.log(`✅ ${this.skinKey} texture confirmed to exist in scene`);
       this.sprite = this.scene.add.image(this.x, this.y, this.skinKey);
-      this.sprite.setDisplaySize(55, 55); // Increased size from 38x38 to 55x55
+      
+      // Special scaling for ERKIN skin - make it much bigger
+      if (this.skinKey === 'erkin_idle' || this.skinKey === 'erkin_attack') {
+        this.sprite.setDisplaySize(85, 85); // Much bigger size for ERKIN
+        console.log(`🔥 ERKIN skin detected - using larger size (85x85)`);
+      } else {
+        this.sprite.setDisplaySize(55, 55); // Standard size for other skins
+      }
+      
       this.sprite.setDepth(101); // Ensure visible above ground tiles
       console.log(`✅ MOYAKI sprite created successfully with actual texture, visible: ${this.sprite.visible}`);
     } else {
@@ -458,7 +482,15 @@ export default class Defense {
     if (this.scene.textures.exists(this.skinKey)) {
       console.log(`✅ ${this.skinKey} texture confirmed to exist in scene`);
       this.sprite = this.scene.add.image(this.x, this.y, this.skinKey);
-      this.sprite.setDisplaySize(55, 55); // Increased size from 38x38 to 55x55
+      
+      // Special scaling for ERKIN skin - make it much bigger
+      if (this.skinKey === 'erkin_idle' || this.skinKey === 'erkin_attack') {
+        this.sprite.setDisplaySize(85, 85); // Much bigger size for ERKIN
+        console.log(`🔥 ERKIN skin detected - using larger size (85x85)`);
+      } else {
+        this.sprite.setDisplaySize(55, 55); // Standard size for other skins
+      }
+      
       this.sprite.setDepth(101); // Ensure visible above ground tiles
       console.log(`✅ KEON sprite created successfully with actual texture, visible: ${this.sprite.visible}`);
     } else {
