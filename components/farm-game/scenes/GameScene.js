@@ -6731,7 +6731,9 @@ if (isBrowser) {
               }).setDepth(7002);
               this.skillTreeElements.push(scoreIcon);
               
-              const scoreText = this.add.text(180, 165, `${progressData.totalScore.toLocaleString()}`, {
+              // Safe score display with null checks
+              const totalScore = (progressData && typeof progressData.totalScore === 'number') ? progressData.totalScore : 0;
+              const scoreText = this.add.text(180, 165, `${totalScore.toLocaleString()}`, {
                   fontFamily: 'Arial Black',
                   fontSize: '18px',
                   color: '#fbbf24',
@@ -6754,7 +6756,9 @@ if (isBrowser) {
               }).setDepth(7002);
               this.skillTreeElements.push(enemyIcon);
               
-              const enemiesText = this.add.text(480, 165, `${progressData.totalEnemiesDefeated.toLocaleString()}`, {
+              // Safe enemies defeated display with null checks
+              const enemiesDefeated = (progressData && typeof progressData.enemiesDefeated === 'number') ? progressData.enemiesDefeated : 0;
+              const enemiesText = this.add.text(480, 165, `${enemiesDefeated.toLocaleString()}`, {
                   fontFamily: 'Arial Black',
                   fontSize: '18px',
                   color: '#ef4444',
