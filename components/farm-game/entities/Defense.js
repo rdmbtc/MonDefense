@@ -354,8 +354,8 @@ export default class Defense {
       
       // Special scaling for ERKIN skin - make it much bigger
       if (this.skinKey === 'erkin_idle' || this.skinKey === 'erkin_attack') {
-        this.sprite.setDisplaySize(85, 85); // Much bigger size for ERKIN
-        console.log(`🔥 ERKIN skin detected - using larger size (85x85)`);
+        this.sprite.setDisplaySize(80, 80); // Optimal size for ERKIN (reduced from 85x85)
+        console.log(`🔥 ERKIN skin detected - using larger size (80x80)`);
       } else {
         this.sprite.setDisplaySize(55, 55); // Standard size for other skins
       }
@@ -401,8 +401,8 @@ export default class Defense {
       
       // Special scaling for ERKIN skin - make it much bigger
       if (this.skinKey === 'erkin_idle' || this.skinKey === 'erkin_attack') {
-        this.sprite.setDisplaySize(85, 85); // Much bigger size for ERKIN
-        console.log(`🔥 ERKIN skin detected - using larger size (85x85)`);
+        this.sprite.setDisplaySize(80, 80); // Optimal size for ERKIN (reduced from 85x85)
+        console.log(`🔥 ERKIN skin detected - using larger size (80x80)`);
       } else {
         this.sprite.setDisplaySize(55, 55); // Standard size for other skins
       }
@@ -443,8 +443,8 @@ export default class Defense {
       
       // Special scaling for ERKIN skin - make it much bigger
       if (this.skinKey === 'erkin_idle' || this.skinKey === 'erkin_attack') {
-        this.sprite.setDisplaySize(85, 85); // Much bigger size for ERKIN
-        console.log(`🔥 ERKIN skin detected - using larger size (85x85)`);
+        this.sprite.setDisplaySize(80, 80); // Optimal size for ERKIN (reduced from 85x85)
+        console.log(`🔥 ERKIN skin detected - using larger size (80x80)`);
       } else {
         this.sprite.setDisplaySize(55, 55); // Standard size for other skins
       }
@@ -485,8 +485,8 @@ export default class Defense {
       
       // Special scaling for ERKIN skin - make it much bigger
       if (this.skinKey === 'erkin_idle' || this.skinKey === 'erkin_attack') {
-        this.sprite.setDisplaySize(85, 85); // Much bigger size for ERKIN
-        console.log(`🔥 ERKIN skin detected - using larger size (85x85)`);
+        this.sprite.setDisplaySize(80, 80); // Optimal size for ERKIN (reduced from 85x85)
+        console.log(`🔥 ERKIN skin detected - using larger size (80x80)`);
       } else {
         this.sprite.setDisplaySize(55, 55); // Standard size for other skins
       }

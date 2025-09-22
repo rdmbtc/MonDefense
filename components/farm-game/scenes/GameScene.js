@@ -6867,8 +6867,11 @@ if (isBrowser) {
             
             // Get skills for this defender
             const skills = skillTreeManager.getDefenderSkills(defenderType);
+            console.log(`[SKILL DEBUG] Getting skills for ${defenderType}:`, skills);
+            console.log(`[SKILL DEBUG] SkillTreeManager available defenders:`, skillTreeManager.getAllDefenders());
             
             if (skills && skills.tiers) {
+                console.log(`[SKILL DEBUG] ${defenderType} has tiers:`, Object.keys(skills.tiers));
               let skillIndex = 0;
               Object.values(skills.tiers).forEach(tier => {
                 tier.skills.forEach((skill) => {
