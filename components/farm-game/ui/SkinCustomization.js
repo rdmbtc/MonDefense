@@ -260,9 +260,10 @@ export default class SkinCustomization {
                     this.updatePreview(skin.key);
                 });
                 panel.on('pointerout', () => {
-                    const isSelected = this.currentSkins[this.selectedDefenderType] === skin.key;
-                    panel.setStrokeStyle(isSelected ? 3 : 2, isSelected ? 0x44aa44 : 0x4a4a4a);
-                });
+                const normalizedType = this.selectedDefenderType.toLowerCase();
+                const isSelected = this.currentSkins[normalizedType] === skin.key;
+                panel.setStrokeStyle(isSelected ? 3 : 2, isSelected ? 0x44aa44 : 0x4a4a4a);
+            });
             }
             
             this.container.add([panel, skinSprite, nameText]);
@@ -271,7 +272,9 @@ export default class SkinCustomization {
     }
     
     selectSkin(skinKey) {
-        this.currentSkins[this.selectedDefenderType] = skinKey;
+        const normalizedType = this.selectedDefenderType.toLowerCase();
+        this.currentSkins[normalizedType] = skinKey;
+        console.log(`[SKIN DEBUG] Selected skin ${skinKey} for ${normalizedType}. Current skins:`, this.currentSkins);
         this.updatePreview(skinKey);
         
         // Update panel highlights
@@ -291,14 +294,13 @@ export default class SkinCustomization {
     }
     
     applySkin() {
-        // Save skin preferences
-        this.saveSkinPreferences();
-        
-        // Update existing defenders with new skin
-        this.updateExistingDefenders();
-        
-        // Show confirmation
-        this.showConfirmation();
+        if (this.selectedDefenderType) {
+            const normalizedType = this.selectedDefenderType.toLowerCase();
+            console.log(`[SKIN DEBUG] Applied skin to ${normalizedType}. Current skins:`, this.currentSkins);
+            this.saveSkinPreferences();
+            this.updateExistingDefenders();
+            this.showConfirmation();
+        }
         
         // Don't close panel automatically - let user continue selecting
         // this.hide();
@@ -328,8 +330,12 @@ export default class SkinCustomization {
         if (!this.scene.defenses) return;
         
         this.scene.defenses.forEach(defense => {
-            if (defense.type === this.selectedDefenderType && defense.sprite) {
-                const newSkin = this.currentSkins[this.selectedDefenderType];
+            const normalizedDefenseType = defense.type.toLowerCase();
+            const normalizedSelectedType = this.selectedDefenderType.toLowerCase();
+            
+            if (normalizedDefenseType === normalizedSelectedType && defense.sprite) {
+                const newSkin = this.currentSkins[normalizedSelectedType];
+                console.log(`[SKIN DEBUG] Updating existing ${defense.type} defense with skin:`, newSkin);
                 if (this.scene.textures.exists(newSkin)) {
                     defense.sprite.setTexture(newSkin);
                     // Update the skinKey so attacks use the correct skin
@@ -363,7 +369,10 @@ export default class SkinCustomization {
     }
     
     getSkinForDefender(defenderType) {
-        return this.currentSkins[defenderType] || `${defenderType}_idle`;
+        const normalizedType = defenderType.toLowerCase();
+        const selectedSkin = this.currentSkins[normalizedType];
+        console.log(`[SKIN DEBUG] Getting skin for ${defenderType} (normalized: ${normalizedType}):`, selectedSkin);
+        return selectedSkin || `${normalizedType}_idle`;
     }
     
     // Initialize skin preferences on game start

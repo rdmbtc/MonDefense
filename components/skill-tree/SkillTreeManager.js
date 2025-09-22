@@ -5,21 +5,30 @@
 
 class SkillTreeManager {
   constructor() {
+    this.skillTreeData = {};
     this.totalScore = 0;
     this.enemiesDefeated = 0;
     this.unlockedSkills = new Set();
-    this.selectedDefender = 'CHOG'; // Default defender
-    this.activeSkills = new Map(); // Map of defender -> active skills
-    this.skillTreeData = this.initializeSkillTreeData();
+    this.selectedDefender = 'CHOG';
+    this.activeSkills = new Map();
     
-    // Load persistent data
-    this.loadProgress();
+    // Initialize skill data with logging
+    this.initializeSkillData();
     
-    // Listen for score updates from the game
+    // Clear old data or load fresh on startup
+    this.clearOldData();
+    
+    // Listen for enemy defeated events
     if (typeof window !== 'undefined') {
       window.addEventListener('enemyDefeated', this.handleEnemyDefeated.bind(this));
       window.addEventListener('scoreUpdate', this.handleScoreUpdate.bind(this));
     }
+  }
+
+  initializeSkillData() {
+    this.skillTreeData = this.initializeSkillTreeData();
+    console.log('[SKILL TREE] Initialized skill data:', this.skillTreeData);
+    console.log('[SKILL TREE] Available defenders:', Object.keys(this.skillTreeData));
   }
 
   initializeSkillTreeData() {
@@ -457,17 +466,17 @@ class SkillTreeManager {
   // Save progress to localStorage
   saveProgress() {
     if (typeof window !== 'undefined' && window.localStorage) {
-      const progressData = {
-        totalScore: this.totalScore,
-        enemiesDefeated: this.enemiesDefeated,
-        unlockedSkills: Array.from(this.unlockedSkills),
-        selectedDefender: this.selectedDefender,
-        activeSkills: Object.fromEntries(this.activeSkills),
-        lastSaved: Date.now()
-      };
-      
       try {
+        const progressData = {
+          totalScore: this.totalScore,
+          enemiesDefeated: this.enemiesDefeated,
+          unlockedSkills: Array.from(this.unlockedSkills),
+          selectedDefender: this.selectedDefender,
+          activeSkills: Object.fromEntries(this.activeSkills),
+          lastSaved: Date.now() // Add timestamp
+        };
         localStorage.setItem('mondefense_skill_progress', JSON.stringify(progressData));
+        console.log('[SKILL TREE] Progress saved:', progressData);
       } catch (error) {
         console.warn('Failed to save skill tree progress:', error);
       }
@@ -551,8 +560,43 @@ class SkillTreeManager {
       });
     });
     
+    // Clear localStorage completely
+    if (typeof window !== 'undefined' && window.localStorage) {
+      localStorage.removeItem('mondefense_skill_progress');
+    }
+    
     this.saveProgress();
     this.dispatchProgressUpdate();
+    console.log('[SKILL TREE] Progress reset and localStorage cleared');
+  }
+
+  // Clear old data and start fresh (called on game start)
+  clearOldData() {
+    if (typeof window !== 'undefined' && window.localStorage) {
+      const saved = localStorage.getItem('mondefense_skill_progress');
+      if (saved) {
+        try {
+          const progressData = JSON.parse(saved);
+          const lastSaved = progressData.lastSaved || 0;
+          const now = Date.now();
+          const hoursSinceLastSave = (now - lastSaved) / (1000 * 60 * 60);
+          
+          // If data is older than 1 hour, reset it
+          if (hoursSinceLastSave > 1) {
+            console.log('[SKILL TREE] Clearing old data (older than 1 hour)');
+            this.resetProgress();
+            return;
+          }
+        } catch (error) {
+          console.warn('[SKILL TREE] Error parsing saved data, resetting:', error);
+          this.resetProgress();
+          return;
+        }
+      }
+    }
+    
+    // Load normally if data is recent
+    this.loadProgress();
   }
 
   // Check if a skill is unlocked
