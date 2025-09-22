@@ -3663,6 +3663,8 @@ if (isBrowser) {
             
             // Get the appropriate skin for this defender type
             const skinKey = this.skinCustomization ? this.skinCustomization.getSkinForDefender(defenseType) : `${defenseType}_idle`;
+            console.log(`[DEFENSE DEBUG] Creating defense ${defenseType} with skin:`, skinKey);
+            console.log(`[DEFENSE DEBUG] SkinCustomization available:`, !!this.skinCustomization);
             
             if (window.skillTreeManager) {
               defense = new SkillDefender(this, defenseType, x, y, window.skillTreeManager, skinKey);
@@ -4861,6 +4863,8 @@ if (isBrowser) {
             if (DefenseClass) {
               // Get the appropriate skin for this defender type
               const skinKey = this.skinCustomization ? this.skinCustomization.getSkinForDefender(type) : `${type}_idle`;
+              console.log(`[DEFENSE DEBUG 2] Creating defense ${type} with skin:`, skinKey);
+              console.log(`[DEFENSE DEBUG 2] SkinCustomization available:`, !!this.skinCustomization);
               
               // Use SkillDefender if skillTreeManager is available, otherwise use regular Defense
               if (window.skillTreeManager) {

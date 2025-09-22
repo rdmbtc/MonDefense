@@ -372,6 +372,7 @@ export default class SkinCustomization {
         const normalizedType = defenderType.toLowerCase();
         const selectedSkin = this.currentSkins[normalizedType];
         console.log(`[SKIN DEBUG] Getting skin for ${defenderType} (normalized: ${normalizedType}):`, selectedSkin);
+        console.log(`[SKIN DEBUG] Current skins state:`, this.currentSkins);
         return selectedSkin || `${normalizedType}_idle`;
     }
     
