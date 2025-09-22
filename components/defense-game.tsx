@@ -727,17 +727,7 @@ export default function DefenseGame({ onBack, onGameEnd }: DefenseGameProps) {
         </div>
 
         {/* Skill Tree Button */}
-        <div className="relative">
-          <Button
-            onClick={() => setSkillTreeVisible(true)}
-            variant="outline"
-            size="sm"
-            className="bg-purple-600/80 hover:bg-purple-500/90 border-purple-400/50 text-white backdrop-blur-sm transition-all duration-200 hover:scale-105 shadow-lg"
-            title="Open Skill Tree"
-          >
-            <span className="text-sm font-medium">🌟 Skills</span>
-          </Button>
-        </div>
+      
         
 
       </div>
